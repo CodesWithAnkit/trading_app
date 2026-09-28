@@ -1,0 +1,500 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#f8f9ff","surface-tint":"#2151da","on-tertiary-container":"#ffcaae","surface":"#f8f9ff","surface-container-highest":"#d5e3fb","on-error":"#ffffff","surface-container-low":"#eff4ff","surface-container":"#e5eeff","on-primary-fixed":"#001551","primary-container":"#1d4ed8","on-tertiary-fixed":"#331200","on-primary-fixed-variant":"#0039b5","on-error-container":"#93000a","inverse-on-surface":"#eaf1ff","on-primary-container":"#cad3ff","surface-container-high":"#dce9ff","on-secondary-fixed-variant":"#00513a","surface-container-lowest":"#ffffff","on-primary":"#ffffff","primary":"#0037b0","secondary-fixed":"#97f5cc","on-tertiary-fixed-variant":"#763300","primary-fixed-dim":"#b7c4ff","inverse-primary":"#b7c4ff","outline":"#747686","tertiary-container":"#984300","secondary-fixed-dim":"#7bd8b1","secondary-container":"#97f5cc","surface-dim":"#cddbf2","inverse-surface":"#233143","on-background":"#0e1c2d","outline-variant":"#c4c5d7","tertiary-fixed-dim":"#ffb68e","error":"#ba1a1a","tertiary-fixed":"#ffdbca","primary-fixed":"#dce1ff","tertiary":"#733100","background":"#f8f9ff","on-tertiary":"#ffffff","on-secondary-fixed":"#002115","on-surface":"#0e1c2d","surface-variant":"#d5e3fb","on-secondary-container":"#007353","error-container":"#ffdad6","on-secondary":"#ffffff","secondary":"#006c4e","on-surface-variant":"#434655"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-md":"0.75rem","space-sm":"0.5rem",margin:"1rem",gutter:"0.75rem","space-lg":"1rem","space-xl":"1.5rem","space-xs":"0.25rem"},fontFamily:{"label-numeric-md":["JetBrains Mono"],"headline-lg":["Inter"],"body-lg":["Inter"],"display-lg":["Inter"],"headline-sm":["Inter"],"label-numeric-sm":["JetBrains Mono"],"body-sm":["Inter"],"label-numeric-lg":["JetBrains Mono"],"label-caps":["Inter"],"body-md":["Inter"]},fontSize:{"label-numeric-md":["0.875rem",{lineHeight:"1.25rem",letterSpacing:"-0.01em",fontWeight:"500"}],"headline-lg":["1.5rem",{lineHeight:"2rem",fontWeight:"600"}],"body-lg":["0.9375rem",{lineHeight:"1.375rem",fontWeight:"500"}],"display-lg":["2rem",{lineHeight:"2.5rem",fontWeight:"700"}],"headline-sm":["1.125rem",{lineHeight:"1.5rem",fontWeight:"600"}],"label-numeric-sm":["0.75rem",{lineHeight:"1rem",letterSpacing:"0em",fontWeight:"500"}],"body-sm":["0.8125rem",{lineHeight:"1.125rem",fontWeight:"400"}],"label-numeric-lg":["1.25rem",{lineHeight:"1.5rem",letterSpacing:"-0.02em",fontWeight:"600"}],"label-caps":["0.6875rem",{lineHeight:"0.875rem",letterSpacing:"0.06em",fontWeight:"700"}],"body-md":["0.875rem",{lineHeight:"1.25rem",fontWeight:"400"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[248px] bg-surface-container-lowest border-r border-outline-variant/40 z-50 flex flex-col justify-between select-none"><div class="flex flex-col"><div class="h-14 px-space-lg flex items-center gap-space-sm border-b border-outline-variant/30"><img alt="Intraday Stock Tracker Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UxFa8RRW4xfGiHV7iI7l2LxYdqev9pMB-L13Bem3d6LpuiYwf4Daj00kNk8RUnwQJAM_1JSx0WsedV2pkz4vNp1cDuFu7bp5BF-yu7-98fuaasD9CFM7PgizzF-dCwHYXipShIP3LDo9zMrHsOUiCI1lUrC4c_GOHS89fUjn1UdnnYaxbirC8bQpHLHSVewNYB2dRQ8nTK50v-J7DJf6H2nbY19QAOgkwuzNH7Th3KkJDCBcnnHXmuVQ"><div class="flex flex-col min-w-0 leading-none"><span class="font-headline-sm text-body-lg text-on-surface font-semibold truncate tracking-tight">Intraday Tracker</span><span class="font-label-caps text-label-caps text-on-surface-variant truncate uppercase">NSE Cash Decision Support</span></div></div><nav class="p-space-sm flex flex-col gap-1" data-active-classes="bg-surface-container-high text-primary font-semibold"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dashboard" href="#"><div class="flex items-center gap-space-sm min-w-0"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-body-md text-body-md truncate">Dashboard</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="signals" href="#"><div class="flex items-center gap-space-sm min-w-0"><span class="material-symbols-outlined text-[20px]">bolt</span><span class="font-body-md text-body-md truncate">Signals</span></div><span class="px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-numeric-sm text-label-numeric-sm">6 active</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="trades" href="#"><div class="flex items-center gap-space-sm min-w-0"><span class="material-symbols-outlined text-[20px]">stacked_line_chart</span><span class="font-body-md text-body-md truncate">Trades</span></div><span class="px-1.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-numeric-sm text-label-numeric-sm">2 open</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="journal" href="#"><div class="flex items-center gap-space-sm min-w-0"><span class="material-symbols-outlined text-[20px]">menu_book</span><span class="font-body-md text-body-md truncate">Journal</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="performance" href="#"><div class="flex items-center gap-space-sm min-w-0"><span class="material-symbols-outlined text-[20px]">monitoring</span><span class="font-body-md text-body-md truncate">Performance</span></div></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="settings" href="#"><div class="flex items-center gap-space-sm min-w-0"><span class="material-symbols-outlined text-[20px]">tune</span><span class="font-body-md text-body-md truncate">Settings</span></div></a></nav></div><div class="p-space-sm border-t border-outline-variant/30"><div class="p-space-sm rounded-lg bg-surface-container-low border border-outline-variant/40 flex items-start gap-space-xs"><span class="material-symbols-outlined text-secondary text-[18px] mt-0.5 shrink-0">verified_user</span><div class="flex flex-col min-w-0"><span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider font-bold">Safe Execution Mode</span><span class="font-body-sm text-body-sm text-on-surface-variant leading-tight truncate mt-0.5">Manual Journal Only • No Broker Connected</span></div></div></div></aside><div class="pl-[248px]"><header class="fixed top-0 left-[248px] right-0 h-14 bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant/40 z-40 px-space-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md min-w-0"><div class="flex items-center gap-2 px-space-sm py-1 rounded bg-tertiary-fixed-dim/40 border border-outline-variant/40"><span class="flex h-2 w-2 relative"><span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary"></span></span><span class="font-label-caps text-label-caps text-tertiary font-bold uppercase tracking-wider">DELAYED (15-MIN)</span><span class="font-label-numeric-sm text-label-numeric-sm text-on-surface border-l border-outline-variant/40 pl-2">IST 11:24:08 AM</span><span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">· Delayed data</span></div><div class="relative w-72 lg:w-96"><span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span><input class="w-full h-8 pl-8 pr-8 rounded bg-surface border border-outline-variant/50 font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20" placeholder="Search NSE cash (e.g. RELIANCE, HDFCBANK)..." type="text"><kbd class="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-label-numeric-sm text-on-surface-variant bg-surface-container border border-outline-variant/40 rounded">⌘K</kbd></div></div><div class="flex items-center gap-space-md shrink-0"><button class="relative p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="h-4 w-px bg-outline-variant/40"></div><div class="flex items-center gap-space-sm"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwnqcbM0hYSSkxrEym_0ya38soh7OTs3LYBkI0SHvd0fuIvGgwtxIycRh5a7sUjUptUmlYFLcqnkQqYxjHWTA9zd5RJ9SMc4Q0lJL-tGYaX64OqehqOkokPLyrbmC3skSuG5QlJxlDnOlR5C6AGp40rSn11eIzQPH7SuikO_qvaFBg9CUfZYPqS7YwdpqwelEoypoPc0fKICOPL5sWKg4lk-of1k0EPACOse1OPAyE93Frw2nbGP5f"><div class="flex flex-col text-left leading-tight"><span class="font-body-sm text-body-sm font-semibold text-on-surface truncate">Ankit Sharma</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Intraday Equity</span></div></div></div></header><main class="relative pt-14 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- Interactive State Switcher & Simulation Bar -->
+<div class="p-space-lg flex flex-col gap-space-md">
+<!-- State Demo Control Pill Bar -->
+<div class="flex flex-wrap items-center justify-between gap-space-md bg-surface-container-low p-space-sm rounded-xl shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline text-[18px]">cell_tower</span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant font-bold">Simulator State Demo:</span>
+<div class="inline-flex rounded-lg bg-surface-container p-0.5 gap-1">
+<button class="px-3 py-1.5 rounded font-label-caps text-label-caps uppercase transition-all duration-200 bg-surface-container-lowest text-tertiary shadow-sm font-bold flex items-center gap-1.5" id="btnStateDelayed" onclick="setFeedState('delayed')">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+            15-Min Delayed
+          </button>
+<button class="px-3 py-1.5 rounded font-label-caps text-label-caps uppercase transition-all duration-200 text-on-surface-variant hover:text-on-surface flex items-center gap-1.5" id="btnStateDisconnected" onclick="setFeedState('disconnected')">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+            Disconnected (NSE Ticker Drop)
+          </button>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Socket Ping: <span class="text-tertiary font-semibold" id="pingValue">912ms (Delayed Cache)</span></span>
+<button class="px-3 py-1.5 bg-primary text-on-primary rounded font-label-caps text-label-caps uppercase tracking-wider font-semibold hover:bg-primary-container transition-all flex items-center gap-1 active:scale-95" onclick="triggerFeedReconnect()">
+<span class="material-symbols-outlined text-[16px] animate-spin hidden" id="reconnectSpinner">sync</span>
+<span id="reconnectBtnText" class="">Reconnect Feed Now</span>
+</button>
+</div>
+</div>
+<!-- Prominent Top Banner Notification -->
+<div class="bg-tertiary-container/15 rounded-xl p-space-md shadow-sm transition-all duration-300" id="noticeBanner">
+<div class="flex items-start justify-between gap-space-md">
+<div class="flex items-start gap-space-md min-w-0">
+<div class="w-9 h-9 rounded-lg bg-tertiary-container/20 flex items-center justify-center shrink-0 mt-0.5 text-tertiary">
+<span class="material-symbols-outlined text-[22px]" id="noticeIcon">history_toggle_off</span>
+</div>
+<div class="flex flex-col gap-1 min-w-0">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="font-label-caps text-label-caps text-tertiary font-bold tracking-wider uppercase" id="noticeBadge">DATA STATUS NOTICE</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant" id="noticeTimestamp">Feed frozen at 11:09:12 IST (15m offset)</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed" id="noticeBody">
+              Feed is currently running on <strong class="font-semibold text-tertiary">15-minute delayed market snapshot</strong>. Active signal generation is paused for safety because intraday cash setups require real-time 1-30m pricing. No broker orders are ever placed by this app.
+            </p>
+</div>
+</div>
+<div class="shrink-0 flex items-center gap-space-xs">
+<button class="px-2.5 py-1 text-on-surface-variant hover:text-on-surface font-label-caps text-label-caps uppercase hover:bg-surface-container rounded transition-colors" onclick="toggleNoticeDetails()">
+            Details
+          </button>
+</div>
+</div>
+<!-- Collapsible diagnostic payload -->
+<div class="hidden mt-space-md pt-space-md bg-surface-container-lowest/80 rounded-lg p-space-sm text-on-surface-variant font-label-numeric-sm text-label-numeric-sm" id="noticeDetailsPanel">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-space-sm">
+<div class=""><span class="text-outline uppercase text-[10px] block">Channel</span> NSE_EQUITY_L1_SNAPSHOT</div>
+<div class=""><span class="text-outline uppercase text-[10px] block">Feed Latency</span> 900,432 ms</div>
+<div class=""><span class="text-outline uppercase text-[10px] block">Last Valid Tick</span> 11:09:12.451 IST</div>
+<div class=""><span class="text-outline uppercase text-[10px] block">Safety Circuit</span> TRIGGERED (Auto-Halt)</div>
+</div>
+</div>
+</div>
+<!-- Greetings & Status Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pt-space-xs">
+<div class="flex flex-col gap-1 min-w-0">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Trading Desk • Intraday Equity Cash</span>
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Session IST 09:15 - 15:30</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Good morning, Ankit.</h1>
+</div>
+<!-- Dynamic Pill Badge -->
+<div class="flex items-center gap-space-sm shrink-0">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed shadow-sm" id="mainStatusBadge">
+<span class="flex h-2.5 w-2.5 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-tertiary" id="badgePulseDot"></span>
+</span>
+<span class="font-label-caps text-label-caps font-bold tracking-wider uppercase" id="statusBadgeText">Delayed Data (15-min delay)</span>
+</div>
+<button class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors" onclick="refreshSnapshot()" title="Force Cache Query">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+</button>
+</div>
+</div>
+<!-- 4 High-Density Metrics Bento Strip -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Metric 1: Net P&L -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline font-bold">Today's Net P&amp;L</span>
+<span class="px-2 py-0.5 rounded font-label-numeric-sm text-label-numeric-sm bg-tertiary-fixed text-on-tertiary-fixed font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">lock_clock</span>
+            Frozen
+          </span>
+</div>
+<div class="mt-space-md">
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-display-lg text-secondary font-bold tracking-tight">₹+18,450.00</span>
+</div>
+<div class="flex items-center gap-1 mt-1">
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant font-medium">Frozen at 11:09 AM IST</span>
+<span class="text-outline font-label-numeric-sm text-label-numeric-sm">· (+2.14%)</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs bg-surface-container-low rounded p-2 flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline">Unrealized MTM</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-tertiary font-semibold">Unverified Price Feed</span>
+</div>
+</div>
+<!-- Metric 2: Active Signals -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline font-bold">Signal Scanner</span>
+<span class="material-symbols-outlined text-outline text-[18px]">sensors_off</span>
+</div>
+<div class="mt-space-md">
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-display-lg text-on-surface font-bold tracking-tight">0</span>
+<span class="font-label-numeric-md text-label-numeric-md text-outline">/ 6 cached</span>
+</div>
+<div class="mt-1">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-tertiary-fixed-dim/40 text-on-tertiary-fixed font-label-numeric-sm text-label-numeric-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+              Paused (Delayed Data)
+            </span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs bg-surface-container-low rounded p-2 flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline">Trigger Engine</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-error font-medium">Safety Halt Active</span>
+</div>
+</div>
+<!-- Metric 3: Open Positions -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline font-bold">Open Positions</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-numeric-sm text-label-numeric-sm font-semibold">2 Running</span>
+</div>
+<div class="mt-space-md">
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-display-lg text-on-surface font-bold tracking-tight">2</span>
+<span class="font-label-numeric-md text-label-numeric-md text-outline">Trades Booked</span>
+</div>
+<p class="font-body-sm text-body-sm text-tertiary mt-1 leading-snug">
+            Positions monitored; live trailing paused
+          </p>
+</div>
+<div class="mt-space-sm pt-space-xs bg-surface-container-low rounded p-2 flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline">Hard SL</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-medium">Auto-Protected in Journal</span>
+</div>
+</div>
+<!-- Metric 4: Win Rate -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline font-bold">Session Win Rate</span>
+<span class="material-symbols-outlined text-secondary text-[18px]">military_tech</span>
+</div>
+<div class="mt-space-md">
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-display-lg text-on-surface font-bold tracking-tight">71.4%</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">5W - 2L</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-secondary h-1.5 rounded-full" style="width: 71.4%"></div>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs bg-surface-container-low rounded p-2 flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline">Profit Factor</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-semibold">2.84</span>
+</div>
+</div>
+</div>
+<!-- Active Monitored Positions (In Delayed Hold) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Active Monitored Trades</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-numeric-sm text-label-numeric-sm">2 Records</span>
+</div>
+<div class="flex items-center gap-space-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-tertiary">warning</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-tertiary">LTP trailing suspended • Using 11:09 AM quotes</span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase">
+<th class="py-2.5 px-3">Symbol / Segment</th>
+<th class="py-2.5 px-3">Setup</th>
+<th class="py-2.5 px-3 text-right">Entry Price</th>
+<th class="py-2.5 px-3 text-right">Cached LTP (11:09)</th>
+<th class="py-2.5 px-3 text-right">Stop Loss</th>
+<th class="py-2.5 px-3 text-right">Target (1:2)</th>
+<th class="py-2.5 px-3 text-right">Estimated P&amp;L</th>
+<th class="py-2.5 px-3 text-center">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded bg-surface-container flex items-center justify-center font-label-caps text-label-caps font-bold text-primary">RE</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">RELIANCE</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Qty: 250 • NSE Cash</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="px-2 py-0.5 rounded font-label-caps text-label-caps bg-secondary-fixed/50 text-on-secondary-fixed-variant font-bold uppercase">↑ VWAP Pullback</span>
+</td>
+<td class="py-3 px-3 text-right font-label-numeric-md text-label-numeric-md text-on-surface">₹2,940.50</td>
+<td class="py-3 px-3 text-right font-label-numeric-md text-label-numeric-md text-secondary font-semibold">₹2,962.10</td>
+<td class="py-3 px-3 text-right font-label-numeric-md text-label-numeric-md text-error">₹2,928.00</td>
+<td class="py-3 px-3 text-right font-label-numeric-md text-label-numeric-md text-on-surface">₹2,975.00</td>
+<td class="py-3 px-3 text-right font-label-numeric-md text-label-numeric-md text-secondary font-bold">+₹5,400.00</td>
+<td class="py-3 px-3 text-center">
+<button class="px-2.5 py-1 bg-surface-container text-on-surface-variant hover:text-on-surface rounded font-label-caps text-label-caps uppercase hover:bg-surface-container-high transition-colors">
+                  Manual Close
+                </button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded bg-surface-container flex items-center justify-center font-label-caps text-label-caps font-bold text-primary">HD</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">HDFCBANK</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Qty: 400 • NSE Cash</span>
+</div>
+</div>
+</td>
+<td class="py-3 px-3">
+<span class="px-2 py-0.5 rounded font-label-caps text-label-caps bg-secondary-fixed/50 text-on-secondary-fixed-variant font-bold uppercase">↑ ORB 15-Min</span>
+</td>
+<td class="py-3 px-3 text-right font-label-numeric-md text-label-numeric-md text-on-surface">₹1,532.00</td>
+<td class="py-3 px-3 text-right font-label-numeric-md text-label-numeric-md text-secondary font-semibold">₹1,544.75</td>
+<td class="py-3 px-3 text-right font-label-numeric-md text-label-numeric-md text-error">₹1,524.00</td>
+<td class="py-3 px-3 text-right font-label-numeric-md text-label-numeric-md text-on-surface">₹1,555.00</td>
+<td class="py-3 px-3 text-right font-label-numeric-md text-label-numeric-md text-secondary font-bold">+₹5,100.00</td>
+<td class="py-3 px-3 text-center">
+<button class="px-2.5 py-1 bg-surface-container text-on-surface-variant hover:text-on-surface rounded font-label-caps text-label-caps uppercase hover:bg-surface-container-high transition-colors">
+                  Manual Close
+                </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Active Signals Area (BLURRED / PAUSED OVERLAY) -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Real-Time Signal Engine</span>
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed-dim/40 text-on-tertiary-fixed font-label-numeric-sm text-label-numeric-sm font-semibold">Auto-Halted</span>
+</div>
+<span class="font-label-numeric-sm text-label-numeric-sm text-outline">Intraday 1m/5m Scans Suspended</span>
+</div>
+<!-- Main Container with Frosted Warning Overlay -->
+<div class="relative bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden p-space-md">
+<!-- FROSTED & BLURRED OVERLAY -->
+<div class="absolute inset-0 z-30 bg-surface-container-lowest/80 backdrop-blur-md flex flex-col items-center justify-center p-space-lg text-center">
+<div class="max-w-xl w-full flex flex-col items-center gap-space-md p-space-xl bg-surface-container-lowest rounded-xl shadow-lg">
+<div class="w-14 h-14 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary shadow-sm" id="overlayIconContainer">
+<span class="material-symbols-outlined text-[32px]" id="overlayIcon">motion_photos_paused</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps uppercase text-tertiary font-bold tracking-wider" id="overlaySuperTitle">Signal Execution Guard</span>
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface" id="overlayTitle">
+                Signals Paused during Delayed / Disconnected Mode
+              </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md mx-auto mt-1" id="overlaySubtitle">Please verify connection or toggle Simulated Live feed. To protect intraday discipline, cash breakouts and breakdown signals require verified real-time tick depth before setup logging.</p>
+</div>
+<div class="flex flex-wrap items-center justify-center gap-space-sm pt-space-xs">
+<button class="px-4 py-2.5 bg-primary text-on-primary rounded font-body-md text-body-md font-semibold hover:bg-primary-container shadow transition-all active:scale-95 flex items-center gap-2" onclick="triggerFeedReconnect()">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span class="">Switch to Simulated Live Feed</span>
+</button>
+<button class="px-4 py-2.5 bg-surface-container text-on-surface-variant hover:text-on-surface rounded font-body-md text-body-md font-medium transition-colors cursor-not-allowed opacity-80" title="Broker connectivity disabled in Safe Execution Mode">
+                View Archived Plan (Simulated)
+              </button>
+</div>
+<!-- Helper Compliance Caption -->
+<div class="flex items-center gap-1.5 pt-2 text-outline">
+<span class="material-symbols-outlined text-[15px]">verified</span>
+<span class="font-body-sm text-body-sm">Safe Execution Mode: Records your journal only. No broker order is placed.</span>
+</div>
+</div>
+</div>
+<!-- Background Simulated Signal Cards (Blurred underneath) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md filter blur-[3px] select-none pointer-events-none opacity-40">
+<!-- Card 1 (Simulated) -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col justify-between">
+<div class="flex items-center justify-between pb-space-sm">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">TCS</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-caps text-label-caps font-bold">↑ LONG</span>
+</div>
+<div class="flex flex-col gap-1 py-space-sm">
+<div class="flex justify-between font-label-numeric-sm text-label-numeric-sm">
+<span class="text-outline">Trigger:</span>
+<span class="text-on-surface font-semibold">₹3,892.00</span>
+</div>
+<div class="flex justify-between font-label-numeric-sm text-label-numeric-sm">
+<span class="text-outline">Stop Loss:</span>
+<span class="text-error font-semibold">₹3,865.00</span>
+</div>
+<div class="flex justify-between font-label-numeric-sm text-label-numeric-sm">
+<span class="text-outline">R:R Ratio:</span>
+<span class="text-secondary font-semibold">1 : 2.2</span>
+</div>
+</div>
+<button class="w-full mt-space-sm py-2 bg-primary text-on-primary rounded font-label-caps text-label-caps uppercase">Take Setup</button>
+</div>
+<!-- Card 2 (Simulated) -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col justify-between">
+<div class="flex items-center justify-between pb-space-sm">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">INFY</span>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-caps text-label-caps font-bold">↓ SHORT</span>
+</div>
+<div class="flex flex-col gap-1 py-space-sm">
+<div class="flex justify-between font-label-numeric-sm text-label-numeric-sm">
+<span class="text-outline">Trigger:</span>
+<span class="text-on-surface font-semibold">₹1,480.00</span>
+</div>
+<div class="flex justify-between font-label-numeric-sm text-label-numeric-sm">
+<span class="text-outline">Stop Loss:</span>
+<span class="text-error font-semibold">₹1,494.00</span>
+</div>
+<div class="flex justify-between font-label-numeric-sm text-label-numeric-sm">
+<span class="text-outline">R:R Ratio:</span>
+<span class="text-secondary font-semibold">1 : 2.0</span>
+</div>
+</div>
+<button class="w-full mt-space-sm py-2 bg-primary text-on-primary rounded font-label-caps text-label-caps uppercase">Take Setup</button>
+</div>
+<!-- Card 3 (Simulated) -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col justify-between">
+<div class="flex items-center justify-between pb-space-sm">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">ICICIBANK</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-caps text-label-caps font-bold">↑ LONG</span>
+</div>
+<div class="flex flex-col gap-1 py-space-sm">
+<div class="flex justify-between font-label-numeric-sm text-label-numeric-sm">
+<span class="text-outline">Trigger:</span>
+<span class="text-on-surface font-semibold">₹1,114.50</span>
+</div>
+<div class="flex justify-between font-label-numeric-sm text-label-numeric-sm">
+<span class="text-outline">Stop Loss:</span>
+<span class="text-error font-semibold">₹1,106.00</span>
+</div>
+<div class="flex justify-between font-label-numeric-sm text-label-numeric-sm">
+<span class="text-outline">R:R Ratio:</span>
+<span class="text-secondary font-semibold">1 : 2.5</span>
+</div>
+</div>
+<button class="w-full mt-space-sm py-2 bg-primary text-on-primary rounded font-label-caps text-label-caps uppercase">Take Setup</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Diagnostic Network Drawer & Manual Execution Safe Note -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Terminal Log Panel -->
+<div class="md:col-span-2 bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-outline">terminal</span>
+<span class="font-label-caps text-label-caps uppercase text-outline font-bold">Data Feed Diagnostics Log</span>
+</div>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant" id="terminalCounter">Auto-Retry in: 2s</span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-space-sm font-label-numeric-sm text-label-numeric-sm text-on-surface flex flex-col gap-1 mt-space-xs"><div class="flex items-center gap-2"><span class="text-outline">[11:09:12]</span><span class="text-tertiary font-semibold">STATUS:</span><span class="">Cache status: 15-minute delayed snapshot loaded.</span></div><div class="flex items-center gap-2"><span class="text-outline">[11:09:28]</span><span class="text-tertiary font-semibold">PAUSE:</span><span class="">Signal engine paused for safety.</span></div><div class="flex items-center gap-2 text-on-surface-variant" id="terminalLiveLine"><span class="text-outline">[11:24:08]</span><span class="text-primary font-semibold">JOURNAL:</span><span class="">Manual trade journaling remains accessible.</span></div></div>
+</div>
+<!-- Protocol Card -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-sm flex flex-col justify-between"><div class="flex flex-col gap-1"><div class="flex items-center gap-2 text-tertiary"><span class="material-symbols-outlined text-[20px]">security</span><span class="font-label-caps text-label-caps uppercase font-bold">Journal Safeguard Protocol</span></div><h3 class="font-body-lg text-body-lg font-semibold text-on-surface mt-1">Data Feed Policy</h3><p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">When market data feeds are delayed or disconnected, signal generation pauses automatically to maintain disciplined journaling standards. Update feed settings or switch to simulated mode.</p></div><div class="pt-space-md"><button class="w-full py-2 bg-surface-container-highest hover:bg-surface-dim text-on-surface rounded font-label-caps text-label-caps uppercase transition-colors font-semibold" onclick="triggerFeedReconnect()">Refresh Feed Connection</button></div></div>
+</div>
+</div>
+</div>
+<script>
+  let currentState = 'delayed';
+  let reconnectTimer = null;
+  let countdownSeconds = 5;
+
+  function setFeedState(state) {
+    currentState = state;
+    const btnDelayed = document.getElementById('btnStateDelayed');
+    const btnDisconnected = document.getElementById('btnStateDisconnected');
+    const noticeBanner = document.getElementById('noticeBanner');
+    const noticeBadge = document.getElementById('noticeBadge');
+    const noticeIcon = document.getElementById('noticeIcon');
+    const noticeBody = document.getElementById('noticeBody');
+    const mainStatusBadge = document.getElementById('mainStatusBadge');
+    const statusBadgeText = document.getElementById('statusBadgeText');
+    const pingValue = document.getElementById('pingValue');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlaySubtitle = document.getElementById('overlaySubtitle');
+    const overlayIcon = document.getElementById('overlayIcon');
+    const overlayIconContainer = document.getElementById('overlayIconContainer');
+    const overlaySuperTitle = document.getElementById('overlaySuperTitle');
+    const terminalLiveLine = document.getElementById('terminalLiveLine');
+
+    if (state === 'delayed') {
+      // Button states
+      btnDelayed.className = "px-3 py-1.5 rounded font-label-caps text-label-caps uppercase transition-all duration-200 bg-surface-container-lowest text-tertiary shadow-sm font-bold flex items-center gap-1.5";
+      btnDisconnected.className = "px-3 py-1.5 rounded font-label-caps text-label-caps uppercase transition-all duration-200 text-on-surface-variant hover:text-on-surface flex items-center gap-1.5";
+      
+      // Notice Banner
+      noticeBanner.className = "bg-tertiary-container/15 rounded-xl p-space-md shadow-sm transition-all duration-300";
+      noticeBadge.textContent = "DATA STATUS NOTICE";
+      noticeBadge.className = "font-label-caps text-label-caps text-tertiary font-bold tracking-wider uppercase";
+      noticeIcon.textContent = "history_toggle_off";
+      noticeBody.innerHTML = 'Feed is currently running on <strong class="font-semibold text-tertiary">15-minute delayed market snapshot</strong>. Active signal generation is paused for safety because intraday cash setups require real-time 1-30m pricing. No broker orders are ever placed by this app.';
+      
+      // Header Status Badge
+      mainStatusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed shadow-sm";
+      statusBadgeText.textContent = "Delayed Data (15-min delay)";
+      pingValue.textContent = "912ms (Delayed Cache)";
+      pingValue.className = "text-tertiary font-semibold";
+
+      // Overlay
+      overlayTitle.textContent = "Signals Paused during Delayed / Disconnected Mode";
+      overlaySubtitle.textContent = "Please verify connection or toggle Simulated Live feed. To protect intraday discipline, cash breakouts and breakdowns require live sub-second order book depth.";
+      overlayIcon.textContent = "motion_photos_paused";
+      overlayIconContainer.className = "w-14 h-14 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary shadow-sm";
+      overlaySuperTitle.className = "font-label-caps text-label-caps uppercase text-tertiary font-bold tracking-wider";
+
+      terminalLiveLine.innerHTML = `<span class="text-outline">[11:24:08]</span> <span class="text-outline">POLL:</span> <span>Checking primary gateway wss://md-feed.nse.internal:8443... (delayed-cache active)</span>`;
+    } else {
+      // Disconnected State
+      btnDelayed.className = "px-3 py-1.5 rounded font-label-caps text-label-caps uppercase transition-all duration-200 text-on-surface-variant hover:text-on-surface flex items-center gap-1.5";
+      btnDisconnected.className = "px-3 py-1.5 rounded font-label-caps text-label-caps uppercase transition-all duration-200 bg-surface-container-lowest text-error shadow-sm font-bold flex items-center gap-1.5";
+
+      // Notice Banner
+      noticeBanner.className = "bg-error-container/25 rounded-xl p-space-md shadow-sm transition-all duration-300";
+      noticeBadge.textContent = "CONNECTION FAILURE: NSE SOCKET OFFLINE";
+      noticeBadge.className = "font-label-caps text-label-caps text-error font-bold tracking-wider uppercase";
+      noticeIcon.textContent = "signal_wifi_connected_no_internet_4";
+      noticeBody.innerHTML = '<strong class="font-semibold text-error">Market data stream completely disconnected.</strong> Gateway response timed out. All automated intraday triggers, trailing stops, and volume delta indicators have been isolated. Attempting automatic reconnection.';
+
+      // Header Status Badge
+      mainStatusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-error-container text-on-error-container shadow-sm";
+      statusBadgeText.textContent = "Disconnected - Reconnecting in 5s...";
+      pingValue.textContent = "TIMEOUT (0 B/s)";
+      pingValue.className = "text-error font-semibold";
+
+      // Overlay
+      overlayTitle.textContent = "Network Socket Disconnected: Signals Isolated";
+      overlaySubtitle.textContent = "Real-time NSE ticks unavailable. Reconnection loop running in background. Click Reconnect Feed Now to force WebSocket handshake.";
+      overlayIcon.textContent = "cloud_off";
+      overlayIconContainer.className = "w-14 h-14 rounded-full bg-error-container flex items-center justify-center text-error shadow-sm";
+      overlaySuperTitle.className = "font-label-caps text-label-caps uppercase text-error font-bold tracking-wider";
+
+      terminalLiveLine.innerHTML = `<span class="text-outline">[11:24:12]</span> <span class="text-error font-semibold">DROP:</span> <span class="text-error">Socket broken (ECONNREFUSED). Retrying pipeline in 5s...</span>`;
+    }
+  }
+
+  function toggleNoticeDetails() {
+    const details = document.getElementById('noticeDetailsPanel');
+    details.classList.toggle('hidden');
+  }
+
+  function triggerFeedReconnect() {
+    const spinner = document.getElementById('reconnectSpinner');
+    const label = document.getElementById('reconnectBtnText');
+    spinner.classList.remove('hidden');
+    label.textContent = "Handshaking NSE...";
+
+    setTimeout(() => {
+      spinner.classList.add('hidden');
+      label.textContent = "Reconnect Feed Now";
+      // Flash simulated state
+      setFeedState('delayed');
+    }, 1200);
+  }
+
+  function refreshSnapshot() {
+    const btn = event.currentTarget;
+    btn.classList.add('rotate-180');
+    setTimeout(() => btn.classList.remove('rotate-180'), 400);
+  }
+
+  // Auto-countdown simulation for terminal
+  setInterval(() => {
+    countdownSeconds = countdownSeconds > 1 ? countdownSeconds - 1 : 5;
+    const counterEl = document.getElementById('terminalCounter');
+    if (counterEl) {
+      counterEl.textContent = `Auto-Retry in: ${countdownSeconds}s`;
+    }
+  }, 1000);
+</script></main></div>
+
+</body></html>
