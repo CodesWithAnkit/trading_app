@@ -1,22 +1,17 @@
 "use client"
-
 import * as React from "react"
 import { notFound } from "next/navigation"
-import { mockTrades } from "@/mock/trades"
-import { mockSignals } from "@/mock/signals"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { SignalPlan } from "@/components/domain/SignalPlan"
-import { ArrowLeft, ArrowUp, ArrowDown } from "lucide-react"
+import { useTrades } from "@/lib/contexts/TradeContext"
+import { useSignals } from "@/lib/contexts/SignalContext"
+import { ArrowUpRight, ArrowDownRight, ArrowLeft, TrendingUp, History, CheckCircle2, ChevronRight, Activity } from "lucide-react"
 import Link from "next/link"
-import { format } from "date-fns"
-
 import { TradeExitModal } from "@/components/domain/TradeExitModal"
 
 export default function TradeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
-  const trade = mockTrades.find(t => t.id === id)
+  const { trades } = useTrades()
+  const { signals } = useSignals()
+  const trade = trades.find((t) => t.id === id)
   
   const [isExitModalOpen, setIsExitModalOpen] = React.useState(false)
 
@@ -24,150 +19,185 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
     notFound()
   }
 
-  const signal = trade.signalId ? mockSignals.find(s => s.id === trade.signalId) : null
+  const linkedSignal = signals.find((s) => s.id === trade.signalId)
   const isLong = trade.direction === "LONG"
+  const ltp = trade.entryPrice * (isLong ? 1.01 : 0.99) // mock ltp
+  const stop = linkedSignal?.stop || (trade.entryPrice * (isLong ? 0.99 : 1.01))
+  const target1 = linkedSignal?.targets?.t1 || (trade.entryPrice * (isLong ? 1.02 : 0.98))
+  
+  const unrealizedPnl = (ltp - trade.entryPrice) * trade.quantity * (isLong ? 1 : -1)
+  const pnlPercent = ((ltp - trade.entryPrice) / trade.entryPrice) * 100 * (isLong ? 1 : -1)
+  const isProfitable = unrealizedPnl > 0
 
-  const handleExitSubmit = (quantity: number, exitPrice: number, isFullExit: boolean) => {
-    console.log("Mock Exit Recorded", { quantity, exitPrice, isFullExit })
-    alert(`Exit recorded: ${isFullExit ? 'Full' : 'Partial'} exit of ${quantity} shares at ₹${exitPrice}`)
+  const handleTradeExitSubmit = (quantity: number, exitPrice: number, isFullExit: boolean) => {
+    // In a real app this would call Context/API to record the exit
+    alert(`Mock Journal: ${isFullExit ? 'Full' : 'Partial'} Exit Recorded - ${quantity} shares at ₹${exitPrice}`)
+    setIsExitModalOpen(false)
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" asChild className="shrink-0 -ml-2 text-text-muted">
-            <Link href="/dashboard/journal">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-          </Button>
-          <div className="flex flex-col">
-            <div className="flex items-center space-x-3">
-              <h1 className="text-display font-display tracking-tight leading-none">{trade.symbol}</h1>
-              <Badge variant={isLong ? "long" : "short"} className="flex items-center space-x-1">
-                {isLong ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                <span>{isLong ? "Long" : "Short"}</span>
-              </Badge>
-              <Badge variant={trade.status === "OPEN" ? "primary" : "default"}>
-                {trade.status === "OPEN" ? "Open" : "Closed"}
-              </Badge>
+    <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
+      {/* Breadcrumb / Header */}
+      <div className="flex items-start gap-4">
+        <Link href="/dashboard" className="mt-1 p-2 rounded-lg text-text-muted hover:bg-surface-muted hover:text-text transition-colors">
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        <div className="flex flex-col w-full">
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-text tracking-tight">{trade.symbol}</h1>
+              <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${isLong ? 'bg-long-soft text-long' : 'bg-short-soft text-short'}`}>
+                {isLong ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                {isLong ? "Long" : "Short"}
+              </span>
+              {trade.status === "OPEN" ? (
+                <span className="px-2 py-1 bg-primary text-surface rounded-md text-xs font-bold uppercase tracking-wider border border-primary">
+                  Open
+                </span>
+              ) : (
+                <span className="px-2 py-1 bg-surface-muted text-text-muted rounded-md text-xs font-bold uppercase tracking-wider border border-border">
+                  Closed
+                </span>
+              )}
             </div>
-            <div className="text-body text-text-muted mt-1">
-              Entered {format(new Date(trade.createdAt), "dd MMM yyyy, HH:mm")}
+            
+            {/* P&L Header Metric */}
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-text-muted uppercase font-bold tracking-wider">Unrealized P&L</span>
+              <div className="flex items-baseline gap-2">
+                <span className={`font-mono text-2xl font-bold tracking-tight ${isProfitable ? 'text-long' : 'text-risk'}`}>
+                  {unrealizedPnl >= 0 ? '+' : '-'}₹{Math.abs(unrealizedPnl).toFixed(2)}
+                </span>
+                <span className={`font-mono text-sm font-semibold ${isProfitable ? 'text-long' : 'text-risk'}`}>
+                  {pnlPercent >= 0 ? '+' : '-'}Math.abs(pnlPercent).toFixed(2)%
+                </span>
+              </div>
             </div>
           </div>
+          <div className="text-sm text-text-muted mt-2 font-medium">
+            Entry: {new Date(trade.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} • 1m timeframe • NSE Cash
+          </div>
         </div>
-        {trade.status === "OPEN" && (
-          <Button variant="journalExit" onClick={() => setIsExitModalOpen(true)}>I exited</Button>
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-border bg-surface shadow-sm">
-            <CardHeader>
-              <CardTitle>Trade Leg Timeline</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative pl-6 space-y-6 border-l-2 border-border ml-2">
-                {trade.legs.map((leg) => (
-                  <div key={leg.id} className="relative">
-                    <div className="absolute -left-7.75 top-1 h-3 w-3 rounded-full bg-surface border-2 border-primary" />
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="text-sm font-medium">
-                          {leg.action === "ENTRY" ? "Entry" : leg.action === "PARTIAL_EXIT" ? "Partial Exit" : "Full Exit"}
-                        </div>
-                        <div className="text-xs text-text-muted">
-                          {format(new Date(leg.timestamp), "HH:mm:ss")}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-number font-medium">
-                          ₹{leg.price.toFixed(2)}
-                        </div>
-                        <div className="text-xs text-text-muted">
-                          Qty: {leg.quantity}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+        {/* Left Column: Trade Details & Log */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <div className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-border bg-surface-muted/30 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-bold text-text tracking-tight">Active Trade Monitor</h2>
+            </div>
+            <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">Avg Entry</span>
+                <span className="font-mono text-lg font-bold text-text">₹{trade.entryPrice.toFixed(2)}</span>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border bg-surface shadow-sm">
-            <CardHeader>
-              <CardTitle>Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-text-muted whitespace-pre-wrap">{trade.notes}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card className="border-border bg-surface shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle>Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-text-muted">Avg Entry</span>
-                <span className="text-sm font-number font-medium">₹{trade.entryPrice.toFixed(2)}</span>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">LTP</span>
+                <span className="font-mono text-lg font-bold text-text">₹{ltp.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-text-muted">Avg Exit</span>
-                <span className="text-sm font-number font-medium">{trade.exitPrice ? `₹${trade.exitPrice.toFixed(2)}` : "—"}</span>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">Current Qty</span>
+                <span className="font-mono text-lg font-bold text-text">{trade.quantity}</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-text-muted">Quantity</span>
-                <span className="text-sm font-number font-medium">{trade.quantity}</span>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">Initial Qty</span>
+                <span className="font-mono text-lg font-bold text-text-muted">{trade.legs[0]?.quantity || trade.quantity}</span>
               </div>
-              {trade.status === "CLOSED" && (
-                <>
-                  <div className="flex justify-between items-center py-2 border-b border-border">
-                    <span className="text-sm text-text-muted">Gross P&L</span>
-                    <span className="text-sm font-number font-medium">₹{(trade.grossPnl || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-border">
-                    <span className="text-sm text-text-muted">Estimated Charges</span>
-                    <span className="text-sm font-number font-medium">₹{((trade.grossPnl || 0) - (trade.netPnl || 0)).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm font-medium">Net P&L</span>
-                    <span className={`text-sm font-number font-medium ${trade.netPnl! >= 0 ? "text-long" : "text-risk"}`}>
-                      {trade.netPnl! >= 0 ? "+" : ""}₹{(trade.netPnl || 0).toFixed(2)}
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">Hard Stop Loss</span>
+                <span className="font-mono text-lg font-bold text-risk">₹{stop.toFixed(2)}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">Target 1</span>
+                <span className={`font-mono text-lg font-bold ${isLong ? 'text-long' : 'text-short'}`}>₹{target1.toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div className="h-48 bg-surface-muted border-t border-border flex items-center justify-center relative overflow-hidden">
+              <span className="text-text-muted font-medium text-sm z-10 bg-surface/80 px-3 py-1 rounded backdrop-blur-sm border border-border">Live Chart Plugin Placeholder</span>
+              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#D9E1EC 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+            </div>
+          </div>
+          
+          <div className="bg-surface border border-border rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-bold text-text tracking-tight mb-4 border-b border-border pb-3 flex items-center gap-2">
+              <History className="w-5 h-5 text-text-muted" />
+              Execution Log
+            </h2>
+            
+            <div className="relative pl-5 space-y-6 before:absolute before:left-1.75 before:top-2 before:bottom-2 before:w-0.5 before:bg-border mt-4">
+              {trade.legs.map((leg, index) => (
+                <div key={leg.id} className="relative">
+                  <div className={`absolute left-[-1.25rem] top-1.5 w-2 h-2 rounded-full ring-4 ring-surface ${leg.action === 'ENTRY' ? 'bg-primary' : 'bg-long'}`}></div>
+                  <div className="flex flex-col">
+                    <span className="font-mono text-[10px] text-text-muted mb-0.5">{new Date(leg.timestamp).toLocaleTimeString()}</span>
+                    <span className="text-sm font-semibold text-text">
+                      {leg.action === 'ENTRY' ? 'Entered' : 'Exited'} {leg.quantity} shares @ ₹{leg.price.toFixed(2)}
                     </span>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      {leg.action === 'ENTRY' ? 'Initial entry filled' : 'Partial profit secured'}
+                    </p>
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          {signal && (
-            <Card className="border-border bg-surface shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle>Original Signal Plan</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <SignalPlan signal={signal} />
-                <Button variant="ghost" size="sm" className="w-full mt-2" asChild>
-                  <Link href={`/dashboard/signals/${signal.id}`}>View Signal Details</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Right Column: Actions */}
+        <div className="flex flex-col gap-6">
+          <div className="bg-surface border border-border rounded-xl shadow-sm flex flex-col overflow-hidden">
+            <div className="p-5 border-b border-border bg-surface-muted/30">
+              <h2 className="text-lg font-bold text-text tracking-tight">Trade Management</h2>
+            </div>
+            
+            <div className="p-5 border-b border-border flex flex-col gap-3">
+              <button 
+                disabled={trade.status !== "OPEN"}
+                onClick={() => setIsExitModalOpen(true)}
+                className="w-full py-3 rounded-lg enabled:bg-risk enabled:hover:bg-risk/90 enabled:text-surface disabled:bg-surface-muted disabled:text-text-muted font-bold transition-colors disabled:opacity-50 disabled:border disabled:border-border flex items-center justify-center gap-2 shadow-sm"
+              >
+                Record Exit (Partial / Full)
+              </button>
+              
+              <div className="text-[10px] text-center text-text-muted uppercase tracking-wider font-bold mt-1">
+                Updates local journal only
+              </div>
+            </div>
+            
+            {linkedSignal && (
+              <div className="p-5 flex flex-col gap-3 bg-surface-muted/30">
+                <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Linked Setup</span>
+                <Link href={`/dashboard/signals/${linkedSignal.id}`} className="flex items-center justify-between p-3 rounded-lg border border-border bg-surface hover:bg-surface-muted transition-colors group">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-text group-hover:text-primary transition-colors">Original Trade Plan</span>
+                    <span className="text-xs text-text-muted">{linkedSignal.setup}</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
+                </Link>
+              </div>
+            )}
+            
+            <div className="p-5 border-t border-border">
+              <h3 className="text-sm font-bold text-text mb-2">Trade Notes</h3>
+              <p className="text-sm text-text-muted bg-surface-muted p-3 rounded-md border border-border">
+                {trade.notes || "No notes added for this trade."}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <TradeExitModal 
-        trade={trade} 
-        isOpen={isExitModalOpen} 
-        onClose={() => setIsExitModalOpen(false)} 
-        onSubmit={handleExitSubmit} 
-      />
+      {isExitModalOpen && (
+        <TradeExitModal 
+          trade={trade} 
+          isOpen={isExitModalOpen} 
+          onClose={() => setIsExitModalOpen(false)} 
+          onSubmit={handleTradeExitSubmit}
+        />
+      )}
     </div>
   )
 }

@@ -1,7 +1,6 @@
 "use client"
-
 import * as React from "react"
-import { Badge } from "@/components/ui/badge"
+import { Clock, AlertCircle } from "lucide-react"
 
 interface ExpiryTimerProps {
   status: "ACTIVE" | "EXPIRING" | "EXPIRED" | "INVALIDATED" | "SKIPPED" | "ENTERED"
@@ -29,29 +28,55 @@ export function ExpiryTimer({ status, expiresAt }: ExpiryTimerProps) {
     return () => clearInterval(interval)
   }, [expiresAt, status])
 
-  if (status === "EXPIRED") {
-    return <Badge variant="default">Expired</Badge>
+  const baseClasses = "px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border"
+
+  if (status === "EXPIRED" || timeLeft <= 0 && (status === "ACTIVE" || status === "EXPIRING")) {
+    return (
+      <div className={`${baseClasses} bg-surface-muted border-border text-text-muted`}>
+        <Clock className="w-3.5 h-3.5" />
+        Expired
+      </div>
+    )
   }
   
   if (status === "INVALIDATED") {
-    return <Badge variant="default">Invalidated</Badge>
+    return (
+      <div className={`${baseClasses} bg-risk-soft border-risk/20 text-risk`}>
+        <AlertCircle className="w-3.5 h-3.5" />
+        Invalidated
+      </div>
+    )
   }
   
   if (status === "SKIPPED") {
-    return <Badge variant="default">Skipped</Badge>
+    return (
+      <div className={`${baseClasses} bg-surface-muted border-border text-text-muted`}>
+        Skipped
+      </div>
+    )
   }
   
   if (status === "ENTERED") {
-    return <Badge variant="primary">Entered</Badge>
-  }
-
-  if (timeLeft <= 0) {
-    return <Badge variant="default">Expired</Badge>
+    return (
+      <div className={`${baseClasses} bg-primary border-primary text-surface`}>
+        Entered
+      </div>
+    )
   }
 
   if (timeLeft <= 5) {
-    return <Badge variant="warning">Expires in {timeLeft}m</Badge>
+    return (
+      <div className={`${baseClasses} bg-warning-soft border-warning/20 text-warning`}>
+        <Clock className="w-3.5 h-3.5" />
+        Expires in {timeLeft}m
+      </div>
+    )
   }
 
-  return <Badge variant="primary">Active · {timeLeft}m</Badge>
+  return (
+    <div className={`${baseClasses} bg-info-soft border-info/20 text-info`}>
+      <Clock className="w-3.5 h-3.5" />
+      Active · {timeLeft}m
+    </div>
+  )
 }

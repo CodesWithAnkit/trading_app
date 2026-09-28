@@ -1,21 +1,17 @@
 "use client"
-
 import * as React from "react"
 import { notFound } from "next/navigation"
-import { mockSignals } from "@/mock/signals"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useSignals } from "@/lib/contexts/SignalContext"
 import { ExpiryTimer } from "@/components/domain/ExpiryTimer"
 import { CandlestickChart } from "@/components/domain/CandlestickChart"
-import { ArrowUp, ArrowDown, ArrowLeft, Clock } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, ArrowLeft, Clock, ShieldAlert, BookOpen, AlertTriangle } from "lucide-react"
 import Link from "next/link"
-
 import { TradeEntryModal } from "@/components/domain/TradeEntryModal"
 
 export default function SignalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
-  const signal = mockSignals.find((s) => s.id === id)
+  const { signals } = useSignals()
+  const signal = signals.find((s) => s.id === id)
   
   const [isEntryModalOpen, setIsEntryModalOpen] = React.useState(false)
 
@@ -24,11 +20,14 @@ export default function SignalDetailPage({ params }: { params: Promise<{ id: str
   }
 
   const isLong = signal.direction === "LONG"
+  const isExpiredOrInvalidated = signal.status === "EXPIRED" || signal.status === "INVALIDATED"
+  const isActionable = signal.status === "ACTIVE" || signal.status === "EXPIRING"
 
   const handleTradeEntrySubmit = (quantity: number, entryPrice: number) => {
-    console.log("Mock Trade Entered", { quantity, entryPrice })
-    // In a real app, this would mutate global state or call an API
-    alert(`Trade recorded: ${quantity} shares of ${signal.symbol} at ₹${entryPrice}`)
+    // Handled in modal or via context update in a real flow.
+    // For now we just close and mock alert.
+    alert(`Mock Journal Recorded: ${quantity} shares at ₹${entryPrice}`)
+    setIsEntryModalOpen(false)
   }
 
   const validateRisk = (qty: number) => {
@@ -42,146 +41,184 @@ export default function SignalDetailPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 max-w-5xl mx-auto">
-      <div className="flex items-center space-x-4 mb-2">
-        <Button variant="ghost" size="icon" asChild className="shrink-0 -ml-2 text-text-muted">
-          <Link href="/dashboard">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-        </Button>
+    <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
+      {/* Breadcrumb / Header */}
+      <div className="flex items-start gap-4">
+        <Link href="/dashboard" className="mt-1 p-2 rounded-lg text-text-muted hover:bg-surface-muted hover:text-text transition-colors">
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
         <div className="flex flex-col">
-          <div className="flex items-center space-x-3">
-            <h1 className="text-display font-display tracking-tight leading-none">{signal.symbol}</h1>
-            <Badge variant={isLong ? "long" : "short"} className="flex items-center space-x-1">
-              {isLong ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-              <span>{isLong ? "Long" : "Short"}</span>
-            </Badge>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl font-bold text-text tracking-tight">{signal.symbol}</h1>
+            <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${isLong ? 'bg-long-soft text-long' : 'bg-short-soft text-short'}`}>
+              {isLong ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+              {isLong ? "Long" : "Short"}
+            </span>
             <ExpiryTimer status={signal.status} expiresAt={signal.expiresAt} />
           </div>
-          <div className="text-body text-text-muted mt-1">
+          <div className="text-sm text-text-muted mt-2 font-medium">
             {signal.setup} • {signal.confidenceBand === "HIGH" ? "High confidence" : signal.confidenceBand === "MEDIUM" ? "Medium confidence" : "Low confidence"}
           </div>
         </div>
       </div>
 
-      {(signal.status === "EXPIRED" || signal.status === "INVALIDATED") && (
-        <div className="w-full bg-surface-muted/50 border border-border p-4 rounded-md flex items-center space-x-3 mb-6">
-          <div className="w-2 h-2 rounded-full bg-risk" />
-          <div className="text-sm">
-            <span className="font-medium text-risk">Signal {signal.status === "EXPIRED" ? "Expired" : "Invalidated"}</span>
-            <span className="text-text-muted ml-2">
-              This signal is no longer active. No new entries should be recorded.
+      {/* Expired / Invalidated State Banner (Screen 3) */}
+      {isExpiredOrInvalidated && (
+        <div className="bg-surface-muted border border-border p-4 rounded-xl flex items-start gap-3">
+          <ShieldAlert className="w-5 h-5 text-text-muted shrink-0 mt-0.5" />
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-text">
+              Signal {signal.status === "EXPIRED" ? "Expired" : "Invalidated"}
+            </span>
+            <span className="text-sm text-text-muted mt-1">
+              This signal's time horizon has elapsed or the setup was invalidated by price action. It is preserved for historical review but no new entries can be recorded.
             </span>
           </div>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-border bg-surface shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <div className="text-sm text-text-muted flex items-center space-x-2">
-                  <Clock className="w-4 h-4" />
-                  <span>1m · NSE</span>
-                </div>
-                <div className="text-heading font-number tabular-nums">
-                  ₹{signal.price.toFixed(2)}
-                </div>
+        {/* Left Column: Chart & Diagnostics */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <div className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-surface-muted/30">
+              <div className="flex items-center gap-2 text-sm text-text-muted font-medium">
+                <Clock className="w-4 h-4" />
+                <span>1m timeframe · NSE Cash</span>
               </div>
+              <div className="font-mono text-xl font-bold text-text">
+                ₹{signal.price.toFixed(2)}
+              </div>
+            </div>
+            <div className="p-4">
               <CandlestickChart signal={signal} />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
           
-          <Card className="border-border bg-surface shadow-sm">
-            <CardHeader>
-              <CardTitle>Strategy Reasoning</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-body mb-6">{signal.rationale}</div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
-                <div>
-                  <div className="text-label text-text-muted mb-1">Relative Volume</div>
-                  <div className="text-sm font-medium">{signal.metrics.relativeVolume}</div>
-                </div>
-                <div>
-                  <div className="text-label text-text-muted mb-1">Trend Alignment</div>
-                  <div className="text-sm font-medium">{signal.metrics.trendAlignment}</div>
-                </div>
-                <div>
-                  <div className="text-label text-text-muted mb-1">Volatility</div>
-                  <div className="text-sm font-medium">{signal.metrics.volatility}</div>
-                </div>
-                <div>
-                  <div className="text-label text-text-muted mb-1">Liquidity</div>
-                  <div className="text-sm font-medium">{signal.metrics.liquidity}</div>
-                </div>
-                <div>
-                  <div className="text-label text-text-muted mb-1">Risk / Reward</div>
-                  <div className="text-sm font-medium">{signal.metrics.riskReward}</div>
-                </div>
+          <div className="bg-surface border border-border rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-bold text-text tracking-tight mb-4 border-b border-border pb-3">Strategy Reasoning & Diagnostics</h2>
+            <div className="text-sm text-text-muted mb-6 leading-relaxed bg-surface-muted/50 p-4 rounded-lg">
+              {signal.rationale}
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-8">
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">Relative Volume</span>
+                <span className="text-sm font-semibold text-text">{signal.metrics.relativeVolume}</span>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">Trend Alignment</span>
+                <span className="text-sm font-semibold text-text">{signal.metrics.trendAlignment}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">Volatility</span>
+                <span className="text-sm font-semibold text-text">{signal.metrics.volatility}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">Liquidity</span>
+                <span className="text-sm font-semibold text-text">{signal.metrics.liquidity}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold uppercase text-text-muted tracking-wider">Risk / Reward</span>
+                <span className="text-sm font-semibold text-text">{signal.metrics.riskReward}</span>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div className="space-y-6">
-          <Card className="border-border bg-surface shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle>Trade Plan</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        {/* Right Column: Trade Plan & Actions */}
+        <div className="flex flex-col gap-6">
+          <div className="bg-surface border border-border rounded-xl shadow-sm flex flex-col overflow-hidden">
+            <div className="p-5 border-b border-border bg-surface-muted/30">
+              <h2 className="text-lg font-bold text-text tracking-tight">Trade Plan</h2>
+            </div>
+            <div className="p-5 flex flex-col gap-4">
               <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-text-muted">Entry Zone</span>
-                <span className="text-sm font-number font-medium">₹{signal.entryZone.low.toFixed(2)} – ₹{signal.entryZone.high.toFixed(2)}</span>
+                <span className="text-sm text-text-muted font-medium">Entry Zone</span>
+                <span className="font-mono text-sm font-bold text-text">₹{signal.entryZone.low.toFixed(2)} – ₹{signal.entryZone.high.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-risk font-medium">Stop / Invalidation</span>
-                <span className="text-sm font-number text-risk font-medium">₹{signal.stop.toFixed(2)}</span>
+                <span className="text-sm text-risk font-bold">Stop / Invalidation</span>
+                <span className="font-mono text-sm font-bold text-risk bg-risk-soft px-2 py-0.5 rounded">₹{signal.stop.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-border">
-                <span className="text-sm text-long font-medium">Target 1</span>
-                <span className="text-sm font-number font-medium">₹{signal.targets.t1.toFixed(2)}</span>
+                <span className={`text-sm font-bold ${isLong ? 'text-long' : 'text-short'}`}>Target 1</span>
+                <span className={`font-mono text-sm font-bold ${isLong ? 'text-long' : 'text-short'}`}>₹{signal.targets.t1.toFixed(2)}</span>
               </div>
               {signal.targets.t2 && (
                 <div className="flex justify-between items-center py-2 border-b border-border">
-                  <span className="text-sm text-text-muted">Target 2</span>
-                  <span className="text-sm font-number font-medium">₹{signal.targets.t2.toFixed(2)}</span>
+                  <span className="text-sm text-text-muted font-medium">Target 2</span>
+                  <span className="font-mono text-sm font-bold text-text">₹{signal.targets.t2.toFixed(2)}</span>
                 </div>
               )}
-              <div className="pt-2 text-xs text-text-muted">
-                Trailing guidance: Trail stop to entry once T1 is reached.
+              
+              <div className="mt-2 p-3 rounded-md bg-info-soft border border-info/20 flex items-start gap-2 text-info">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="text-xs font-medium leading-tight">
+                  Trailing guidance: Trail stop to entry once T1 is reached.
+                </span>
               </div>
-            </CardContent>
-            <div className="p-4 border-t border-border bg-surface-muted/30 flex flex-col space-y-3">
-              <Button 
-                variant="journalEnter" 
-                size="lg" 
-                className="w-full"
-                disabled={signal.status !== "ACTIVE" && signal.status !== "EXPIRING"}
+            </div>
+            
+            <div className="p-5 border-t border-border bg-surface-muted/50 flex flex-col gap-3">
+              <button 
+                disabled={!isActionable}
                 onClick={() => setIsEntryModalOpen(true)}
+                className="w-full py-3 rounded-lg enabled:bg-primary enabled:hover:bg-primary-hover enabled:text-surface disabled:bg-surface-muted disabled:text-text-muted font-bold transition-colors disabled:opacity-50 disabled:border disabled:border-border flex items-center justify-center gap-2"
               >
+                <BookOpen className="w-4 h-4" />
                 I entered
-              </Button>
-              <div className="flex space-x-3">
-                <Button variant="secondary" className="flex-1">Skip</Button>
-                <Button variant="secondary" className="flex-1">Watch</Button>
+              </button>
+              
+              <div className="flex gap-3">
+                <button 
+                  disabled={!isActionable}
+                  className="flex-1 py-2.5 rounded-lg bg-surface border border-border hover:bg-surface-muted text-text font-semibold transition-colors disabled:opacity-50"
+                >
+                  Skip
+                </button>
+                <button 
+                  disabled={!isActionable}
+                  className="flex-1 py-2.5 rounded-lg bg-surface border border-border hover:bg-surface-muted text-text font-semibold transition-colors disabled:opacity-50"
+                >
+                  Watch
+                </button>
               </div>
-              <div className="text-[10px] text-center text-text-muted uppercase tracking-wider mt-2">
+              
+              <div className="text-[10px] text-center text-text-muted uppercase tracking-wider font-bold mt-2">
                 Records your journal only • No broker order is placed
               </div>
             </div>
-          </Card>
+          </div>
+          
+          {/* Mock Historical Context or Similar */}
+          {isExpiredOrInvalidated && (
+            <div className="bg-surface border border-border rounded-xl shadow-sm p-5">
+              <h3 className="text-sm font-bold text-text uppercase tracking-wider mb-3">Outcome Summary</h3>
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-text-muted">Maximum Favorable Excursion</span>
+                  <span className="font-mono text-sm font-bold text-text">+0.8%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-text-muted">Maximum Adverse Excursion</span>
+                  <span className="font-mono text-sm font-bold text-text">-0.2%</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      <TradeEntryModal 
-        signal={signal} 
-        isOpen={isEntryModalOpen} 
-        onClose={() => setIsEntryModalOpen(false)} 
-        onSubmit={handleTradeEntrySubmit}
-        onValidateRisk={validateRisk}
-      />
+      {isEntryModalOpen && (
+        <TradeEntryModal 
+          signal={signal} 
+          isOpen={isEntryModalOpen} 
+          onClose={() => setIsEntryModalOpen(false)} 
+          onSubmit={handleTradeEntrySubmit}
+          onValidateRisk={validateRisk}
+        />
+      )}
     </div>
   )
 }

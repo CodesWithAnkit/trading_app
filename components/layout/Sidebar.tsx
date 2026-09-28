@@ -1,40 +1,42 @@
 "use client"
-
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Activity, LayoutDashboard, Zap, TrendingUp, BookOpen, BarChart2, Settings, ShieldCheck } from "lucide-react"
+import { useSignals } from "@/lib/contexts/SignalContext"
+import { useTrades } from "@/lib/contexts/TradeContext"
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { activeSignals } = useSignals()
+  const { openTrades } = useTrades()
 
   const links = [
-    { href: "/dashboard", label: "Dashboard", icon: "grid_view" },
-    { href: "/dashboard/signals", label: "Signals", icon: "bolt", badge: "6 active", badgeClass: "bg-secondary-container text-on-secondary-container" },
-    { href: "/dashboard/trades", label: "Trades", icon: "stacked_line_chart", badge: "2 open", badgeClass: "bg-primary-fixed text-on-primary-fixed" },
-    { href: "/dashboard/journal", label: "Journal", icon: "menu_book" },
-    { href: "/dashboard/performance", label: "Performance", icon: "monitoring" },
-    { href: "/settings", label: "Settings", icon: "tune" },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/signals", label: "Signals", icon: Zap, badge: activeSignals.length > 0 ? `${activeSignals.length} active` : undefined, badgeClass: "bg-info-soft text-info" },
+    { href: "/dashboard/trades", label: "Trades", icon: TrendingUp, badge: openTrades.length > 0 ? `${openTrades.length} open` : undefined, badgeClass: "bg-primary text-surface" },
+    { href: "/dashboard/journal", label: "Journal", icon: BookOpen },
+    { href: "/dashboard/performance", label: "Performance", icon: BarChart2 },
+    { href: "/settings", label: "Settings", icon: Settings },
   ]
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-62 bg-surface-container-lowest border-r border-outline-variant/40 z-50 flex flex-col justify-between select-none">
-      <div className="flex flex-col">
-        <div className="h-14 px-space-lg flex items-center gap-space-sm border-b border-outline-variant/30">
-          <img
-            alt="Intraday Stock Tracker Logo"
-            className="h-8 w-auto object-contain"
-            src="https://lh3.googleusercontent.com/aida/AEtjO1UxFa8RRW4xfGiHV7iI7l2LxYdqev9pMB-L13Bem3d6LpuiYwf4Daj00kNk8RUnwQJAM_1JSx0WsedV2pkz4vNp1cDuFu7bp5BF-yu7-98fuaasD9CFM7PgizzF-dCwHYXipShIP3LDo9zMrHsOUiCI1lUrC4c_GOHS89fUjn1UdnnYaxbirC8bQpHLHSVewNYB2dRQ8nTK50v-J7DJf6H2nbY19QAOgkwuzNH7Th3KkJDCBcnnHXmuVQ"
-          />
-          <div className="flex flex-col min-w-0 leading-none">
-            <span className="font-headline-sm text-body-lg text-on-surface font-semibold truncate tracking-tight">
-              Intraday Tracker
+    <aside className="w-18 lg:w-62 h-full hidden md:flex flex-col border-r border-border bg-surface shrink-0 transition-all">
+      <div className="flex flex-col flex-1 overflow-y-auto">
+        <div className="h-16 px-4 flex items-center gap-3 border-b border-border shrink-0">
+          <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center shrink-0">
+             <Activity className="w-5 h-5 text-surface" />
+          </div>
+          <div className="hidden lg:flex flex-col min-w-0 leading-none">
+            <span className="text-body font-semibold text-text truncate tracking-tight">
+              Intraday
             </span>
-            <span className="font-label-caps text-label-caps text-on-surface-variant truncate uppercase">
-              NSE Cash Decision Support
+            <span className="text-[10px] font-bold text-text-muted truncate uppercase tracking-wider mt-1">
+              Decision Support
             </span>
           </div>
         </div>
-        <nav className="p-space-sm flex flex-col gap-1">
+        <nav className="p-2 flex flex-col gap-1 mt-2">
           {links.map((link) => {
             const isActive = pathname === link.href || (pathname.startsWith(link.href) && link.href !== "/dashboard" && link.href !== "/settings")
 
@@ -42,18 +44,18 @@ export function Sidebar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center justify-between px-space-md py-space-sm rounded-lg transition-colors ${
+                className={`flex items-center justify-between px-3 py-2 rounded-md transition-colors ${
                   isActive
-                    ? "bg-surface-container-high text-primary font-semibold"
-                    : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+                    ? "bg-canvas text-primary font-semibold"
+                    : "text-text-muted hover:bg-canvas hover:text-text"
                 }`}
               >
-                <div className="flex items-center gap-space-sm min-w-0">
-                  <span className="material-symbols-outlined text-[20px]">{link.icon}</span>
-                  <span className="font-body-md text-body-md truncate">{link.label}</span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <link.icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-primary' : 'text-text-muted'}`} />
+                  <span className="text-sm truncate hidden lg:block">{link.label}</span>
                 </div>
                 {link.badge && (
-                  <span className={`px-1.5 py-0.5 rounded-full font-label-numeric-sm text-label-numeric-sm ${link.badgeClass}`}>
+                  <span className={`hidden lg:block px-1.5 py-0.5 rounded font-mono text-[10px] font-medium ${link.badgeClass}`}>
                     {link.badge}
                   </span>
                 )}
@@ -62,16 +64,14 @@ export function Sidebar() {
           })}
         </nav>
       </div>
-      <div className="p-space-sm border-t border-outline-variant/30">
-        <div className="p-space-sm rounded-lg bg-surface-container-low border border-outline-variant/40 flex items-start gap-space-xs">
-          <span className="material-symbols-outlined text-secondary text-[18px] mt-0.5 shrink-0">
-            verified_user
-          </span>
+      <div className="p-4 border-t border-border hidden lg:block shrink-0">
+        <div className="p-3 rounded-md bg-canvas border border-border flex items-start gap-2">
+          <ShieldCheck className="text-info w-4 h-4 mt-0.5 shrink-0" />
           <div className="flex flex-col min-w-0">
-            <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider font-bold">
+            <span className="text-[10px] text-text uppercase tracking-wider font-bold">
               Safe Execution Mode
             </span>
-            <span className="font-body-sm text-body-sm text-on-surface-variant leading-tight truncate mt-0.5">
+            <span className="text-xs text-text-muted leading-tight mt-1">
               Manual Journal Only • No Broker Connected
             </span>
           </div>

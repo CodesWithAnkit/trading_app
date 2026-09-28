@@ -3,20 +3,19 @@
 import * as React from "react"
 import { Sidebar } from "./Sidebar"
 import { Topbar } from "./Topbar"
-import { usePathname } from "next/navigation"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className="flex h-screen bg-canvas overflow-hidden">
       <Sidebar />
-      <div className="pl-62">
+      <div className="flex-1 flex flex-col min-w-0">
         <Topbar />
-        <main className="relative pt-14 bg-background min-h-screen">
-          <div className="flex flex-col w-full">
+        <main className="flex-1 overflow-auto relative">
+          <div className="mx-auto max-w-360 px-8 py-8">
             {children}
           </div>
         </main>
       </div>
-    </>
+    </div>
   )
 }

@@ -1,8 +1,5 @@
 import * as React from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { type Trade } from "@/mock/trades"
 
 interface TradeExitModalProps {
@@ -20,7 +17,7 @@ export function TradeExitModal({ trade, isOpen, onClose, onSubmit }: TradeExitMo
   React.useEffect(() => {
     if (isOpen && trade) {
       setQuantity(trade.quantity.toString())
-      setExitPrice("")
+      setExitPrice((trade.entryPrice * (trade.direction === 'LONG' ? 1.01 : 0.99)).toFixed(2)) // default to mock LTP
       setIsFullExit(true)
     }
   }, [isOpen, trade])
@@ -34,50 +31,58 @@ export function TradeExitModal({ trade, isOpen, onClose, onSubmit }: TradeExitMo
     onClose()
   }
 
-  const handleSetFullExit = () => {
-    setQuantity(trade.quantity.toString())
-    setIsFullExit(true)
-  }
-
-  const handleSetPartialExit = () => {
-    setQuantity(Math.floor(trade.quantity / 2).toString())
-    setIsFullExit(false)
+  const handleSetExitPercent = (percent: number) => {
+    const calculatedQty = Math.floor(trade.quantity * percent)
+    setQuantity(calculatedQty.toString())
+    setIsFullExit(percent === 1)
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-surface border-border text-text">
         <DialogHeader>
           <DialogTitle>Record Trade Exit</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="flex justify-between pb-2 border-b border-border">
-            <span className="font-medium">{trade.symbol}</span>
-            <span className="text-text-muted text-sm">Remaining Qty: {trade.quantity}</span>
+        <div className="grid gap-5 py-2">
+          <div className="flex justify-between pb-3 border-b border-border items-center">
+            <span className="font-bold text-lg">{trade.symbol}</span>
+            <span className="text-text-muted text-sm font-medium">Open Qty: <span className="font-mono">{trade.quantity}</span></span>
           </div>
           
           <div className="flex gap-2">
-            <Button 
-              variant={isFullExit ? "primary" : "secondary"} 
-              size="sm" 
-              onClick={handleSetFullExit}
-              className="flex-1"
+            <button 
+              type="button"
+              className={`flex-1 py-1.5 rounded-md font-semibold text-sm transition-colors border ${isFullExit ? 'bg-primary border-primary text-surface' : 'bg-surface border-border text-text hover:bg-surface-muted'}`}
+              onClick={() => handleSetExitPercent(1)}
             >
-              Full Exit
-            </Button>
-            <Button 
-              variant={!isFullExit ? "primary" : "secondary"} 
-              size="sm" 
-              onClick={handleSetPartialExit}
-              className="flex-1"
+              100%
+            </button>
+            <button 
+              type="button"
+              className={`flex-1 py-1.5 rounded-md font-semibold text-sm transition-colors border ${!isFullExit && quantity === Math.floor(trade.quantity * 0.75).toString() ? 'bg-primary border-primary text-surface' : 'bg-surface border-border text-text hover:bg-surface-muted'}`}
+              onClick={() => handleSetExitPercent(0.75)}
             >
-              Partial Exit
-            </Button>
+              75%
+            </button>
+            <button 
+              type="button"
+              className={`flex-1 py-1.5 rounded-md font-semibold text-sm transition-colors border ${!isFullExit && quantity === Math.floor(trade.quantity * 0.5).toString() ? 'bg-primary border-primary text-surface' : 'bg-surface border-border text-text hover:bg-surface-muted'}`}
+              onClick={() => handleSetExitPercent(0.5)}
+            >
+              50%
+            </button>
+            <button 
+              type="button"
+              className={`flex-1 py-1.5 rounded-md font-semibold text-sm transition-colors border ${!isFullExit && quantity === Math.floor(trade.quantity * 0.25).toString() ? 'bg-primary border-primary text-surface' : 'bg-surface border-border text-text hover:bg-surface-muted'}`}
+              onClick={() => handleSetExitPercent(0.25)}
+            >
+              25%
+            </button>
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4 mt-2">
-            <Label htmlFor="qty" className="text-right">Quantity</Label>
-            <Input 
+            <label htmlFor="qty" className="text-right text-sm font-semibold text-text">Quantity</label>
+            <input 
               id="qty" 
               type="number" 
               value={quantity} 
@@ -85,27 +90,42 @@ export function TradeExitModal({ trade, isOpen, onClose, onSubmit }: TradeExitMo
                 setQuantity(e.target.value)
                 setIsFullExit(parseInt(e.target.value, 10) >= trade.quantity)
               }} 
-              className="col-span-3 font-number" 
+              className="col-span-3 h-10 px-3 rounded-md bg-surface border border-border focus:outline-none focus:border-primary font-mono text-sm"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="price" className="text-right">Exit Price</Label>
-            <Input 
-              id="price" 
-              type="number" 
-              value={exitPrice} 
-              onChange={(e) => setExitPrice(e.target.value)} 
-              className="col-span-3 font-number" 
-            />
+            <label htmlFor="price" className="text-right text-sm font-semibold text-text">Exit Price</label>
+            <div className="col-span-3 relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-mono">₹</span>
+              <input 
+                id="price" 
+                type="number" 
+                value={exitPrice} 
+                onChange={(e) => setExitPrice(e.target.value)} 
+                className="w-full h-10 pl-7 pr-3 rounded-md bg-surface border border-border focus:outline-none focus:border-primary font-mono text-sm"
+              />
+            </div>
           </div>
 
-          <div className="text-[10px] text-text-muted text-center mt-2 uppercase tracking-wide">
+          <div className="text-[10px] text-text-muted text-center mt-2 uppercase tracking-wide font-bold">
             Records your journal only • No broker order is placed
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button variant="journalExit" onClick={handleConfirm}>Confirm Exit</Button>
+        <DialogFooter className="mt-2">
+          <button 
+            type="button" 
+            className="px-4 py-2 rounded-md bg-surface border border-border hover:bg-surface-muted text-text font-semibold transition-colors"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            className="px-4 py-2 rounded-md bg-risk hover:bg-risk/90 text-surface font-semibold transition-colors shadow-sm"
+            onClick={handleConfirm}
+          >
+            Confirm {isFullExit ? 'Full' : 'Partial'} Exit
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

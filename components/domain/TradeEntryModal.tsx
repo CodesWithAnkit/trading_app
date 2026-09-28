@@ -1,9 +1,7 @@
 import * as React from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { type Signal } from "@/mock/signals"
+import { ArrowUpRight, ArrowDownRight, AlertTriangle } from "lucide-react"
 
 interface TradeEntryModalProps {
   signal: Signal | null
@@ -50,30 +48,43 @@ export function TradeEntryModal({ signal, isOpen, onClose, onSubmit, onValidateR
     }
   }
 
+  const isLong = signal.direction === "LONG"
+
   if (riskError) {
     return (
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-md bg-surface border-border text-text">
           <DialogHeader>
-            <DialogTitle className="text-risk">Risk Limit Exceeded</DialogTitle>
+            <DialogTitle className="text-risk flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Risk Limit Exceeded
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-2 text-body">
-              <p>Configured risk budget: ₹3,000</p>
-              <p className="text-risk font-medium">Calculated risk: ₹{riskError.calculatedRisk}</p>
+            <div className="space-y-2 text-sm text-text">
+              <p>Configured daily risk budget: <span className="font-mono font-bold">₹3,000.00</span></p>
+              <p className="text-risk font-medium">Calculated trade risk: <span className="font-mono font-bold">₹{riskError.calculatedRisk.toFixed(2)}</span></p>
             </div>
-            <div className="bg-surface-muted p-3 rounded-md text-sm">
-              <p>The quantity you entered exceeds your configured risk parameters.</p>
-              <p className="mt-2">Safe quantity: <span className="font-number font-medium">{riskError.safeQuantity}</span></p>
+            <div className="bg-risk-soft/30 border border-risk/20 p-4 rounded-lg text-sm text-text">
+              <p className="font-medium">The quantity you entered exceeds your configured risk parameters.</p>
+              <p className="mt-2">Maximum safe quantity for this stop-loss: <span className="font-mono font-bold text-lg">{riskError.safeQuantity}</span> shares</p>
             </div>
           </div>
           <DialogFooter className="gap-2 sm:justify-start">
-            <Button variant="secondary" onClick={() => setRiskError(null)}>
-              Cancel
-            </Button>
-            <Button variant="journalEnter" onClick={handleAdjustQuantity}>
+            <button 
+              type="button"
+              className="px-4 py-2 rounded-md bg-surface border border-border hover:bg-surface-muted text-text font-semibold transition-colors"
+              onClick={() => setRiskError(null)}
+            >
+              Go Back
+            </button>
+            <button 
+              type="button"
+              className="px-4 py-2 rounded-md bg-risk hover:bg-risk/90 text-surface font-semibold transition-colors shadow-sm"
+              onClick={handleAdjustQuantity}
+            >
               Adjust to Safe Quantity
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -85,65 +96,85 @@ export function TradeEntryModal({ signal, isOpen, onClose, onSubmit, onValidateR
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md bg-surface border-border text-text">
         <DialogHeader>
           <DialogTitle>Record Trade Entry</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="flex justify-between pb-2 border-b border-border">
-            <span className="font-medium">{signal.symbol}</span>
-            <span className={signal.direction === "LONG" ? "text-long" : "text-short"}>
-              {signal.direction === "LONG" ? "Long" : "Short"}
+        <div className="grid gap-5 py-2">
+          <div className="flex justify-between pb-3 border-b border-border items-center">
+            <div className="flex flex-col">
+              <span className="font-bold text-lg">{signal.symbol}</span>
+              <span className="text-xs text-text-muted">NSE Cash</span>
+            </div>
+            <span className={`px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${isLong ? 'bg-long-soft text-long' : 'bg-short-soft text-short'}`}>
+              {isLong ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+              {isLong ? "Long" : "Short"}
             </span>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="price" className="text-right">Price</Label>
-            <Input 
-              id="price" 
-              type="number" 
-              value={entryPrice} 
-              onChange={(e) => setEntryPrice(e.target.value)} 
-              className="col-span-3 font-number" 
-            />
+            <label htmlFor="price" className="text-right text-sm font-semibold text-text">Entry Price</label>
+            <div className="col-span-3 relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-mono">₹</span>
+              <input 
+                id="price" 
+                type="number" 
+                value={entryPrice} 
+                onChange={(e) => setEntryPrice(e.target.value)} 
+                className="w-full h-10 pl-7 pr-3 rounded-md bg-surface border border-border focus:outline-none focus:border-primary font-mono text-sm"
+              />
+            </div>
           </div>
+          
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="qty" className="text-right">Quantity</Label>
-            <Input 
+            <label htmlFor="qty" className="text-right text-sm font-semibold text-text">Quantity</label>
+            <input 
               id="qty" 
               type="number" 
               value={quantity} 
               onChange={(e) => setQuantity(e.target.value)} 
-              className="col-span-3 font-number" 
+              className="col-span-3 h-10 px-3 rounded-md bg-surface border border-border focus:outline-none focus:border-primary font-mono text-sm"
             />
           </div>
 
-          <div className="bg-surface-muted/50 p-4 rounded-md space-y-2 mt-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-text-muted">Estimated Risk</span>
-              <span className="font-number font-medium text-risk">₹{estimatedRisk.toFixed(2)}</span>
+          <div className="bg-surface-muted/50 p-4 rounded-lg space-y-3 mt-2 border border-border">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-text-muted font-medium">Estimated Risk</span>
+              <span className="font-mono font-bold text-risk bg-risk-soft px-2 py-0.5 rounded text-base">₹{estimatedRisk.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between items-center text-sm">
               <span className="text-text-muted">Risk Per Share</span>
-              <span className="font-number font-medium">₹{riskPerShare.toFixed(2)}</span>
+              <span className="font-mono font-semibold">₹{riskPerShare.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-sm pt-2 border-t border-border/50">
+            <div className="flex justify-between items-center text-sm pt-3 border-t border-border">
               <span className="text-text-muted">Stop Loss</span>
-              <span className="font-number font-medium">₹{signal.stop.toFixed(2)}</span>
+              <span className="font-mono font-semibold">₹{signal.stop.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between items-center text-sm">
               <span className="text-text-muted">Target 1</span>
-              <span className="font-number font-medium text-long">₹{signal.targets.t1.toFixed(2)}</span>
+              <span className={`font-mono font-semibold ${isLong ? 'text-long' : 'text-short'}`}>₹{signal.targets.t1.toFixed(2)}</span>
             </div>
           </div>
           
-          <div className="text-[10px] text-text-muted text-center mt-2 uppercase tracking-wide">
+          <div className="text-[10px] text-text-muted text-center uppercase tracking-wider font-bold">
             Records your journal only • No broker order is placed
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button variant="journalEnter" onClick={handleConfirm}>Confirm Entry</Button>
+        <DialogFooter className="mt-2">
+          <button 
+            type="button" 
+            className="px-4 py-2 rounded-md bg-surface border border-border hover:bg-surface-muted text-text font-semibold transition-colors"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            className="px-4 py-2 rounded-md bg-primary hover:bg-primary-hover text-surface font-semibold transition-colors shadow-sm"
+            onClick={handleConfirm}
+          >
+            Confirm Entry
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
