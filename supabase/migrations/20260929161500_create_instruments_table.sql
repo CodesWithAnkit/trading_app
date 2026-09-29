@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.instruments (
 ALTER TABLE public.instruments ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access (like other public data in this app)
+DROP POLICY IF EXISTS "Allow public read access on instruments" ON public.instruments;
 CREATE POLICY "Allow public read access on instruments"
     ON public.instruments
     FOR SELECT
@@ -19,6 +20,7 @@ CREATE POLICY "Allow public read access on instruments"
     USING (true);
 
 -- Allow service role to manage instruments
+DROP POLICY IF EXISTS "Allow service role full access on instruments" ON public.instruments;
 CREATE POLICY "Allow service role full access on instruments"
     ON public.instruments
     USING (auth.jwt() ->> 'role' = 'service_role');
