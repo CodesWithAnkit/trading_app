@@ -97,7 +97,7 @@
 
 ---
 
-## Live Dashboard Integration (Phase 4B) `in-progress`
+## Live Dashboard Integration (Phase 4B) `done`
 
 **Intent**: Connect the real Angel One market data pipeline end to end through the dashboard, replacing all mock/hardcoded data with live scanner output.
 **Done when**: The dashboard shows real stock prices, real market status, real candles, and real signals (or an honest empty state) sourced from the live Angel One feed, with scanner diagnostics visible in development.
@@ -109,12 +109,12 @@
   - [x] Dashboard context rewrite and MarketWatch component (AC-2, AC-3, AC-4)
   - [x] Strategy engine port to backend and candles API (AC-5, AC-8)
   - [x] Scanner diagnostics and mock path validation (AC-7, AC-10)
-- [ ] Verify it: /check verify
-- [ ] Test it: /test
+- [x] Verify it: /check verify
+- [x] Test it: /test
 
 ---
 
-## Live Market and Scanner UI (Phase 4C) `in-progress`
+## Live Market and Scanner UI (Phase 4C) `done`
 
 **Intent**: Implement the approved Stitch design for live market data and scanner visualization UI, adding Markets and Stock Detail pages and updating the dashboard to consume real data.
 **Done when**: The dashboard, Markets page, and Stock Detail page show real market data from the backend APIs with proper loading, error, and market closed states, and all existing routes continue working.
@@ -126,5 +126,5 @@
   - [x] Markets page with pipeline, feed health, and candle engine (AC-6, AC-7)
   - [x] Stock Detail page with chart, metrics, scanner evaluation, and setup (AC-8)
   - [x] Loading, error, responsive, accessibility, and mock mode (AC-10, AC-11, AC-15, AC-16, AC-17)
-- [ ] Verify it: /check verify
-- [ ] Test it: /test
+- [x] Verify it: /check verify
+- [x] Test it: /test
