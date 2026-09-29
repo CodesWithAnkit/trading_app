@@ -105,4 +105,11 @@ describe('AngelOneMarketDataProvider', () => {
     (provider as any).smartApi.gainersLosers.mockResolvedValue({ status: false, errorcode: 'AB2001', message: 'Internal error' });
     await expect(provider.fetchFnoPriceGainers()).rejects.toThrow('AB2001');
   });
+
+  it('reports an Angel error payload with no status flag instead of treating it as empty (AG8004)', async () => {
+    (provider as any).smartApi.getCandleData.mockResolvedValue({ success: false, message: 'Invalid API Key', errorCode: 'AG8004', data: '' });
+    await expect(provider.getCandles1m('2885', new Date(), new Date())).rejects.toThrow('AG8004 Invalid API Key');
+    (provider as any).smartApi.searchScrip.mockResolvedValue({ message: 'Invalid API Key', data: '' });
+    await expect(provider.searchScrip('M&M')).rejects.toThrow('Invalid API Key');
+  });
 });

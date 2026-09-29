@@ -121,6 +121,11 @@ export class AngelOneMarketDataProvider implements MarketDataProvider, MarketDat
     return session.data;
   }
 
+  /** Logs in for REST calls only (no WebSocket), e.g. for CLI tools. */
+  public async loginForRest(): Promise<void> {
+    await this.login();
+  }
+
   public async disconnect(): Promise<void> {
     this.updateStatus('DISCONNECTED');
     if (this.reconnectTimer) {
@@ -321,7 +326,10 @@ export class AngelOneMarketDataProvider implements MarketDataProvider, MarketDat
         res = await this.attempt(call);
       }
       if (res instanceof Error) throw res;
-      if (isFailure(res)) throw new Error(`Angel One REST call failed: ${(res as any).errorcode ?? ''} ${(res as any).message ?? ''}`.trim());
+      if (isFailure(res)) {
+        const r = res as any;
+        throw new Error(`Angel One REST call failed: ${r?.errorcode ?? r?.errorCode ?? ''} ${r?.message ?? 'unexpected response'}`.trim());
+      }
       return res;
     };
     const next = this.restQueue.then(run, run);
@@ -343,7 +351,7 @@ function sleep(ms: number) {
 }
 
 function errorText(res: any): string {
-  return `${res?.errorcode ?? ''} ${res?.message ?? ''} ${res?.response?.status ?? ''}`.toLowerCase();
+  return `${res?.errorcode ?? res?.errorCode ?? ''} ${res?.message ?? ''} ${res?.response?.status ?? ''}`.toLowerCase();
 }
 
 function isRateLimited(res: any): boolean {
@@ -356,6 +364,12 @@ function isAuthError(res: any): boolean {
   return text.includes('ag8001') || text.includes('ag8002') || text.includes('invalid token') || text.includes('401');
 }
 
+/**
+ * Success is an array (the SDK unwraps searchScrip) or `status`/`success` true. Angel's
+ * errors come as `{ success: false, errorCode, message }` or `{ status: false, errorcode }`,
+ * and some carry neither flag, so anything else is a failure.
+ */
 function isFailure(res: any): boolean {
-  return res && typeof res === 'object' && !Array.isArray(res) && res.status === false;
+  if (Array.isArray(res)) return false;
+  return !(res && typeof res === 'object' && (res.status === true || res.success === true));
 }

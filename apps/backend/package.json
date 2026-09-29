@@ -21,7 +21,8 @@
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "scanner:angelone:smoke": "npx tsx src/scanner/angel-one-smoke.ts",
-    "scanner:reconcile": "npx tsx src/scanner/reconcile-cli.ts"
+    "scanner:reconcile": "npx tsx src/scanner/reconcile-cli.ts",
+    "scanner:replay": "npx tsx src/scanner/replay-cli.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

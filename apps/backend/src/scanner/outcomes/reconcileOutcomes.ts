@@ -17,52 +17,63 @@ export type SignalOutcomeFields = {
 
 const logger = new Logger('ReconcileOutcomes');
 
+export type PlanExit = { status: OutcomeStatus; exitPrice: number; exitAt: string | null; pnlPct: number };
+
+/**
+ * Walks the candles after a trade plan fired and finds how it ended: the first candle
+ * to touch the stop (LOST) or the target (WON), else the last close (NEUTRAL). When a
+ * single candle spans both we cannot know which came first, so it counts as LOST.
+ * `firedAt` is the trigger candle's start; only candles after it can fill the plan.
+ */
+export function findPlanExit(
+  plan: { direction: string; entry: number; stop: number; target: number; firedAt: string },
+  candles: OutcomeCandle[]
+): PlanExit | null {
+  if (candles.length === 0 || !plan.entry) return null;
+  const isLong = plan.direction !== 'SHORT';
+  const firedAt = new Date(plan.firedAt).getTime();
+
+  let status: OutcomeStatus = 'NEUTRAL';
+  let exitPrice = candles[candles.length - 1].close;
+  let exitAt: string | null = null;
+  for (const c of candles) {
+    if (new Date(c.start_time).getTime() <= firedAt) continue;
+    const hitTarget = isLong ? c.high >= plan.target : c.low <= plan.target;
+    const hitStop = isLong ? c.low <= plan.stop : c.high >= plan.stop;
+    if (hitStop || hitTarget) {
+      status = hitStop ? 'LOST' : 'WON';
+      exitPrice = hitStop ? plan.stop : plan.target;
+      exitAt = c.start_time;
+      break;
+    }
+  }
+
+  const rawPct = ((exitPrice - plan.entry) / plan.entry) * 100;
+  return { status, exitPrice, exitAt, pnlPct: Math.round((isLong ? rawPct : -rawPct) * 100) / 100 };
+}
+
 /**
  * Compares one signal against the session's candles.
- * actual_high/low/close cover the whole 09:15–15:30 session; WON/LOST walks only
- * the candles from the signal onward, in time order. When a single candle spans
- * both target and stop we cannot know which came first, so it counts as LOST.
+ * actual_high/low/close cover the whole 09:15–15:30 session; WON/LOST comes from
+ * `findPlanExit` over the candles from the signal onward.
  */
 export function evaluateOutcome(signal: any, sessionCandles: OutcomeCandle[]): SignalOutcomeFields | null {
   if (sessionCandles.length === 0) return null;
 
   const entry = referenceEntryOf(signal);
-  const stop = stopOf(signal);
   const target = target1Of(signal);
   if (!entry || target === null) return null;
 
-  const isLong = signal.direction !== 'SHORT';
-  const signalTime = new Date(signal.created_at).getTime();
-  const actual_high = Math.max(...sessionCandles.map(c => c.high));
-  const actual_low = Math.min(...sessionCandles.map(c => c.low));
-  const actual_close = sessionCandles[sessionCandles.length - 1].close;
-
-  let outcome_status: OutcomeStatus = 'NEUTRAL';
-  let exitPrice = actual_close;
-  for (const c of sessionCandles) {
-    // created_at is the trigger candle's start; only candles after it can fill the plan.
-    if (new Date(c.start_time).getTime() <= signalTime) continue;
-    const hitTarget = isLong ? c.high >= target : c.low <= target;
-    const hitStop = isLong ? c.low <= stop : c.high >= stop;
-    if (hitStop) {
-      outcome_status = 'LOST';
-      exitPrice = stop;
-      break;
-    }
-    if (hitTarget) {
-      outcome_status = 'WON';
-      exitPrice = target;
-      break;
-    }
-  }
-
-  const rawPct = ((exitPrice - entry) / entry) * 100;
+  const exit = findPlanExit(
+    { direction: signal.direction, entry, stop: stopOf(signal), target, firedAt: signal.created_at },
+    sessionCandles
+  )!;
   return {
-    actual_high,
-    actual_low,
-    actual_close,
-    outcome_status,
-    outcome_pnl_pct: Math.round((isLong ? rawPct : -rawPct) * 100) / 100,
+    actual_high: Math.max(...sessionCandles.map(c => c.high)),
+    actual_low: Math.min(...sessionCandles.map(c => c.low)),
+    actual_close: sessionCandles[sessionCandles.length - 1].close,
+    outcome_status: exit.status,
+    outcome_pnl_pct: exit.pnlPct,
   };
 }
 
