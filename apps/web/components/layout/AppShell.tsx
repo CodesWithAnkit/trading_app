@@ -3,12 +3,13 @@
 import * as React from "react"
 import { Sidebar } from "./Sidebar"
 import { Topbar } from "./Topbar"
+import { BottomNav } from "./BottomNav"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-background overflow-hidden w-full">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
         <Topbar />
         <main className="flex-1 overflow-auto relative">
           <div className="mx-auto max-w-360 px-8 py-8">
@@ -16,6 +17,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
+      <BottomNav />
     </div>
   )
 }
