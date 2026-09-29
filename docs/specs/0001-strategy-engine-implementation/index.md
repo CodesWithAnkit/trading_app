@@ -1,7 +1,7 @@
 # 0001. Implement deterministic strategy engine and calibration
 
 **Date**: 2026-09-28
-**Status**: In Progress
+**Status**: Accepted
 
 ## Summary
 

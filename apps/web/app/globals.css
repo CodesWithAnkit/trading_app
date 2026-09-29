@@ -1,0 +1,133 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-surface-bright: #f8f9ff;
+  --color-surface-tint: #2151da;
+  --color-on-tertiary-container: #ffcaae;
+  --color-surface: #f8f9ff;
+  --color-surface-container-highest: #d5e3fb;
+  --color-on-error: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-on-primary-fixed: #001551;
+  --color-primary-container: #1d4ed8;
+  --color-on-tertiary-fixed: #331200;
+  --color-on-primary-fixed-variant: #0039b5;
+  --color-on-error-container: #93000a;
+  --color-inverse-on-surface: #eaf1ff;
+  --color-on-primary-container: #cad3ff;
+  --color-surface-container-high: #dce9ff;
+  --color-on-secondary-fixed-variant: #00513a;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-primary: #ffffff;
+  --color-primary: #0037b0;
+  --color-secondary-fixed: #97f5cc;
+  --color-on-tertiary-fixed-variant: #763300;
+  --color-primary-fixed-dim: #b7c4ff;
+  --color-inverse-primary: #b7c4ff;
+  --color-outline: #747686;
+  --color-tertiary-container: #984300;
+  --color-secondary-fixed-dim: #7bd8b1;
+  --color-secondary-container: #97f5cc;
+  --color-surface-dim: #cddbf2;
+  --color-inverse-surface: #233143;
+  --color-on-background: #0e1c2d;
+  --color-outline-variant: #c4c5d7;
+  --color-tertiary-fixed-dim: #ffb68e;
+  --color-error: #ba1a1a;
+  --color-tertiary-fixed: #ffdbca;
+  --color-primary-fixed: #dce1ff;
+  --color-tertiary: #733100;
+  --color-background: #f8f9ff;
+  --color-on-tertiary: #ffffff;
+  --color-on-secondary-fixed: #002115;
+  --color-on-surface: #0e1c2d;
+  --color-surface-variant: #d5e3fb;
+  --color-on-secondary-container: #007353;
+  --color-error-container: #ffdad6;
+  --color-on-secondary: #ffffff;
+  --color-secondary: #006c4e;
+  --color-on-surface-variant: #434655;
+
+  --spacing-space-md: 0.75rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-margin: 1rem;
+  --spacing-gutter: 0.75rem;
+  --spacing-space-lg: 1rem;
+  --spacing-space-xl: 1.5rem;
+  --spacing-space-xs: 0.25rem;
+
+  --font-label-numeric-md: "JetBrains Mono";
+  --font-headline-lg: "Inter";
+  --font-body-lg: "Inter";
+  --font-display-lg: "Inter";
+  --font-headline-sm: "Inter";
+  --font-label-numeric-sm: "JetBrains Mono";
+  --font-body-sm: "Inter";
+  --font-label-numeric-lg: "JetBrains Mono";
+  --font-label-caps: "Inter";
+  --font-body-md: "Inter";
+
+  --text-label-numeric-md: 0.875rem;
+  --text-label-numeric-md--line-height: 1.25rem;
+  --text-label-numeric-md--letter-spacing: -0.01em;
+  --text-label-numeric-md--font-weight: 500;
+
+  --text-headline-lg: 1.5rem;
+  --text-headline-lg--line-height: 2rem;
+  --text-headline-lg--font-weight: 600;
+
+  --text-body-lg: 0.9375rem;
+  --text-body-lg--line-height: 1.375rem;
+  --text-body-lg--font-weight: 500;
+
+  --text-display-lg: 2rem;
+  --text-display-lg--line-height: 2.5rem;
+  --text-display-lg--font-weight: 700;
+
+  --text-headline-sm: 1.125rem;
+  --text-headline-sm--line-height: 1.5rem;
+  --text-headline-sm--font-weight: 600;
+
+  --text-label-numeric-sm: 0.75rem;
+  --text-label-numeric-sm--line-height: 1rem;
+  --text-label-numeric-sm--letter-spacing: 0em;
+  --text-label-numeric-sm--font-weight: 500;
+
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.125rem;
+  --text-body-sm--font-weight: 400;
+
+  --text-label-numeric-lg: 1.25rem;
+  --text-label-numeric-lg--line-height: 1.5rem;
+  --text-label-numeric-lg--letter-spacing: -0.02em;
+  --text-label-numeric-lg--font-weight: 600;
+
+  --text-label-caps: 0.6875rem;
+  --text-label-caps--line-height: 0.875rem;
+  --text-label-caps--letter-spacing: 0.06em;
+  --text-label-caps--font-weight: 700;
+
+  --text-body-md: 0.875rem;
+  --text-body-md--line-height: 1.25rem;
+  --text-body-md--font-weight: 400;
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 0,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 24;
+}
+
+@layer base {
+  * {
+    @apply border-outline-variant;
+  }
+  body {
+    @apply bg-background text-on-surface font-body-md antialiased;
+  }
+}
