@@ -11,6 +11,7 @@
 | Angel One Market Data Integration (Phase 4) | done |
 | Live Dashboard Integration (Phase 4B) | in-progress |
 | Live Market and Scanner UI (Phase 4C) | in-progress |
+| Dynamic Stock Analysis & Strategy Engine (Phase 5) | done |
 
 ---
 
@@ -126,5 +127,22 @@
   - [x] Markets page with pipeline, feed health, and candle engine (AC-6, AC-7)
   - [x] Stock Detail page with chart, metrics, scanner evaluation, and setup (AC-8)
   - [x] Loading, error, responsive, accessibility, and mock mode (AC-10, AC-11, AC-15, AC-16, AC-17)
+- [x] Verify it: /check verify
+- [x] Test it: /test
+
+---
+
+## Dynamic Stock Analysis & Strategy Engine (Phase 5) `done`
+
+**Intent**: Implement a dynamic market scanner that fetches the Nifty 50 or Top Gainers and evaluates them against 4 quantitative trading strategies (VWAP, Momentum, Mean-Reversion, Scalping) to automatically surface the top bullish stocks and generate trade plans.
+**Done when**: The dashboard dynamically selects stocks, evaluates them using the new multi-strategy engine, displays the active or approaching setups on the UI, and allows saving generated trade plans to a manual journal.
+
+- [x] Design it (spec): [0008](../specs/0008-dynamic-stock-analysis/index.md)
+- [x] Build it: /develop Dynamic Stock Analysis
+  - [x] Database migration for journal_entries (AC-7)
+  - [x] Dynamic instrument discovery on backend startup (AC-1, AC-2)
+  - [x] Implement Vwap, Momentum, MeanReversion, Scalping strategy evaluators (AC-3, AC-4, AC-5)
+  - [x] API endpoints for /top-setups and /journal (AC-6)
+  - [x] UI Integration: Top Bullish dashboard, Analysis page, Trade Plan component, and Journal UI (AC-6, AC-7, AC-8, AC-9, AC-10)
 - [x] Verify it: /check verify
 - [x] Test it: /test

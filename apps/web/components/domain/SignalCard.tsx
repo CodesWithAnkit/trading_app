@@ -90,7 +90,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
       {/* Card Actions */}
       <div className="flex flex-col gap-1 pt-space-xs">
         <div className="flex items-center gap-2">
-          <Link href={`/dashboard/signals/${signal.id}`} className="flex-1 h-11 px-space-md rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-body-sm font-semibold transition-colors flex items-center justify-center gap-1 shadow-xs">
+          <Link href={`/dashboard/analysis/${signal.symbol}`} className="flex-1 h-11 px-space-md rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-body-sm font-semibold transition-colors flex items-center justify-center gap-1 shadow-xs">
             <span className="material-symbols-outlined text-[18px]">visibility</span>View plan
           </Link>
           <button 

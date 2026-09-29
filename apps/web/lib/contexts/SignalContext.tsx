@@ -15,9 +15,15 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
   const [signals, setSignals] = useState<Signal[]>([])
 
   React.useEffect(() => {
-    fetch("http://localhost:3001/api/v1/signals")
+    fetch("http://localhost:3001/api/v1/scanner/top-setups")
       .then(res => res.json())
-      .then(data => setSignals(data.data || mockSignals))
+      .then(data => {
+        if (!data.data || data.data.length === 0) {
+          setSignals(mockSignals);
+        } else {
+          setSignals(data.data);
+        }
+      })
       .catch(() => setSignals(mockSignals))
   }, [])
 

@@ -16,9 +16,27 @@ export function TradeProvider({ children }: { children: React.ReactNode }) {
   const [trades, setTrades] = useState<Trade[]>([])
 
   React.useEffect(() => {
-    fetch("http://localhost:3001/api/v1/trades")
+    fetch("http://localhost:3001/api/v1/journal")
       .then(res => res.json())
-      .then(data => setTrades(data.data || mockTrades))
+      .then(data => {
+        if (!data.data || data.data.length === 0) {
+          setTrades(mockTrades);
+          return;
+        }
+        const mappedTrades = data.data.map((je: any) => ({
+          id: je.id,
+          symbol: je.symbol,
+          direction: "LONG", // We can't easily infer direction without strategy_name parsing, defaulting to LONG
+          status: je.status === "PENDING" ? "OPEN" : je.status === "WON" || je.status === "LOST" ? "CLOSED" : je.status,
+          quantity: 100,
+          entryPrice: je.entry_price,
+          netPnl: je.status === "WON" ? (je.target_price - je.entry_price) * 100 : je.status === "LOST" ? (je.stop_price - je.entry_price) * 100 : 0,
+          legs: [],
+          notes: je.notes || "",
+          createdAt: je.created_at
+        })) as Trade[];
+        setTrades(mappedTrades);
+      })
       .catch(() => setTrades(mockTrades))
   }, [])
 

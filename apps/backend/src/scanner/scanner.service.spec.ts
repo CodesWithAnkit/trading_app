@@ -55,4 +55,22 @@ describe('ScannerService', () => {
       reconnect_count: 3
     }));
   });
+
+  it('sets up subscriptions by fetching ACTIVE instruments', async () => {
+    const mockInstruments = [{ symbol: 'AAPL' }, { symbol: 'RELIANCE' }];
+    supabaseMock.client.from.mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue({ data: mockInstruments, error: null })
+    });
+    
+    // Simulate no env var
+    process.env.SCANNER_INSTRUMENTS = '';
+
+    await service.setupSubscriptions();
+    
+    expect(supabaseMock.client.from).toHaveBeenCalledWith('instruments');
+    // Ensure the updated constraint status = ACTIVE is used
+    expect(supabaseMock.client.from().select().eq).toHaveBeenCalledWith('status', 'ACTIVE');
+  });
 });
