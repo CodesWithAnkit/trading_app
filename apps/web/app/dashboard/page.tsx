@@ -15,9 +15,9 @@ export default function DashboardPage() {
   const shortSignalsCount = activeSignals.filter(s => s.direction === "SHORT").length
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="px-space-md sm:px-space-xl py-space-md sm:py-space-lg flex flex-col gap-space-lg max-w-[1720px] mx-auto w-full">
       {/* Top Greeting & State Switcher */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-xs">
         <div className="flex flex-col">
           <h1 className="text-2xl font-bold text-text flex items-center gap-2 tracking-tight">
             Good morning, Ankit
@@ -33,57 +33,31 @@ export default function DashboardPage() {
             <span className="font-mono text-xs font-semibold text-primary">Session Elapsed: 2h 09m</span>
           </p>
         </div>
-
-        {/* Demo Switcher for Dashboard States */}
-        <div className="flex items-center gap-3 bg-surface p-2 rounded-lg border border-border shadow-sm">
-          <div className="flex items-center gap-1 bg-surface-muted p-1 rounded-md text-xs">
-            <button 
-              onClick={() => setMarketState('LIVE')}
-              className={`px-3 py-1 rounded font-semibold transition-all ${marketState === 'LIVE' ? 'bg-surface text-primary border border-border' : 'text-text-muted hover:text-text'}`}>
-              Live
-            </button>
-            <button 
-              onClick={() => setMarketState('DELAYED')}
-              className={`px-3 py-1 rounded font-semibold transition-all ${marketState === 'DELAYED' ? 'bg-surface text-warning border border-warning/30' : 'text-text-muted hover:text-text'}`}>
-              Delayed
-            </button>
-            <button 
-              onClick={() => setMarketState('DISCONNECTED')}
-              className={`px-3 py-1 rounded font-semibold transition-all ${marketState === 'DISCONNECTED' ? 'bg-surface text-risk border border-risk/30' : 'text-text-muted hover:text-text'}`}>
-              Disconnected
-            </button>
-            <button 
-              onClick={() => setMarketState('SIMULATED')}
-              className={`px-3 py-1 rounded font-semibold transition-all ${marketState === 'SIMULATED' ? 'bg-surface text-info border border-info/30' : 'text-text-muted hover:text-text'}`}>
-              Simulated
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Disconnected / Delayed States Warning Banner */}
       {(marketState === 'DELAYED' || marketState === 'DISCONNECTED') && (
         <div className={`p-4 rounded-lg flex items-start gap-3 border ${marketState === 'DELAYED' ? 'bg-warning-soft border-warning/30' : 'bg-risk-soft border-risk/30'}`}>
-          <AlertTriangle className={`w-5 h-5 shrink-0 ${marketState === 'DELAYED' ? 'text-warning' : 'text-risk'}`} />
-          <div className="flex flex-col">
-            <span className={`text-sm font-bold ${marketState === 'DELAYED' ? 'text-warning' : 'text-risk'}`}>
-              {marketState === 'DELAYED' ? 'Market Data Feed is Delayed' : 'Data Feed Disconnected'}
-            </span>
-            <span className="text-sm text-text-muted mt-0.5">
-              {marketState === 'DELAYED' 
-                ? 'Quotes are running 15 minutes behind. Scanner is paused. Do not use for live trading decisions until feed catches up.' 
-                : 'Connection to the quotes server has dropped. The scanner is halted. Attempting to reconnect...'}
-            </span>
+            <AlertTriangle className={`w-5 h-5 shrink-0 ${marketState === 'DELAYED' ? 'text-warning' : 'text-risk'}`} />
+            <div className="flex flex-col">
+              <span className={`text-sm font-bold ${marketState === 'DELAYED' ? 'text-warning' : 'text-risk'}`}>
+                {marketState === 'DELAYED' ? 'Market Data Feed is Delayed' : 'Data Feed Disconnected'}
+              </span>
+              <span className="text-sm text-text-muted mt-0.5">
+                {marketState === 'DELAYED'
+                  ? 'Quotes are running 15 minutes behind. Scanner is paused. Do not use for live trading decisions until feed catches up.'
+                  : 'Connection to the quotes server has dropped. The scanner is halted. Attempting to reconnect...'}
+              </span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Metric 1 */}
         <div className="bg-surface p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
           <div className="flex flex-col">
-            <span className="text-xs uppercase text-text-muted font-bold tracking-wider">Today's Net P&L</span>
+            <span className="text-xs uppercase text-text-muted font-bold tracking-wider">Today&apos;s Net P&L</span>
             <span className="text-xs text-text-muted mt-1 truncate">Calculated from manual journal</span>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
@@ -230,7 +204,7 @@ export default function DashboardPage() {
                             const linkedSignal = activeSignals.find(s => s.id === trade.signalId)
                             const stopPrice = linkedSignal ? linkedSignal.stop : (trade.direction === 'LONG' ? trade.entryPrice * 0.99 : trade.entryPrice * 1.01)
                             const t1Price = linkedSignal ? linkedSignal.targets.t1 : (trade.direction === 'LONG' ? trade.entryPrice * 1.02 : trade.entryPrice * 0.98)
-                            
+
                             return (
                               <>
                                 <span className="text-risk font-medium">SL: ₹{stopPrice.toFixed(2)}</span>
@@ -264,11 +238,11 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between border-b border-border pb-4">
             <div className="flex items-center gap-2">
               <History className="text-primary w-5 h-5" />
-              <h3 className="text-base font-bold text-text tracking-tight">Today's Trade Log</h3>
+              <h3 className="text-base font-bold text-text tracking-tight">Today&apos;s Trade Log</h3>
             </div>
             <a className="text-[10px] uppercase text-primary font-bold hover:underline" href="/dashboard/journal">Full Journal</a>
           </div>
-          
+
           <div className="relative pl-5 space-y-5 before:absolute before:left-1.75 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
             <div className="relative">
               <div className="absolute left-[-1.25rem] top-1.5 w-2 h-2 rounded-full bg-primary ring-4 ring-surface"></div>
@@ -298,5 +272,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-  )
+      )
 }

@@ -66,7 +66,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
             <span className="text-on-surface-variant">Planned Entry</span>
             <span className="text-on-surface font-semibold">₹{signal.entryZone?.low?.toFixed(2)} – ₹{signal.entryZone?.high?.toFixed(2)}</span>
           </div>
-          <div className="flex items-center justify-between font-label-numeric-sm text-label-numeric-sm border-t border-outline-variant/30 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-1 font-label-numeric-sm text-label-numeric-sm border-t border-outline-variant/30 pt-1">
             <div className="flex items-center gap-1">
               <span className="text-on-surface-variant">Stop-Loss:</span>
               <span className="px-1.5 py-0.2 rounded bg-error-container text-error font-semibold">

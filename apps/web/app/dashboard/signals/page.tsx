@@ -14,7 +14,7 @@ export default function SignalsPage() {
   const signals = activeTab === "long" ? longSignals : activeTab === "short" ? shortSignals : contextSignals
 
   return (
-    <div className="px-space-xl py-space-lg flex flex-col gap-space-lg max-w-[1720px] mx-auto w-full">
+    <div className="px-space-md sm:px-space-xl py-space-md sm:py-space-lg flex flex-col gap-space-lg max-w-[1720px] mx-auto w-full">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-xs border-b border-outline-variant/30">
         <div className="flex flex-col">
           <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight flex items-center gap-space-xs">
@@ -35,7 +35,7 @@ export default function SignalsPage() {
             </div>
           </div>
           
-          <div className="flex items-center gap-1 bg-surface-container p-1 rounded-lg text-body-sm">
+          <div className="flex flex-wrap items-center gap-1 bg-surface-container p-1 rounded-lg text-body-sm">
             <button 
               onClick={() => setActiveTab("all")}
               className={`px-3 py-1 rounded text-body-sm transition-all ${activeTab === 'all' ? 'font-semibold bg-surface-container-lowest text-primary shadow-xs' : 'text-on-surface-variant hover:text-on-surface'}`}

@@ -77,18 +77,18 @@
 
 ---
 
-## Angel One Market Data Integration (Phase 4) `planned`
+## Angel One Market Data Integration (Phase 4) `in-progress`
 
 **Intent**: Integrate Angel One's SmartAPI as the real market data source for the Scanner Worker, discarding mock data.
 **Done when**: The worker maintains a stable WebSocket connection to Angel One, normalizes ticks into 1m/5m candles, and the strategy engine acts on this verified real market data.
 
-- [ ] Design it (spec): [0005](../specs/0005-angel-one-market-data.md)
-- [ ] Build it: /develop Angel One Market Data Integration
-  - [ ] Define Provider interface and canonical domain types (AC-3, AC-4)
-  - [ ] Implement TickNormalizer and CandleAggregator (AC-3, AC-4)
-  - [ ] Create AngelOneMarketDataProvider with SmartAPI SDK (AC-1, AC-2)
-  - [ ] Implement reconnect state machine (AC-5)
-  - [ ] Wire provider into Scanner, flush FeedHealth to Supabase (AC-1, AC-4, AC-6, AC-8)
-  - [ ] Implement live smoke-test CLI script (AC-7)
-- [ ] Verify it: /check verify
-- [ ] Test it: /test
+- [x] Design it (spec): [0005](../specs/0005-angel-one-market-data/index.md)
+- [x] Build it: /develop Angel One Market Data Integration
+  - [x] Define Provider interface and canonical domain types (AC-3, AC-4)
+  - [x] Implement TickNormalizer and CandleAggregator (AC-3, AC-4)
+  - [x] Create AngelOneMarketDataProvider with SmartAPI SDK (AC-1, AC-2)
+  - [x] Implement reconnect state machine (AC-5)
+  - [x] Wire provider into Scanner, flush FeedHealth to Supabase (AC-1, AC-4, AC-6, AC-8)
+  - [x] Implement live smoke-test CLI script (AC-7)
+- [x] Verify it: /check verify
+- [x] Test it: /test

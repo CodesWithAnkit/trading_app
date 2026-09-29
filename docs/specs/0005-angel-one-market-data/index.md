@@ -1,15 +1,11 @@
 # 0005. Angel One SmartAPI Market Data Integration
 
 **Date**: 2026-09-29
-**Status**: Proposed
+**Status**: Accepted
 
 ## Summary
 
 This specification outlines the Phase 4 implementation to integrate Angel One's SmartAPI as the real market data source for the Scanner Worker. It replaces the local mock feed with real NSE cash-equity data while preserving the existing strategy boundaries and ensuring no broker trading execution or secret leakage to the browser. The integration relies on the official SmartAPI JavaScript SDK and implements robust WebSocket lifecycle management, tick normalization, and candle aggregation.
-
-## Context
-
-Phase 3 established the backend infrastructure (NestJS worker, Supabase) using a simulated market data feed. To move towards a live trading assistant, we must ingest real market data. However, this introduces challenges: maintaining a stable WebSocket connection, processing high-throughput ticks without overwhelming the database, isolating secrets from the client, and ensuring the strategy engine only acts on high-quality, verified data. A strict boundary must be maintained to prevent accidental live trade execution, as this product remains a decision-support application (paper strategy with manual execution).
 
 ## Requirements
 
@@ -26,33 +22,6 @@ Phase 3 established the backend infrastructure (NestJS worker, Supabase) using a
 - **AC-6**: `FeedHealth` is monitored and flushed to Supabase on state changes or every 60 seconds. The strategy engine receives data only when the feed is healthy (`Live`).
 - **AC-7**: A live smoke-test command (`npm run scanner:angelone:smoke`) verifies connectivity, tick processing, and feed health without writing to the database or evaluating strategy.
 - **AC-8**: The system explicitly blocks and audits against any usage of broker order endpoints (e.g., `placeOrder`, `funds`, `holdings`).
-
-## Options considered
-
-### Option 1: Official SmartAPI SDK
-Use the `smartapi-javascript` SDK provided by Angel One.
-**Pros**:
-- Handles the intricacies of authentication, session management, and feed token generation automatically.
-- Maintained by the broker, receiving updates for protocol changes.
-**Cons**:
-- SDK quality and type definitions can sometimes be inconsistent.
-
-### Option 2: Raw REST / WebSocket Implementation
-Implement raw API calls directly using `ws` or `socket.io-client`.
-**Pros**:
-- Total control over the WebSocket implementation and reduced dependency bloat.
-**Cons**:
-- High maintenance burden to manually handle feed tokens, ping/pong heartbeats, and binary tick parsing.
-
-## Decision
-
-**Chosen option**: Option 1: Official SmartAPI SDK
-
-We will integrate the official `smartapi-javascript` SDK within a dedicated `AngelOneMarketDataProvider` class that implements a generic internal `MarketDataProvider` interface. This shields the rest of the application from vendor-specific types.
-
-## Rationale
-
-The official SDK minimizes the risk of protocol parsing errors and reduces the boilerplate needed for authentication and feed token management. By wrapping the SDK in a strict adapter boundary (`AngelOneMarketDataProvider`), we mitigate the risk of SDK implementation details leaking into our domain logic. The data model decision to discard raw ticks and only persist aggregated candles significantly reduces Supabase storage costs and write contention, prioritizing the strategy engine's need for clean, aggregated intervals.
 
 ## Feature design
 
@@ -99,13 +68,13 @@ The official SDK minimizes the risk of protocol parsing errors and reduces the b
 
 ## Build plan
 
-1. Define `MarketDataProvider` interface and canonical domain types (`MarketTick`, `Candle`, `FeedHealth`), satisfies **AC-3, AC-4**
-2. Implement `TickNormalizer` and `CandleAggregator` utilities with unit tests, satisfies **AC-3, AC-4**
-3. Create `AngelOneMarketDataProvider` wrapping the `smartapi-javascript` SDK, implementing auth and WebSocket connection logic, satisfies **AC-1, AC-2**
-4. Implement reconnect state machine with exponential backoff inside the provider, satisfies **AC-5**
-5. Connect `AngelOneMarketDataProvider` to Supabase to flush `FeedHealth` (on change or 60s) and persist `Candle` records, satisfies **AC-4, AC-6**
-6. Wire the provider into the Scanner module, replacing the mock provider conditionally based on `MARKET_DATA_PROVIDER`, satisfies **AC-1, AC-8**
-7. Implement the live smoke-test CLI script, satisfies **AC-7**
+1. Define `MarketDataProvider` interface and canonical domain types (`MarketTick`, `Candle`, `FeedHealth`), satisfies **AC-3, AC-4** [x]
+2. Implement `TickNormalizer` and `CandleAggregator` utilities with unit tests, satisfies **AC-3, AC-4** [x]
+3. Create `AngelOneMarketDataProvider` wrapping the `smartapi-javascript` SDK, implementing auth and WebSocket connection logic, satisfies **AC-1, AC-2** [x]
+4. Implement reconnect state machine with exponential backoff inside the provider, satisfies **AC-5** [x]
+5. Connect `AngelOneMarketDataProvider` to Supabase to flush `FeedHealth` (on change or 60s) and persist `Candle` records, satisfies **AC-4, AC-6** [x]
+6. Wire the provider into the Scanner module, replacing the mock provider conditionally based on `MARKET_DATA_PROVIDER`, satisfies **AC-1, AC-8** [x]
+7. Implement the live smoke-test CLI script, satisfies **AC-7** [x]
 
 ## Consequences
 
@@ -125,9 +94,3 @@ The official SDK minimizes the risk of protocol parsing errors and reduces the b
 
 - [ ] Ensure `AGENTS.md` in `apps/backend` reflects any new patterns introduced for external WebSocket management once implemented.
 - [ ] Monitor memory usage of the NestJS worker over a full trading session to ensure the tick buffer and candle aggregation do not leak memory.
-
-## References
-
-**Project sources**:
-- Phase 4 PRD (`docs/Phase 4 — Angel One SmartAPI Market Data Integration.md`)
-- Architecture guidelines and conventions in `AGENTS.md`
