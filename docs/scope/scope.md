@@ -8,7 +8,9 @@
 | Intraday Stock Tracker Dashboard UI | done |
 | Remaining Intraday Dashboard Pages | done |
 | Real API Implementation (Phase 3) | done |
-| Angel One Market Data Integration (Phase 4) | planned |
+| Angel One Market Data Integration (Phase 4) | done |
+| Live Dashboard Integration (Phase 4B) | in-progress |
+| Live Market and Scanner UI (Phase 4C) | in-progress |
 
 ---
 
@@ -77,7 +79,7 @@
 
 ---
 
-## Angel One Market Data Integration (Phase 4) `in-progress`
+## Angel One Market Data Integration (Phase 4) `done`
 
 **Intent**: Integrate Angel One's SmartAPI as the real market data source for the Scanner Worker, discarding mock data.
 **Done when**: The worker maintains a stable WebSocket connection to Angel One, normalizes ticks into 1m/5m candles, and the strategy engine acts on this verified real market data.
@@ -92,3 +94,37 @@
   - [x] Implement live smoke-test CLI script (AC-7)
 - [x] Verify it: /check verify
 - [x] Test it: /test
+
+---
+
+## Live Dashboard Integration (Phase 4B) `in-progress`
+
+**Intent**: Connect the real Angel One market data pipeline end to end through the dashboard, replacing all mock/hardcoded data with live scanner output.
+**Done when**: The dashboard shows real stock prices, real market status, real candles, and real signals (or an honest empty state) sourced from the live Angel One feed, with scanner diagnostics visible in development.
+
+- [x] Design it (spec): [0006](../specs/0006-live-dashboard-integration/index.md)
+- [x] Build it: /develop Live Dashboard Integration
+  - [x] Instruments table, token resolution, and session clock (AC-1, AC-6)
+  - [x] Market status and market watch APIs with in memory tick storage (AC-2, AC-4, AC-9)
+  - [x] Dashboard context rewrite and MarketWatch component (AC-2, AC-3, AC-4)
+  - [x] Strategy engine port to backend and candles API (AC-5, AC-8)
+  - [x] Scanner diagnostics and mock path validation (AC-7, AC-10)
+- [ ] Verify it: /check verify
+- [ ] Test it: /test
+
+---
+
+## Live Market and Scanner UI (Phase 4C) `in-progress`
+
+**Intent**: Implement the approved Stitch design for live market data and scanner visualization UI, adding Markets and Stock Detail pages and updating the dashboard to consume real data.
+**Done when**: The dashboard, Markets page, and Stock Detail page show real market data from the backend APIs with proper loading, error, and market closed states, and all existing routes continue working.
+
+- [x] Design it (spec): [0007](../specs/0007-live-market-ui/index.md)
+- [x] Build it: /develop Live Market and Scanner UI
+  - [x] MarketDataContext, MarketStatusBadge, and sidebar update (AC-1, AC-9)
+  - [x] Dashboard cards, scanner summary, market watch, and signals sections (AC-2, AC-3, AC-4, AC-5)
+  - [x] Markets page with pipeline, feed health, and candle engine (AC-6, AC-7)
+  - [x] Stock Detail page with chart, metrics, scanner evaluation, and setup (AC-8)
+  - [x] Loading, error, responsive, accessibility, and mock mode (AC-10, AC-11, AC-15, AC-16, AC-17)
+- [ ] Verify it: /check verify
+- [ ] Test it: /test

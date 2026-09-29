@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#f8f9ff","surface-tint":"#2151da","on-tertiary-container":"#ffcaae","surface":"#f8f9ff","surface-container-highest":"#d5e3fb","on-error":"#ffffff","surface-container-low":"#eff4ff","surface-container":"#e5eeff","on-primary-fixed":"#001551","primary-container":"#1d4ed8","on-tertiary-fixed":"#331200","on-primary-fixed-variant":"#0039b5","on-error-container":"#93000a","inverse-on-surface":"#eaf1ff","on-primary-container":"#cad3ff","surface-container-high":"#dce9ff","on-secondary-fixed-variant":"#00513a","surface-container-lowest":"#ffffff","on-primary":"#ffffff","primary":"#0037b0","secondary-fixed":"#97f5cc","on-tertiary-fixed-variant":"#763300","primary-fixed-dim":"#b7c4ff","inverse-primary":"#b7c4ff","outline":"#747686","tertiary-container":"#984300","secondary-fixed-dim":"#7bd8b1","secondary-container":"#97f5cc","surface-dim":"#cddbf2","inverse-surface":"#233143","on-background":"#0e1c2d","outline-variant":"#c4c5d7","tertiary-fixed-dim":"#ffb68e","error":"#ba1a1a","tertiary-fixed":"#ffdbca","primary-fixed":"#dce1ff","tertiary":"#733100","background":"#f8f9ff","on-tertiary":"#ffffff","on-secondary-fixed":"#002115","on-surface":"#0e1c2d","surface-variant":"#d5e3fb","on-secondary-container":"#007353","error-container":"#ffdad6","on-secondary":"#ffffff","secondary":"#006c4e","on-surface-variant":"#434655"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xl":"1.5rem","space-lg":"1rem","space-xs":"0.25rem","space-sm":"0.5rem","space-md":"0.75rem",gutter:"0.75rem",margin:"1rem"},fontFamily:{"body-sm":["Inter"],"body-lg":["Inter"],"label-numeric-sm":["JetBrains Mono"],"headline-lg":["Inter"],"label-numeric-md":["JetBrains Mono"],"label-numeric-lg":["JetBrains Mono"],"label-caps":["Inter"],"display-lg":["Inter"],"body-md":["Inter"],"headline-sm":["Inter"]},fontSize:{"body-sm":["0.8125rem",{lineHeight:"1.125rem",fontWeight:"400"}],"body-lg":["0.9375rem",{lineHeight:"1.375rem",fontWeight:"500"}],"label-numeric-sm":["0.75rem",{lineHeight:"1rem",letterSpacing:"0em",fontWeight:"500"}],"headline-lg":["1.5rem",{lineHeight:"2rem",fontWeight:"600"}],"label-numeric-md":["0.875rem",{lineHeight:"1.25rem",letterSpacing:"-0.01em",fontWeight:"500"}],"label-numeric-lg":["1.25rem",{lineHeight:"1.5rem",letterSpacing:"-0.02em",fontWeight:"600"}],"label-caps":["0.6875rem",{lineHeight:"0.875rem",letterSpacing:"0.06em",fontWeight:"700"}],"display-lg":["2rem",{lineHeight:"2.5rem",fontWeight:"700"}],"body-md":["0.875rem",{lineHeight:"1.25rem",fontWeight:"400"}],"headline-sm":["1.125rem",{lineHeight:"1.5rem",fontWeight:"600"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[248px] bg-surface-container-lowest border-r border-outline-variant/40 z-50 flex flex-col justify-between select-none"><div class="flex flex-col"><div class="h-14 px-space-lg flex items-center gap-space-sm border-b border-outline-variant/30"><img alt="Intraday Stock Tracker Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UxFa8RRW4xfGiHV7iI7l2LxYdqev9pMB-L13Bem3d6LpuiYwf4Daj00kNk8RUnwQJAM_1JSx0WsedV2pkz4vNp1cDuFu7bp5BF-yu7-98fuaasD9CFM7PgizzF-dCwHYXipShIP3LDo9zMrHsOUiCI1lUrC4c_GOHS89fUjn1UdnnYaxbirC8bQpHLHSVewNYB2dRQ8nTK50v-J7DJf6H2nbY19QAOgkwuzNH7Th3KkJDCBcnnHXmuVQ"/><div class="flex flex-col min-w-0 leading-none"><span class="font-headline-sm text-body-lg text-on-surface font-semibold truncate tracking-tight">Intraday Tracker</span><span class="font-label-caps text-label-caps text-on-surface-variant truncate uppercase">NSE Cash Decision Support</span></div></div><nav class="p-space-sm flex flex-col gap-1" data-active-classes="bg-surface-container-high text-primary font-semibold"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dashboard" href="#"><span class="font-body-md text-body-md truncate">Dashboard</span></a><a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm rounded-lg transition-colors bg-surface-container-high text-primary font-semibold" data-path="markets" href="#"><span class="font-body-md text-body-md truncate">Markets</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="signals" href="#"><span class="font-body-md text-body-md truncate">Signals</span><span class="px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-numeric-sm text-label-numeric-sm">2 active</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="trades" href="#"><span class="font-body-md text-body-md truncate">Trades</span><span class="px-1.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-numeric-sm text-label-numeric-sm">2 open</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="journal" href="#"><span class="font-body-md text-body-md truncate">Journal</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="performance" href="#"><span class="font-body-md text-body-md truncate">Performance</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="font-body-md text-body-md truncate">Settings</span></a></nav></div><div class="p-space-sm border-t border-outline-variant/30"><div class="p-space-sm rounded-lg bg-surface-container-low border border-outline-variant/40 flex items-start gap-space-xs"><span class="material-symbols-outlined text-secondary text-[18px] mt-0.5 shrink-0">verified_user</span><div class="flex flex-col min-w-0"><span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider font-bold">Safe Execution Mode</span><span class="font-body-sm text-body-sm text-on-surface-variant leading-tight truncate mt-0.5">Manual Journal Only · No Broker Order Triggered</span></div></div></div></aside><div class="pl-[248px]"><header class="fixed top-0 left-[248px] right-0 h-14 bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant/40 z-40 px-space-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md min-w-0"><div class="flex items-center gap-2 px-space-sm py-1 rounded bg-secondary-fixed/30 border border-secondary-fixed shrink-0"><span class="flex h-2 w-2 relative"><span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span></span><span class="font-label-caps text-label-caps text-secondary font-bold uppercase tracking-wider">LIVE</span><span class="font-label-numeric-sm text-label-numeric-sm text-on-surface border-l border-outline-variant/40 pl-2 whitespace-nowrap">Angel One SmartAPI · IST 03:29:59 PM · Freshness 0.8s</span></div><div class="relative w-72 lg:w-96"><span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span><input class="w-full h-8 pl-8 pr-8 rounded bg-surface border border-outline-variant/50 font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20" placeholder="Search eligible NSE cash equities (e.g. RELIANCE, HDFCBANK)..." type="text"/><kbd class="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-label-numeric-sm text-on-surface-variant bg-surface-container border border-outline-variant/40 rounded">⌘K</kbd></div></div><div class="flex items-center gap-space-md shrink-0"><button class="relative p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="h-4 w-px bg-outline-variant/40"></div><div class="flex items-center gap-space-sm"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwnqcbM0hYSSkxrEym_0ya38soh7OTs3LYBkI0SHvd0fuIvGgwtxIycRh5a7sUjUptUmlYFLcqnkQqYxjHWTA9zd5RJ9SMc4Q0lJL-tGYaX64OqehqOkokPLyrbmC3skSuG5QlJxlDnOlR5C6AGp40rSn11eIzQPH7SuikO_qvaFBg9CUfZYPqS7YwdpqwelEoypoPc0fKICOPL5sWKg4lk-of1k0EPACOse1OPAyE93Frw2nbGP5f"/><div class="flex flex-col text-left leading-tight"><span class="font-body-sm text-body-sm font-semibold text-on-surface truncate">Ankit Sharma</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Intraday Equity</span></div></div></div></header><main class="relative pt-14 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- Content Canvas Area -->
+<div class="p-space-lg lg:p-space-xl flex flex-col gap-space-lg max-w-[1720px] mx-auto w-full">
+<!-- Section 1: Breadcrumb, Live Ticker Header & Action Strip -->
+<header class="flex flex-col gap-space-md">
+<!-- Breadcrumb Navigation -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant">
+<a class="text-primary hover:text-on-primary-fixed-variant transition-colors flex items-center gap-1 font-medium" href="#">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            Back to Markets
+          </a>
+<span class="text-outline-variant">/</span>
+<span class="text-on-surface-variant">NSE Cash</span>
+<span class="text-outline-variant">/</span>
+<span class="font-headline-sm text-body-md text-on-surface font-semibold">RELIANCE</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
+            Eligible NSE Cash Universe · High Liquidity
+          </span>
+<span class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary-fixed/50 text-secondary font-label-numeric-sm text-label-numeric-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+            SmartAPI Feed: 0.8s
+          </span>
+</div>
+</div>
+<!-- Main Symbol Row -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-lg">
+<div class="flex flex-col md:flex-row items-start md:items-center gap-space-lg">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-sm">
+<h1 class="font-display-lg text-display-lg text-on-surface font-bold tracking-tight">RELIANCE</h1>
+<span class="px-2 py-1 rounded bg-secondary-container text-on-secondary-container font-label-caps text-label-caps uppercase font-bold tracking-wider">
+                ↑ Long Signal Active
+              </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+              Reliance Industries Ltd · NSE Cash Equity · ISIN: <span class="font-label-numeric-sm">INE002A01018</span>
+</p>
+</div>
+<!-- Vertical separator line -->
+<div class="hidden md:block w-px h-10 bg-outline-variant/50"></div>
+<!-- Price & Performance Snapshot -->
+<div class="flex items-baseline gap-space-md">
+<span class="font-label-numeric-lg text-display-lg font-bold text-on-surface tracking-tight">
+              ₹1,452.80
+            </span>
+<div class="flex items-center gap-1 text-secondary font-label-numeric-md text-label-numeric-md">
+<span class="material-symbols-outlined text-[18px]">trending_up</span>
+<span>+0.84% (+₹12.10 today)</span>
+</div>
+</div>
+</div>
+<!-- Quick Strategy Action -->
+<div class="flex items-center gap-space-sm w-full lg:w-auto justify-end">
+<div class="hidden sm:flex flex-col text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">
+<span>IST 03:29:59 PM</span>
+<span class="text-secondary font-medium">Session Close Window</span>
+</div>
+<a class="px-space-md py-2 rounded-lg bg-primary text-on-primary hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-1 font-body-sm text-body-sm font-semibold shadow-sm" href="#">
+<span>View Active Signal Plan</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</header>
+<!-- Section 2: Two-Column Trading Cockpit Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- ================= LEFT COLUMN: Visual Chart & Detailed Matrix (65% ~ 8 cols) ================= -->
+<div class="lg:col-span-8 flex flex-col gap-space-lg min-w-0">
+<!-- Visual Price Chart Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Chart Header & Interactive Ribbon -->
+<div class="p-space-md bg-surface-container-low/60 flex flex-wrap items-center justify-between gap-space-sm">
+<!-- Timeframe Selector -->
+<div class="flex items-center bg-surface-container rounded-lg p-0.5" id="tf-group">
+<button class="px-3 py-1 rounded font-label-numeric-sm text-label-numeric-sm text-on-surface-variant hover:text-on-surface transition-colors" onclick="switchTf(this, '1m')">1m</button>
+<button class="px-3 py-1 rounded bg-surface-container-lowest text-primary font-semibold shadow-sm font-label-numeric-sm text-label-numeric-sm" onclick="switchTf(this, '5m')">5m</button>
+<button class="px-3 py-1 rounded font-label-numeric-sm text-label-numeric-sm text-on-surface-variant hover:text-on-surface transition-colors" onclick="switchTf(this, '15m')">15m</button>
+</div>
+<!-- Candle Bar Realtime OHLCV Strip -->
+<div class="flex items-center gap-space-md font-label-numeric-sm text-label-numeric-sm text-on-surface-variant overflow-x-auto whitespace-nowrap">
+<span>O: <strong class="text-on-surface">₹1,450.20</strong></span>
+<span>H: <strong class="text-on-surface">₹1,453.50</strong></span>
+<span>L: <strong class="text-on-surface">₹1,449.80</strong></span>
+<span>C: <strong class="text-secondary font-bold">₹1,452.80</strong></span>
+<span class="text-outline">|</span>
+<span>Vol: <strong class="text-on-surface">145K</strong></span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant text-[11px]">5m Candle</span>
+</div>
+</div>
+<!-- Chart Area with Overlay Levels & Volume -->
+<div class="relative w-full h-[440px] bg-surface-container-lowest p-space-md select-none overflow-hidden flex flex-col justify-between">
+<!-- Background Grid & Candle SVG Visualization -->
+<div class="relative flex-1 w-full">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 880 340" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient id="entryZoneGrad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#2151da" stop-opacity="0.12"></stop>
+<stop offset="100%" stop-color="#2151da" stop-opacity="0.03"></stop>
+</lineargradient>
+</defs>
+<!-- Horizontal Price Grid Reference Lines -->
+<line opacity="0.6" stroke="#d5e3fb" stroke-dasharray="2 3" stroke-width="1" x1="0" x2="880" y1="40" y2="40"></line>
+<line opacity="0.6" stroke="#d5e3fb" stroke-dasharray="2 3" stroke-width="1" x1="0" x2="880" y1="100" y2="100"></line>
+<line opacity="0.6" stroke="#d5e3fb" stroke-dasharray="2 3" stroke-width="1" x1="0" x2="880" y1="170" y2="170"></line>
+<line opacity="0.6" stroke="#d5e3fb" stroke-dasharray="2 3" stroke-width="1" x1="0" x2="880" y1="240" y2="240"></line>
+<line opacity="0.6" stroke="#d5e3fb" stroke-dasharray="2 3" stroke-width="1" x1="0" x2="880" y1="300" y2="300"></line>
+<!-- Entry Shaded Zone: ₹1,450.00 – ₹1,454.00 (y ~ 140 to 180) -->
+<rect fill="url(#entryZoneGrad)" height="38" width="880" x="0" y="142"></rect>
+<!-- Technical Indicator EMA 20 & VWAP Lines -->
+<!-- VWAP Line (~1,446.50 -> y ~ 210) -->
+<path d="M 0,225 Q 220,220 440,215 T 880,208" fill="none" opacity="0.85" stroke="#733100" stroke-dasharray="4 4" stroke-width="1.5"></path>
+<!-- EMA-20 Trend -->
+<path d="M 0,250 C 200,240 400,210 600,185 S 800,165 880,158" fill="none" opacity="0.9" stroke="#2151da" stroke-width="1.8"></path>
+<!-- OVERLAY LEVEL 1: Target 2 (₹1,482.00) -->
+<line stroke="#006c4e" stroke-dasharray="4 3" stroke-width="1.5" x1="0" x2="880" y1="35" y2="35"></line>
+<!-- OVERLAY LEVEL 2: Target 1 (₹1,468.00) -->
+<line stroke="#006c4e" stroke-width="1.5" x1="0" x2="880" y1="95" y2="95"></line>
+<!-- OVERLAY LEVEL 3: Stop-Loss (₹1,438.00) -->
+<line stroke="#ba1a1a" stroke-width="1.5" x1="0" x2="880" y1="290" y2="290"></line>
+<!-- OVERLAY LEVEL 4: Active LTP Marker (₹1,452.80) -->
+<line stroke="#0037b0" stroke-dasharray="2 2" stroke-width="1" x1="0" x2="880" y1="152" y2="152"></line>
+<!-- Candlestick Visual Series (Historical to Real-Time 5m) -->
+<!-- 1. 02:20 PM Red Candle -->
+<line stroke="#ba1a1a" stroke-width="1" x1="45" x2="45" y1="225" y2="265"></line>
+<rect fill="#ba1a1a" height="20" rx="1" width="10" x="40" y="235"></rect>
+<!-- 2. 02:25 PM Green Candle -->
+<line stroke="#006c4e" stroke-width="1" x1="95" x2="95" y1="220" y2="255"></line>
+<rect fill="#006c4e" height="22" rx="1" width="10" x="90" y="228"></rect>
+<!-- 3. 02:30 PM Doji / Indecision -->
+<line stroke="#434655" stroke-width="1" x1="145" x2="145" y1="218" y2="242"></line>
+<rect fill="#434655" height="4" rx="1" width="10" x="140" y="228"></rect>
+<!-- 4. 02:35 PM Red Pullback -->
+<line stroke="#ba1a1a" stroke-width="1" x1="195" x2="195" y1="222" y2="260"></line>
+<rect fill="#ba1a1a" height="20" rx="1" width="10" x="190" y="230"></rect>
+<!-- 5. 02:40 PM Support Bounce -->
+<line stroke="#006c4e" stroke-width="1" x1="245" x2="245" y1="228" y2="268"></line>
+<rect fill="#006c4e" height="24" rx="1" width="10" x="240" y="234"></rect>
+<!-- 6. 02:45 PM Green Continuation -->
+<line stroke="#006c4e" stroke-width="1" x1="295" x2="295" y1="210" y2="248"></line>
+<rect fill="#006c4e" height="22" rx="1" width="10" x="290" y="215"></rect>
+<!-- 7. 02:50 PM Small Consolidation -->
+<line stroke="#ba1a1a" stroke-width="1" x1="345" x2="345" y1="205" y2="230"></line>
+<rect fill="#ba1a1a" height="12" rx="1" width="10" x="340" y="212"></rect>
+<!-- 8. 02:55 PM Higher Low Formation -->
+<line stroke="#006c4e" stroke-width="1" x1="395" x2="395" y1="198" y2="225"></line>
+<rect fill="#006c4e" height="15" rx="1" width="10" x="390" y="202"></rect>
+<!-- 9. 03:00 PM Breakout Base 1 -->
+<line stroke="#006c4e" stroke-width="1" x1="445" x2="445" y1="190" y2="220"></line>
+<rect fill="#006c4e" height="20" rx="1" width="10" x="440" y="194"></rect>
+<!-- 10. 03:05 PM Bullish Push -->
+<line stroke="#006c4e" stroke-width="1" x1="495" x2="495" y1="180" y2="210"></line>
+<rect fill="#006c4e" height="18" rx="1" width="10" x="490" y="184"></rect>
+<!-- 11. 03:10 PM Test of Resistance -->
+<line stroke="#ba1a1a" stroke-width="1" x1="545" x2="545" y1="172" y2="202"></line>
+<rect fill="#ba1a1a" height="14" rx="1" width="10" x="540" y="176"></rect>
+<!-- 12. 03:15 PM High RVOL Setup Trigger Candle -->
+<line stroke="#006c4e" stroke-width="1.5" x1="595" x2="595" y1="158" y2="190"></line>
+<rect fill="#006c4e" height="24" rx="1" width="12" x="589" y="162"></rect>
+<!-- 13. 03:20 PM Expansion Candle -->
+<line stroke="#006c4e" stroke-width="1.5" x1="645" x2="645" y1="148" y2="178"></line>
+<rect fill="#006c4e" height="22" rx="1" width="12" x="639" y="152"></rect>
+<!-- 14. 03:25 PM Momentum Confirmation Candle -->
+<line stroke="#006c4e" stroke-width="1.5" x1="695" x2="695" y1="145" y2="168"></line>
+<rect fill="#006c4e" height="16" rx="1" width="12" x="689" y="148"></rect>
+<!-- 15. 03:29 PM Active Live Candle -->
+<line stroke="#006c4e" stroke-width="2" x1="745" x2="745" y1="146" y2="162"></line>
+<rect fill="#006c4e" height="10" rx="1" width="12" x="739" y="150"></rect>
+<!-- Live Pulse Dot on active candle -->
+<circle cx="745" cy="152" fill="#2151da" r="4"></circle>
+<circle cx="745" cy="152" fill="#2151da" opacity="0.35" r="8">
+<animate attributename="r" dur="2s" repeatcount="indefinite" values="4;10;4"></animate>
+<animate attributename="opacity" dur="2s" repeatcount="indefinite" values="0.4;0.0;0.4"></animate>
+</circle>
+</svg>
+<!-- Strategy Overlaid Level Badges (DOM Elements for Crisp Typography) -->
+<!-- Target 2 Badge -->
+<div class="absolute right-2 top-[32px] -translate-y-1/2 flex items-center gap-1.5 px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-numeric-sm text-label-numeric-sm font-semibold shadow-sm">
+<span>Target 2: ₹1,482.00</span>
+<span class="text-[10px] opacity-80">(+1.97R)</span>
+</div>
+<!-- Target 1 Badge -->
+<div class="absolute right-2 top-[95px] -translate-y-1/2 flex items-center gap-1.5 px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-label-numeric-sm text-label-numeric-sm font-semibold shadow-sm">
+<span>Target 1: ₹1,468.00</span>
+<span class="text-[10px] opacity-80">(+1.03R)</span>
+</div>
+<!-- Entry Zone Pill -->
+<div class="absolute left-3 top-[152px] -translate-y-1/2 flex items-center gap-1.5 px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-label-numeric-sm text-label-numeric-sm font-semibold">
+<span>Entry Zone: ₹1,450.00 – ₹1,454.00</span>
+</div>
+<!-- Active LTP Price Marker -->
+<div class="absolute right-2 top-[152px] -translate-y-1/2 flex items-center gap-2 px-2.5 py-1 rounded bg-primary text-on-primary font-label-numeric-sm text-label-numeric-sm font-bold shadow-md">
+<span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+<span>LTP ₹1,452.80</span>
+</div>
+<!-- Stop-Loss Badge -->
+<div class="absolute right-2 top-[290px] -translate-y-1/2 flex items-center gap-1.5 px-2 py-0.5 rounded bg-error-container text-on-error-container font-label-numeric-sm text-label-numeric-sm font-semibold shadow-sm">
+<span>Stop-Loss: ₹1,438.00</span>
+<span class="text-[10px] opacity-80">(Risk ₹14.80)</span>
+</div>
+<!-- Legend Inset Indicator -->
+<div class="absolute left-3 bottom-2 flex items-center gap-space-md text-[11px] font-label-numeric-sm text-on-surface-variant bg-surface-container-lowest/80 px-2 py-1 rounded backdrop-blur-sm">
+<div class="flex items-center gap-1">
+<span class="w-3 h-0.5 bg-primary"></span>
+<span>EMA-20</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-3 h-0.5 border-t border-dashed border-tertiary"></span>
+<span>Intraday VWAP</span>
+</div>
+</div>
+</div>
+<!-- Volume Histogram Sub-Panel -->
+<div class="h-20 w-full pt-2 flex flex-col justify-end">
+<div class="flex items-center justify-between font-label-caps text-label-caps text-on-surface-variant px-1 mb-1">
+<span>Volume Breakdown (5m bars)</span>
+<span class="text-secondary font-semibold">RVOL 1.82x (Surge Confirmed)</span>
+</div>
+<svg class="w-full h-12" preserveaspectratio="none" viewbox="0 0 880 50" xmlns="http://www.w3.org/2000/svg">
+<!-- Volume baseline -->
+<line stroke="#d5e3fb" stroke-width="1" x1="0" x2="880" y1="48" y2="48"></line>
+<!-- Threshold RVOL line -->
+<line opacity="0.4" stroke="#747686" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="880" y1="20" y2="20"></line>
+<!-- Normal volume bars -->
+<rect fill="#ba1a1a" height="16" opacity="0.6" width="10" x="40" y="32"></rect>
+<rect fill="#006c4e" height="20" opacity="0.6" width="10" x="90" y="28"></rect>
+<rect fill="#434655" height="10" opacity="0.5" width="10" x="140" y="38"></rect>
+<rect fill="#ba1a1a" height="18" opacity="0.6" width="10" x="190" y="30"></rect>
+<rect fill="#006c4e" height="22" opacity="0.6" width="10" x="240" y="26"></rect>
+<rect fill="#006c4e" height="26" opacity="0.6" width="10" x="290" y="22"></rect>
+<rect fill="#ba1a1a" height="14" opacity="0.5" width="10" x="340" y="34"></rect>
+<rect fill="#006c4e" height="20" opacity="0.6" width="10" x="390" y="28"></rect>
+<rect fill="#006c4e" height="24" opacity="0.6" width="10" x="440" y="24"></rect>
+<rect fill="#006c4e" height="28" opacity="0.7" width="10" x="490" y="20"></rect>
+<rect fill="#ba1a1a" height="18" opacity="0.6" width="10" x="540" y="30"></rect>
+<!-- Surge bars (Trigger and expansion candles) -->
+<rect fill="#006c4e" height="40" width="12" x="589" y="8"></rect>
+<rect fill="#006c4e" height="43" width="12" x="639" y="5"></rect>
+<rect fill="#006c4e" height="36" width="12" x="689" y="12"></rect>
+<rect fill="#006c4e" height="33" width="12" x="739" y="15"></rect>
+</svg>
+</div>
+</div>
+</div>
+<!-- Market Metrics Grid (8 Compact Telemetry Cards) -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-sm">
+<!-- Metric 1: Day Range -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Day Range</span>
+<div class="mt-2 flex flex-col">
+<span class="font-label-numeric-md text-label-numeric-md font-semibold text-on-surface">
+                ₹1,435.00 – 1,454.20
+              </span>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 88%;"></div>
+</div>
+</div>
+</div>
+<!-- Metric 2: 52-Week Range -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">52W Range</span>
+<div class="mt-2 flex flex-col">
+<span class="font-label-numeric-md text-label-numeric-md font-semibold text-on-surface">
+                ₹1,210.00 – 1,610.00
+              </span>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-outline h-full rounded-full" style="width: 61%;"></div>
+</div>
+</div>
+</div>
+<!-- Metric 3: Day Volume -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Day Volume</span>
+<div class="mt-2">
+<span class="font-label-numeric-md text-label-numeric-md font-semibold text-on-surface">2,420,150</span>
+<span class="block font-body-sm text-body-sm text-on-surface-variant text-[11px]">Shares traded</span>
+</div>
+</div>
+<!-- Metric 4: Relative Volume (RVOL) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">RVOL (5D Avg)</span>
+<span class="px-1.5 py-0.2 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-label-caps text-[10px]">High</span>
+</div>
+<div class="mt-2 flex items-baseline gap-1">
+<span class="font-label-numeric-md text-label-numeric-md font-bold text-secondary">1.82x</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant">&gt; 1.30x rule</span>
+</div>
+</div>
+<!-- Metric 5: 1m Momentum -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">1m Change</span>
+<div class="mt-2 flex items-center gap-1 font-label-numeric-md text-label-numeric-md font-semibold text-secondary">
+<span class="material-symbols-outlined text-[16px]">arrow_drop_up</span>
+<span>+0.12%</span>
+</div>
+</div>
+<!-- Metric 6: 5m Momentum -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">5m Change</span>
+<div class="mt-2 flex items-center gap-1 font-label-numeric-md text-label-numeric-md font-semibold text-secondary">
+<span class="material-symbols-outlined text-[16px]">arrow_drop_up</span>
+<span>+0.31%</span>
+</div>
+</div>
+<!-- Metric 7: VWAP Baseline -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Intraday VWAP</span>
+<div class="mt-2">
+<span class="font-label-numeric-md text-label-numeric-md font-semibold text-tertiary">₹1,446.50</span>
+<span class="block font-body-sm text-[11px] text-secondary font-medium">+₹6.30 above</span>
+</div>
+</div>
+<!-- Metric 8: Friction / Spread -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Spread Friction</span>
+<div class="mt-2">
+<span class="font-label-numeric-md text-label-numeric-md font-semibold text-on-surface">₹0.05</span>
+<span class="block font-body-sm text-[11px] text-secondary font-medium">Healthy (&lt; 0.02%)</span>
+</div>
+</div>
+</div>
+<!-- Safe Execution & Capital Discipline Notice -->
+<div class="rounded-xl p-space-md bg-surface-container-low flex items-start gap-space-sm shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px] shrink-0 mt-0.5">policy</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Personal Decision Support Notice</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 leading-relaxed">
+              Scanner outputs and pattern evaluations are strictly informational tools calculated from automated live criteria. Never risk intraday capital without independent chart validation and structured sizing. Intraday Tracker executes zero automatic broker transactions.
+            </p>
+</div>
+</div>
+</div>
+<!-- ================= RIGHT COLUMN: Active Signal, Qualification & History (35% ~ 4 cols) ================= -->
+<div class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- CARD 1: Current Setup / Active Signal Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col">
+<!-- Card Title & Expiry Ribbon -->
+<div class="p-space-md bg-secondary-container/40 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="font-headline-sm text-body-lg font-bold text-on-surface">Active Setup: ↑ Long</span>
+</div>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">
+              18m window left
+            </span>
+</div>
+<div class="p-space-lg flex flex-col gap-space-md">
+<!-- Pattern & Confidence Meter -->
+<div class="flex items-center justify-between pb-space-sm bg-surface-container-low/40 p-space-sm rounded-lg">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Model Pattern</span>
+<span class="block font-body-md text-body-md font-semibold text-on-surface">Breakout Momentum v1</span>
+</div>
+<div class="text-right">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Confidence</span>
+<div class="flex items-baseline justify-end gap-1">
+<span class="font-label-numeric-lg text-headline-sm font-bold text-primary">82</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">/ 100</span>
+</div>
+</div>
+</div>
+<!-- Sizing & Strategy Levels Breakdown Table -->
+<div class="flex flex-col gap-2 pt-1 font-label-numeric-sm text-label-numeric-sm">
+<div class="flex items-center justify-between py-1.5 px-2 rounded bg-surface">
+<span class="text-on-surface-variant">Entry Zone</span>
+<span class="font-semibold text-primary">₹1,450.00 – ₹1,454.00</span>
+</div>
+<div class="flex items-center justify-between py-1.5 px-2 rounded bg-surface">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="text-on-surface-variant">Stop-Loss</span>
+</div>
+<div class="text-right">
+<span class="font-semibold text-error">₹1,438.00</span>
+<span class="text-on-surface-variant text-[11px] block">(Risk: ₹14.80)</span>
+</div>
+</div>
+<div class="flex items-center justify-between py-1.5 px-2 rounded bg-surface">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-on-surface-variant">Target 1</span>
+</div>
+<div class="text-right">
+<span class="font-semibold text-secondary">₹1,468.00</span>
+<span class="text-on-surface-variant text-[11px] block">(+₹15.20 · 1.03R)</span>
+</div>
+</div>
+<div class="flex items-center justify-between py-1.5 px-2 rounded bg-surface">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-on-surface-variant">Target 2</span>
+</div>
+<div class="text-right">
+<span class="font-semibold text-secondary">₹1,482.00</span>
+<span class="text-on-surface-variant text-[11px] block">(+₹29.20 · 1.97R)</span>
+</div>
+</div>
+</div>
+<!-- Action Triggers -->
+<div class="flex flex-col gap-2 pt-2">
+<button class="w-full py-2.5 px-space-md rounded-lg bg-secondary text-on-secondary hover:opacity-95 font-body-md text-body-md font-semibold transition-all shadow-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+<span>I entered (Manual Journal)</span>
+</button>
+<button class="w-full py-2 px-space-md rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-body-sm text-body-sm font-medium transition-colors">
+                View Plan &amp; Sizing Parameters
+              </button>
+<span class="text-center font-body-sm text-[11px] text-on-surface-variant leading-tight">
+                Records your journal only · No broker order is placed
+              </span>
+</div>
+</div>
+</div>
+<!-- CARD 2: Scanner Qualification Matrix -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-body-lg font-bold text-on-surface">Scanner Criteria Matrix</h2>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-caps text-label-caps uppercase">6 / 6 Passed</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Deterministic rule-engine evaluation for intraday eligibility:
+          </p>
+<div class="flex flex-col gap-space-sm pt-1">
+<!-- Rule 1 -->
+<div class="p-space-sm rounded-lg bg-surface flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5 shrink-0">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Universe Eligibility</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Top 50 Liquid NSE Cash Equities</span>
+</div>
+</div>
+<!-- Rule 2 -->
+<div class="p-space-sm rounded-lg bg-surface flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5 shrink-0">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Bid / Ask Spread Friction</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">₹0.05 spread (&lt;0.02% slippage risk)</span>
+</div>
+</div>
+<!-- Rule 3 -->
+<div class="p-space-sm rounded-lg bg-surface flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5 shrink-0">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Relative Volume (RVOL)</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-medium">1.82x &gt; 1.30x activation threshold</span>
+</div>
+</div>
+<!-- Rule 4 -->
+<div class="p-space-sm rounded-lg bg-surface flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5 shrink-0">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Trend Bias Alignment</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Price &gt; VWAP &amp; 5m EMA-20 &gt; EMA-50</span>
+</div>
+</div>
+<!-- Rule 5 -->
+<div class="p-space-sm rounded-lg bg-surface flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5 shrink-0">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Setup Structural Pattern</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">5m Range Breakout with high volume candle</span>
+</div>
+</div>
+<!-- Rule 6 -->
+<div class="p-space-sm rounded-lg bg-surface flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5 shrink-0">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Risk / Reward Ratio</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-medium">Target 1 offers &gt;= 1.0R to Stop-Loss</span>
+</div>
+</div>
+</div>
+<div class="mt-2 p-2.5 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-between font-label-numeric-sm text-label-numeric-sm">
+<span>Signal Timestamp</span>
+<span class="font-semibold text-primary">03:18 PM IST</span>
+</div>
+</div>
+<!-- CARD 3: Recent Scanner Evaluation History (Audit Trail) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-body-lg font-bold text-on-surface">Scanner Audit Trail</h2>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Today</span>
+</div>
+<div class="relative pl-6 flex flex-col gap-space-md">
+<!-- Vertical timeline line -->
+<div class="absolute left-2.5 top-2 bottom-2 w-0.5 bg-outline-variant/60"></div>
+<!-- Entry 1 -->
+<div class="relative flex flex-col">
+<span class="absolute -left-6 top-1.5 w-2 h-2 rounded-full bg-secondary ring-4 ring-surface-container-lowest"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant font-medium">03:29 PM IST</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Setup Active · Price ₹1,452.80 holding above Entry</span>
+</div>
+<!-- Entry 2 -->
+<div class="relative flex flex-col">
+<span class="absolute -left-6 top-1.5 w-2 h-2 rounded-full bg-secondary ring-4 ring-surface-container-lowest"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant font-medium">03:25 PM IST</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface">5m Candle Confirmed · High volume bullish candle closed ₹1,451.80</span>
+</div>
+<!-- Entry 3 -->
+<div class="relative flex flex-col">
+<span class="absolute -left-6 top-1.5 w-2 h-2 rounded-full bg-primary ring-4 ring-surface-container-lowest"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant font-medium">03:20 PM IST</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Setup Triggered · Breakout Momentum rule met (Score 82)</span>
+</div>
+<!-- Entry 4 -->
+<div class="relative flex flex-col">
+<span class="absolute -left-6 top-1.5 w-2 h-2 rounded-full bg-outline ring-4 ring-surface-container-lowest"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant font-medium">03:15 PM IST</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">RVOL threshold breached (1.45x) · Alert armed</span>
+</div>
+<!-- Entry 5 -->
+<div class="relative flex flex-col">
+<span class="absolute -left-6 top-1.5 w-2 h-2 rounded-full bg-outline-variant ring-4 ring-surface-container-lowest"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant font-medium">03:10 PM IST</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Monitoring · Consolidation near ₹1,448.00 base</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function switchTf(button, timeframe) {
+    const parent = button.parentElement;
+    parent.querySelectorAll('button').forEach(btn => {
+      btn.className = 'px-3 py-1 rounded font-label-numeric-sm text-label-numeric-sm text-on-surface-variant hover:text-on-surface transition-colors';
+    });
+    button.className = 'px-3 py-1 rounded bg-surface-container-lowest text-primary font-semibold shadow-sm font-label-numeric-sm text-label-numeric-sm';
+  }
+</script></main></div></body></html>

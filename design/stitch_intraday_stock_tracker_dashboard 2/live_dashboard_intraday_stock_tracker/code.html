@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#f8f9ff","surface-tint":"#2151da","on-tertiary-container":"#ffcaae","surface":"#f8f9ff","surface-container-highest":"#d5e3fb","on-error":"#ffffff","surface-container-low":"#eff4ff","surface-container":"#e5eeff","on-primary-fixed":"#001551","primary-container":"#1d4ed8","on-tertiary-fixed":"#331200","on-primary-fixed-variant":"#0039b5","on-error-container":"#93000a","inverse-on-surface":"#eaf1ff","on-primary-container":"#cad3ff","surface-container-high":"#dce9ff","on-secondary-fixed-variant":"#00513a","surface-container-lowest":"#ffffff","on-primary":"#ffffff","primary":"#0037b0","secondary-fixed":"#97f5cc","on-tertiary-fixed-variant":"#763300","primary-fixed-dim":"#b7c4ff","inverse-primary":"#b7c4ff","outline":"#747686","tertiary-container":"#984300","secondary-fixed-dim":"#7bd8b1","secondary-container":"#97f5cc","surface-dim":"#cddbf2","inverse-surface":"#233143","on-background":"#0e1c2d","outline-variant":"#c4c5d7","tertiary-fixed-dim":"#ffb68e","error":"#ba1a1a","tertiary-fixed":"#ffdbca","primary-fixed":"#dce1ff","tertiary":"#733100","background":"#f8f9ff","on-tertiary":"#ffffff","on-secondary-fixed":"#002115","on-surface":"#0e1c2d","surface-variant":"#d5e3fb","on-secondary-container":"#007353","error-container":"#ffdad6","on-secondary":"#ffffff","secondary":"#006c4e","on-surface-variant":"#434655"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xl":"1.5rem","space-lg":"1rem","space-xs":"0.25rem","space-sm":"0.5rem","space-md":"0.75rem",gutter:"0.75rem",margin:"1rem"},fontFamily:{"body-sm":["Inter"],"body-lg":["Inter"],"label-numeric-sm":["JetBrains Mono"],"headline-lg":["Inter"],"label-numeric-md":["JetBrains Mono"],"label-numeric-lg":["JetBrains Mono"],"label-caps":["Inter"],"display-lg":["Inter"],"body-md":["Inter"],"headline-sm":["Inter"]},fontSize:{"body-sm":["0.8125rem",{lineHeight:"1.125rem",fontWeight:"400"}],"body-lg":["0.9375rem",{lineHeight:"1.375rem",fontWeight:"500"}],"label-numeric-sm":["0.75rem",{lineHeight:"1rem",letterSpacing:"0em",fontWeight:"500"}],"headline-lg":["1.5rem",{lineHeight:"2rem",fontWeight:"600"}],"label-numeric-md":["0.875rem",{lineHeight:"1.25rem",letterSpacing:"-0.01em",fontWeight:"500"}],"label-numeric-lg":["1.25rem",{lineHeight:"1.5rem",letterSpacing:"-0.02em",fontWeight:"600"}],"label-caps":["0.6875rem",{lineHeight:"0.875rem",letterSpacing:"0.06em",fontWeight:"700"}],"display-lg":["2rem",{lineHeight:"2.5rem",fontWeight:"700"}],"body-md":["0.875rem",{lineHeight:"1.25rem",fontWeight:"400"}],"headline-sm":["1.125rem",{lineHeight:"1.5rem",fontWeight:"600"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[248px] bg-surface-container-lowest border-r border-outline-variant/40 z-50 flex flex-col justify-between select-none"><div class="flex flex-col"><div class="h-14 px-space-lg flex items-center gap-space-sm border-b border-outline-variant/30"><img alt="Intraday Stock Tracker Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UxFa8RRW4xfGiHV7iI7l2LxYdqev9pMB-L13Bem3d6LpuiYwf4Daj00kNk8RUnwQJAM_1JSx0WsedV2pkz4vNp1cDuFu7bp5BF-yu7-98fuaasD9CFM7PgizzF-dCwHYXipShIP3LDo9zMrHsOUiCI1lUrC4c_GOHS89fUjn1UdnnYaxbirC8bQpHLHSVewNYB2dRQ8nTK50v-J7DJf6H2nbY19QAOgkwuzNH7Th3KkJDCBcnnHXmuVQ"/><div class="flex flex-col min-w-0 leading-none"><span class="font-headline-sm text-body-lg text-on-surface font-semibold truncate tracking-tight">Intraday Tracker</span><span class="font-label-caps text-label-caps text-on-surface-variant truncate uppercase">NSE Cash Decision Support</span></div></div><nav class="p-space-sm flex flex-col gap-1" data-active-classes="bg-surface-container-high text-primary font-semibold"><a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm rounded-lg transition-colors bg-surface-container-high text-primary font-semibold" data-path="dashboard" href="#"><span class="font-body-md text-body-md truncate">Dashboard</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="markets" href="#"><span class="font-body-md text-body-md truncate">Markets</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="signals" href="#"><span class="font-body-md text-body-md truncate">Signals</span><span class="px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-numeric-sm text-label-numeric-sm">2 active</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="trades" href="#"><span class="font-body-md text-body-md truncate">Trades</span><span class="px-1.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-numeric-sm text-label-numeric-sm">2 open</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="journal" href="#"><span class="font-body-md text-body-md truncate">Journal</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="performance" href="#"><span class="font-body-md text-body-md truncate">Performance</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="font-body-md text-body-md truncate">Settings</span></a></nav></div><div class="p-space-sm border-t border-outline-variant/30"><div class="p-space-sm rounded-lg bg-surface-container-low border border-outline-variant/40 flex items-start gap-space-xs"><span class="material-symbols-outlined text-secondary text-[18px] mt-0.5 shrink-0">verified_user</span><div class="flex flex-col min-w-0"><span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider font-bold">Safe Execution Mode</span><span class="font-body-sm text-body-sm text-on-surface-variant leading-tight truncate mt-0.5">Manual Journal Only · No Broker Orders Placed</span></div></div></div></aside><div class="pl-[248px]"><header class="fixed top-0 left-[248px] right-0 h-14 bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant/40 z-40 px-space-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md min-w-0"><div class="flex items-center gap-2 px-space-sm py-1 rounded bg-secondary-fixed/30 border border-secondary-fixed shrink-0"><span class="flex h-2 w-2 relative"><span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span></span><span class="font-label-caps text-label-caps text-secondary font-bold uppercase tracking-wider">LIVE</span><span class="font-label-numeric-sm text-label-numeric-sm text-on-surface border-l border-outline-variant/40 pl-2 whitespace-nowrap">Angel One SmartAPI · IST 03:29:59 PM · Freshness 0.8s</span></div><div class="relative w-72 lg:w-96"><span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span><input class="w-full h-8 pl-8 pr-8 rounded bg-surface border border-outline-variant/50 font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20" placeholder="Search eligible NSE cash equities (e.g. RELIANCE, HDFCBANK)..." type="text"/><kbd class="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-label-numeric-sm text-on-surface-variant bg-surface-container border border-outline-variant/40 rounded">⌘K</kbd></div></div><div class="flex items-center gap-space-md shrink-0"><button class="relative p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="h-4 w-px bg-outline-variant/40"></div><div class="flex items-center gap-space-sm"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwnqcbM0hYSSkxrEym_0ya38soh7OTs3LYBkI0SHvd0fuIvGgwtxIycRh5a7sUjUptUmlYFLcqnkQqYxjHWTA9zd5RJ9SMc4Q0lJL-tGYaX64OqehqOkokPLyrbmC3skSuG5QlJxlDnOlR5C6AGp40rSn11eIzQPH7SuikO_qvaFBg9CUfZYPqS7YwdpqwelEoypoPc0fKICOPL5sWKg4lk-of1k0EPACOse1OPAyE93Frw2nbGP5f"/><div class="flex flex-col text-left leading-tight"><span class="font-body-sm text-body-sm font-semibold text-on-surface truncate">Ankit Sharma</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Intraday Equity</span></div></div></div></header><main class="relative pt-14 bg-background min-h-screen"><div class="flex flex-col w-full">
+<div class="p-space-lg space-y-space-md">
+<!-- Top Header Ribbon -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-sm bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Good afternoon, Ankit</h1>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-caps text-label-caps uppercase tracking-wider">Desk 01</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+<span>NSE Cash Equities Session</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>09:15–15:30 IST</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface">29 Sep 2026</span>
+</p>
+</div>
+<div class="flex items-center gap-space-sm self-start lg:self-auto">
+<div class="flex items-center gap-2 px-space-md py-1.5 rounded-lg bg-surface-container-low">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary"></span>
+</span>
+<span class="font-label-caps text-label-caps text-secondary uppercase font-bold tracking-widest">LIVE</span>
+<span class="h-3 w-px bg-outline-variant/60"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Angel One SmartAPI</span>
+<span class="h-3 w-px bg-outline-variant/60"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-semibold">03:29:59 PM IST</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary bg-secondary-fixed/40 px-1.5 py-0.5 rounded text-[11px]">14ms</span>
+</div>
+</div>
+</div>
+<!-- Summary KPI Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between hover:bg-surface-container-lowest/80 transition-all">
+<div class="flex items-start justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Market Feed Status</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">sensors</span>
+</div>
+<div class="my-space-sm">
+<div class="flex items-center gap-2">
+<span class="h-2.5 w-2.5 rounded-full bg-secondary"></span>
+<span class="font-headline-lg text-headline-lg text-secondary font-bold">LIVE</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">NSE Cash Feed · Angel One SmartAPI</p>
+</div>
+<div class="pt-space-xs bg-surface-container-low/50 -mx-space-md -mb-space-md px-space-md py-2 rounded-b-xl flex items-center justify-between text-on-surface-variant">
+<span class="font-label-numeric-sm text-label-numeric-sm">Last tick: 03:29:59 PM</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-medium">0.8s freshness</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between hover:bg-surface-container-lowest/80 transition-all">
+<div class="flex items-start justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Stocks Monitored</span>
+<span class="material-symbols-outlined text-primary text-[20px]">view_list</span>
+</div>
+<div class="my-space-sm">
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold">50</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">Active Scan</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">42 eligible · 8 filtered</p>
+</div>
+<div class="pt-space-xs bg-surface-container-low/50 -mx-space-md -mb-space-md px-space-md py-2 rounded-b-xl flex items-center justify-between text-on-surface-variant">
+<span class="font-label-caps text-label-caps uppercase">Universe:</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-medium truncate">NSE Cash-Equity Liquid</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between hover:bg-surface-container-lowest/80 transition-all">
+<div class="flex items-start justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Active Signals</span>
+<span class="material-symbols-outlined text-primary text-[20px]">radar</span>
+</div>
+<div class="my-space-sm">
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">2 Active</span>
+</div>
+<div class="flex items-center gap-2 mt-0.5 font-body-sm text-body-sm">
+<span class="text-secondary font-medium">1 Long ↑</span>
+<span class="text-outline-variant">·</span>
+<span class="text-tertiary-container font-medium">1 Short ↓</span>
+</div>
+</div>
+<div class="pt-space-xs bg-surface-container-low/50 -mx-space-md -mb-space-md px-space-md py-2 rounded-b-xl flex items-center justify-between text-on-surface-variant">
+<span class="font-label-caps text-label-caps uppercase">Rule:</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-medium">intraday-momentum-v1</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col justify-between hover:bg-surface-container-lowest/80 transition-all">
+<div class="flex items-start justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Scanner Health</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">health_and_safety</span>
+</div>
+<div class="my-space-sm">
+<div class="flex items-center gap-2">
+<span class="h-2.5 w-2.5 rounded-full bg-secondary"></span>
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold">Healthy</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Last completed 5m: 03:25 PM</p>
+</div>
+<div class="pt-space-xs bg-surface-container-low/50 -mx-space-md -mb-space-md px-space-md py-2 rounded-b-xl flex items-center justify-between text-on-surface-variant">
+<span class="font-label-numeric-sm text-label-numeric-sm truncate">Forming: 03:25–03:30 PM</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-primary font-medium shrink-0 pl-1">(42 eval)</span>
+</div>
+</div>
+</div>
+<!-- Scanner Status & Pipeline Preview Banner -->
+<div class="bg-surface-container-low p-space-md rounded-xl shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-md">
+<div class="flex items-center flex-wrap gap-2 overflow-x-auto w-full lg:w-auto py-1">
+<div class="flex items-center gap-2 px-space-sm py-1 rounded bg-surface-container-lowest shadow-sm shrink-0">
+<span class="h-2 w-2 rounded-full bg-secondary"></span>
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Angel One SmartAPI</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">Connected</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[16px] shrink-0">arrow_forward</span>
+<div class="flex items-center gap-2 px-space-sm py-1 rounded bg-surface-container-lowest shadow-sm shrink-0">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Tick Stream</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-semibold">1,284 ticks/min</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[16px] shrink-0">arrow_forward</span>
+<div class="flex items-center gap-2 px-space-sm py-1 rounded bg-surface-container-lowest shadow-sm shrink-0">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Candle Engine</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">1m &amp; 5m Healthy</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[16px] shrink-0">arrow_forward</span>
+<div class="flex items-center gap-2 px-space-sm py-1 rounded bg-surface-container-lowest shadow-sm shrink-0">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Strategy Eval</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-semibold">42 eligible</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[16px] shrink-0">arrow_forward</span>
+<div class="flex items-center gap-2 px-space-sm py-1 rounded bg-secondary-fixed/40 shadow-sm shrink-0">
+<span class="font-label-caps text-label-caps uppercase text-on-secondary-fixed">Signals</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-secondary-fixed font-bold">2 Active</span>
+</div>
+</div>
+<a class="font-body-sm text-body-sm text-primary font-semibold hover:underline flex items-center gap-1 shrink-0 whitespace-nowrap" href="#">
+<span>View full scanner &amp; market pipeline</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<!-- Active Signals Section -->
+<div class="space-y-space-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Active Signals</h2>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-numeric-sm text-label-numeric-sm font-bold">2 Live</span>
+<span class="hidden sm:inline-block font-label-numeric-sm text-label-numeric-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">Rule: intraday-momentum-v1</span>
+</div>
+<!-- Filter tabs -->
+<div class="inline-flex p-1 bg-surface-container rounded-lg self-start sm:self-auto" id="signal-filter-group">
+<button class="px-3 py-1 text-label-caps font-label-caps uppercase rounded bg-surface-container-lowest text-primary font-semibold shadow-sm transition-all" onclick="filterSignals('all', this)">All (2)</button>
+<button class="px-3 py-1 text-label-caps font-label-caps uppercase rounded text-on-surface-variant hover:text-on-surface transition-all" onclick="filterSignals('long', this)">Long (1)</button>
+<button class="px-3 py-1 text-label-caps font-label-caps uppercase rounded text-on-surface-variant hover:text-on-surface transition-all" onclick="filterSignals('short', this)">Short (1)</button>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-space-md">
+<!-- Signal 1: RELIANCE -->
+<div class="signal-card bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between gap-space-md hover:shadow-md transition-shadow" data-direction="long">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">RELIANCE</span>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-caps text-label-caps font-bold">↑ LONG</span>
+</div>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Reliance Industries Ltd · Cash Equity</span>
+</div>
+</div>
+<div class="text-right">
+<div class="font-label-numeric-lg text-label-numeric-lg text-on-surface font-bold">₹1,452.80</div>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">+0.84%</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-y-1 gap-x-space-md py-space-xs bg-surface-container-low px-space-md rounded-lg">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary">timer</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface">18m remaining</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">(expires 03:48 PM)</span>
+</div>
+<div class="h-3 w-px bg-outline-variant"></div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">analytics</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-primary font-bold">82 / 100</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">High RVOL 1.8x · 5M breakout</span>
+</div>
+</div>
+<!-- Price Matrix -->
+<div class="grid grid-cols-4 gap-2 pt-space-xs">
+<div class="p-2 rounded bg-surface-container text-center">
+<span class="block font-label-caps text-label-caps text-on-surface-variant uppercase">Entry Zone</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-bold truncate block">₹1,450–1,454</span>
+</div>
+<div class="p-2 rounded bg-error-container/60 text-center">
+<span class="block font-label-caps text-label-caps text-error uppercase font-bold">Stop-Loss</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-error font-bold block">₹1,438.00</span>
+</div>
+<div class="p-2 rounded bg-secondary-fixed/50 text-center">
+<span class="block font-label-caps text-label-caps text-secondary uppercase font-bold">Target 1</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-bold block">₹1,468.00</span>
+</div>
+<div class="p-2 rounded bg-secondary-fixed/50 text-center">
+<span class="block font-label-caps text-label-caps text-secondary uppercase font-bold">Target 2</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-bold block">₹1,482.00</span>
+</div>
+</div>
+</div>
+<div class="pt-space-sm flex flex-col gap-1.5">
+<div class="flex items-center justify-between gap-space-sm">
+<button class="flex-1 h-9 px-3 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold transition-colors flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+<span>View Plan</span>
+</button>
+<button class="flex-1 h-9 px-3 rounded bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold transition-colors flex items-center justify-center gap-1.5" onclick="recordEntry('RELIANCE', 'BUY', 1452.80)">
+<span class="material-symbols-outlined text-[18px]">done</span>
+<span>I entered</span>
+</button>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant text-center">Records your journal only · No broker order is placed</span>
+</div>
+</div>
+<!-- Signal 2: INFY -->
+<div class="signal-card bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between gap-space-md hover:shadow-md transition-shadow" data-direction="short">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">INFY</span>
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-caps text-label-caps font-bold">↓ SHORT</span>
+</div>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Infosys Ltd · Cash Equity</span>
+</div>
+</div>
+<div class="text-right">
+<div class="font-label-numeric-lg text-label-numeric-lg text-on-surface font-bold">₹1,418.50</div>
+<span class="font-label-numeric-sm text-label-numeric-sm text-error font-semibold">-0.84%</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-y-1 gap-x-space-md py-space-xs bg-surface-container-low px-space-md rounded-lg">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary">timer</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface">22m remaining</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">(expires 03:52 PM)</span>
+</div>
+<div class="h-3 w-px bg-outline-variant"></div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary">analytics</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-tertiary font-bold">78 / 100</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[11px]">Pinbar rejection @ VWAP · RVOL 2.1x</span>
+</div>
+</div>
+<!-- Price Matrix -->
+<div class="grid grid-cols-4 gap-2 pt-space-xs">
+<div class="p-2 rounded bg-surface-container text-center">
+<span class="block font-label-caps text-label-caps text-on-surface-variant uppercase">Entry Zone</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-bold truncate block">₹1,420–1,424</span>
+</div>
+<div class="p-2 rounded bg-error-container/60 text-center">
+<span class="block font-label-caps text-label-caps text-error uppercase font-bold">Stop-Loss</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-error font-bold block">₹1,432.00</span>
+</div>
+<div class="p-2 rounded bg-secondary-fixed/50 text-center">
+<span class="block font-label-caps text-label-caps text-secondary uppercase font-bold">Target 1</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-bold block">₹1,402.00</span>
+</div>
+<div class="p-2 rounded bg-secondary-fixed/50 text-center">
+<span class="block font-label-caps text-label-caps text-secondary uppercase font-bold">Target 2</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary font-bold block">₹1,388.00</span>
+</div>
+</div>
+</div>
+<div class="pt-space-sm flex flex-col gap-1.5">
+<div class="flex items-center justify-between gap-space-sm">
+<button class="flex-1 h-9 px-3 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold transition-colors flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+<span>View Plan</span>
+</button>
+<button class="flex-1 h-9 px-3 rounded bg-primary hover:bg-primary-container text-on-primary font-body-sm text-body-sm font-semibold transition-colors flex items-center justify-center gap-1.5" onclick="recordEntry('INFY', 'SELL', 1418.50)">
+<span class="material-symbols-outlined text-[18px]">done</span>
+<span>I entered</span>
+</button>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant text-center">Records your journal only · No broker order is placed</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Market Watch Section -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md space-y-space-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs px-space-xs">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Market Watch — Monitored Universe (50 Stocks)</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Live streaming real-time prices &amp; volume metrics across NSE Cash Equities</span>
+</div>
+<a class="font-body-sm text-body-sm text-primary font-semibold hover:underline flex items-center gap-1" href="#">
+<span>View all 50 in Markets</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<div class="overflow-x-auto rounded-lg bg-surface-container-lowest">
+<table class="w-full border-collapse text-left">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider h-8">
+<th class="px-space-md py-1.5 font-bold">Symbol</th>
+<th class="px-space-md py-1.5 text-right font-bold">LTP (₹)</th>
+<th class="px-space-md py-1.5 text-right font-bold">Day Change</th>
+<th class="px-space-md py-1.5 text-right font-bold">1m Change</th>
+<th class="px-space-md py-1.5 text-right font-bold">5m Change</th>
+<th class="px-space-md py-1.5 text-right font-bold">Volume</th>
+<th class="px-space-md py-1.5 text-right font-bold">RVOL</th>
+<th class="px-space-md py-1.5 text-center font-bold">Scanner State</th>
+<th class="px-space-md py-1.5 text-right font-bold">Quick Action</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-label-numeric-sm text-label-numeric-sm">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors h-9">
+<td class="px-space-md py-1 font-body-sm font-bold text-on-surface">RELIANCE</td>
+<td class="px-space-md py-1 text-right font-semibold">1,452.80</td>
+<td class="px-space-md py-1 text-right text-secondary font-bold">+0.84%</td>
+<td class="px-space-md py-1 text-right text-secondary">+0.12%</td>
+<td class="px-space-md py-1 text-right text-secondary">+0.31%</td>
+<td class="px-space-md py-1 text-right">2.42M</td>
+<td class="px-space-md py-1 text-right font-bold text-primary">1.82x</td>
+<td class="px-space-md py-1 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[11px] font-semibold">
+<span class="h-1.5 w-1.5 rounded-full bg-secondary"></span> Active Signal
+                </span>
+</td>
+<td class="px-space-md py-1 text-right">
+<button class="px-2 py-1 rounded bg-surface-container text-primary font-body-sm text-body-sm font-semibold hover:bg-surface-container-high transition-colors">View Chart →</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors h-9 bg-surface-container-low/20">
+<td class="px-space-md py-1 font-body-sm font-bold text-on-surface">HDFCBANK</td>
+<td class="px-space-md py-1 text-right font-semibold">1,534.60</td>
+<td class="px-space-md py-1 text-right text-secondary font-bold">+1.08%</td>
+<td class="px-space-md py-1 text-right text-secondary">+0.05%</td>
+<td class="px-space-md py-1 text-right text-secondary">+0.22%</td>
+<td class="px-space-md py-1 text-right">1.85M</td>
+<td class="px-space-md py-1 text-right font-bold text-primary">1.45x</td>
+<td class="px-space-md py-1 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed text-[11px] font-semibold">
+<span class="h-1.5 w-1.5 rounded-full bg-primary"></span> In Trade (Long)
+                </span>
+</td>
+<td class="px-space-md py-1 text-right">
+<button class="px-2 py-1 rounded bg-surface-container text-primary font-body-sm text-body-sm font-semibold hover:bg-surface-container-high transition-colors">View Trade →</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors h-9">
+<td class="px-space-md py-1 font-body-sm font-bold text-on-surface">ICICIBANK</td>
+<td class="px-space-md py-1 text-right font-semibold">941.30</td>
+<td class="px-space-md py-1 text-right text-secondary font-bold">+0.73%</td>
+<td class="px-space-md py-1 text-right text-error">-0.02%</td>
+<td class="px-space-md py-1 text-right text-secondary">+0.15%</td>
+<td class="px-space-md py-1 text-right">1.12M</td>
+<td class="px-space-md py-1 text-right text-on-surface-variant">1.10x</td>
+<td class="px-space-md py-1 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[11px]">
+<span class="h-1.5 w-1.5 rounded-full bg-outline"></span> Monitoring
+                </span>
+</td>
+<td class="px-space-md py-1 text-right">
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-body-sm text-body-sm font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors">View Chart →</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors h-9 bg-surface-container-low/20">
+<td class="px-space-md py-1 font-body-sm font-bold text-on-surface">INFY</td>
+<td class="px-space-md py-1 text-right font-semibold">1,418.50</td>
+<td class="px-space-md py-1 text-right text-error font-bold">-0.84%</td>
+<td class="px-space-md py-1 text-right text-error">-0.15%</td>
+<td class="px-space-md py-1 text-right text-error">-0.40%</td>
+<td class="px-space-md py-1 text-right">1.95M</td>
+<td class="px-space-md py-1 text-right font-bold text-tertiary-container">2.14x</td>
+<td class="px-space-md py-1 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-[11px] font-semibold">
+<span class="h-1.5 w-1.5 rounded-full bg-tertiary-container"></span> Active Signal
+                </span>
+</td>
+<td class="px-space-md py-1 text-right">
+<button class="px-2 py-1 rounded bg-surface-container text-primary font-body-sm text-body-sm font-semibold hover:bg-surface-container-high transition-colors">View Chart →</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors h-9">
+<td class="px-space-md py-1 font-body-sm font-bold text-on-surface">TATAMOTORS</td>
+<td class="px-space-md py-1 text-right font-semibold">969.20</td>
+<td class="px-space-md py-1 text-right text-secondary font-bold">+0.71%</td>
+<td class="px-space-md py-1 text-right text-secondary">+0.08%</td>
+<td class="px-space-md py-1 text-right text-secondary">+0.18%</td>
+<td class="px-space-md py-1 text-right">3.10M</td>
+<td class="px-space-md py-1 text-right font-bold text-primary">1.32x</td>
+<td class="px-space-md py-1 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed text-[11px] font-semibold">
+<span class="h-1.5 w-1.5 rounded-full bg-primary"></span> In Trade (Long)
+                </span>
+</td>
+<td class="px-space-md py-1 text-right">
+<button class="px-2 py-1 rounded bg-surface-container text-primary font-body-sm text-body-sm font-semibold hover:bg-surface-container-high transition-colors">View Trade →</button>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors h-9 bg-surface-container-low/20">
+<td class="px-space-md py-1 font-body-sm font-bold text-on-surface">SBIN</td>
+<td class="px-space-md py-1 text-right font-semibold">782.40</td>
+<td class="px-space-md py-1 text-right text-secondary font-bold">+0.35%</td>
+<td class="px-space-md py-1 text-right text-secondary">+0.02%</td>
+<td class="px-space-md py-1 text-right text-secondary">+0.08%</td>
+<td class="px-space-md py-1 text-right">2.20M</td>
+<td class="px-space-md py-1 text-right text-on-surface-variant">0.95x</td>
+<td class="px-space-md py-1 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[11px]">
+<span class="h-1.5 w-1.5 rounded-full bg-outline"></span> Monitoring
+                </span>
+</td>
+<td class="px-space-md py-1 text-right">
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-body-sm text-body-sm font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors">View Chart →</button>
+</td>
+</tr>
+<!-- Row 7 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors h-9">
+<td class="px-space-md py-1 font-body-sm font-bold text-on-surface">TCS</td>
+<td class="px-space-md py-1 text-right font-semibold">3,892.10</td>
+<td class="px-space-md py-1 text-right text-error font-bold">-0.42%</td>
+<td class="px-space-md py-1 text-right text-error">-0.08%</td>
+<td class="px-space-md py-1 text-right text-error">-0.12%</td>
+<td class="px-space-md py-1 text-right">850K</td>
+<td class="px-space-md py-1 text-right text-on-surface-variant">0.88x</td>
+<td class="px-space-md py-1 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[11px]">
+<span class="h-1.5 w-1.5 rounded-full bg-outline"></span> Monitoring
+                </span>
+</td>
+<td class="px-space-md py-1 text-right">
+<button class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-body-sm text-body-sm font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors">View Chart →</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Open Running Trades Section (User Manual Journal) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md space-y-space-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs px-space-xs">
+<div class="flex items-center gap-space-sm">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Open Running Trades</h2>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-numeric-sm text-label-numeric-sm font-bold">2 Open</span>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant bg-surface-container-low px-space-sm py-1 rounded">
+          User journal entries. Trailed stops are personal reminders and not broker trigger orders.
+        </span>
+</div>
+<div class="overflow-x-auto rounded-lg">
+<table class="w-full border-collapse text-left">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider h-8">
+<th class="px-space-md py-1.5 font-bold">Position</th>
+<th class="px-space-md py-1.5 text-right font-bold">Entry Price</th>
+<th class="px-space-md py-1.5 text-right font-bold">Current LTP</th>
+<th class="px-space-md py-1.5 text-right font-bold">Qty</th>
+<th class="px-space-md py-1.5 text-right font-bold">Trailed Stop</th>
+<th class="px-space-md py-1.5 text-right font-bold">Unrealized P&amp;L</th>
+<th class="px-space-md py-1.5 text-right font-bold">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-label-numeric-sm text-label-numeric-sm">
+<!-- Trade 1: HDFCBANK -->
+<tr class="hover:bg-surface-container-low/60 transition-colors h-11">
+<td class="px-space-md py-2">
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-caps text-[10px] font-bold">BUY</span>
+<div>
+<span class="font-body-sm font-bold text-on-surface block">HDFCBANK</span>
+<span class="text-[10px] text-on-surface-variant block font-label-numeric-sm">Entered 10:14 AM</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-2 text-right">₹1,514.10</td>
+<td class="px-space-md py-2 text-right font-semibold">₹1,534.60</td>
+<td class="px-space-md py-2 text-right">200</td>
+<td class="px-space-md py-2 text-right">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed/50 text-secondary font-bold">₹1,524.00</span>
+<span class="block text-[10px] text-secondary font-medium">Locked in profit</span>
+</td>
+<td class="px-space-md py-2 text-right">
+<span class="text-secondary font-bold text-body-sm block">+₹4,100.00</span>
+<span class="text-[10px] text-secondary font-medium">+1.35%</span>
+</td>
+<td class="px-space-md py-2 text-right">
+<div class="inline-flex items-center gap-1.5">
+<button class="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-medium transition-colors">
+                    Journal / Edit
+                  </button>
+<button class="px-2.5 py-1 rounded bg-error-container text-error hover:bg-error hover:text-on-error font-body-sm text-body-sm font-semibold transition-colors" onclick="recordExit('HDFCBANK')">
+                    Record Exit
+                  </button>
+</div>
+</td>
+</tr>
+<!-- Trade 2: TATAMOTORS -->
+<tr class="hover:bg-surface-container-low/60 transition-colors h-11 bg-surface-container-low/20">
+<td class="px-space-md py-2">
+<div class="flex items-center gap-2">
+<span class="px-1.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-caps text-[10px] font-bold">BUY</span>
+<div>
+<span class="font-body-sm font-bold text-on-surface block">TATAMOTORS</span>
+<span class="text-[10px] text-on-surface-variant block font-label-numeric-sm">Entered 01:45 PM</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-2 text-right">₹962.40</td>
+<td class="px-space-md py-2 text-right font-semibold">₹969.20</td>
+<td class="px-space-md py-2 text-right">400</td>
+<td class="px-space-md py-2 text-right">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed/50 text-secondary font-bold">₹958.00</span>
+<span class="block text-[10px] text-on-surface-variant">Near BE (-₹4.40)</span>
+</td>
+<td class="px-space-md py-2 text-right">
+<span class="text-secondary font-bold text-body-sm block">+₹2,720.00</span>
+<span class="text-[10px] text-secondary font-medium">+0.71%</span>
+</td>
+<td class="px-space-md py-2 text-right">
+<div class="inline-flex items-center gap-1.5">
+<button class="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-medium transition-colors">
+                    Journal / Edit
+                  </button>
+<button class="px-2.5 py-1 rounded bg-error-container text-error hover:bg-error hover:text-on-error font-body-sm text-body-sm font-semibold transition-colors" onclick="recordExit('TATAMOTORS')">
+                    Record Exit
+                  </button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function filterSignals(direction, btn) {
+    const parent = document.getElementById('signal-filter-group');
+    parent.querySelectorAll('button').forEach(b => {
+      b.className = 'px-3 py-1 text-label-caps font-label-caps uppercase rounded text-on-surface-variant hover:text-on-surface transition-all';
+    });
+    btn.className = 'px-3 py-1 text-label-caps font-label-caps uppercase rounded bg-surface-container-lowest text-primary font-semibold shadow-sm transition-all';
+
+    const cards = document.querySelectorAll('.signal-card');
+    cards.forEach(card => {
+      if (direction === 'all') {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = card.getAttribute('data-direction') === direction ? 'flex' : 'none';
+      }
+    });
+  }
+
+  function recordEntry(symbol, side, price) {
+    const note = prompt(`Confirm Journal Entry for ${symbol} (${side}) at ₹${price.toFixed(2)}?\nEnter execution notes (optional):`, `Manual fill via Web at ₹${price.toFixed(2)}`);
+    if (note !== null) {
+      alert(`Journal updated: Recorded ${side} ${symbol} at ₹${price.toFixed(2)}. No broker order placed.`);
+    }
+  }
+
+  function recordExit(symbol) {
+    const confirmExit = confirm(`Record exit in manual journal for ${symbol}? This will close the tracking session in your journal.`);
+    if (confirmExit) {
+      alert(`Logged manual exit for ${symbol}. Trailed stop tracking completed.`);
+    }
+  }
+</script></main></div></body></html>

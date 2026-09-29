@@ -91,7 +91,7 @@ export default function SignalDetailPage({ params }: { params: Promise<{ id: str
               </div>
             </div>
             <div className="p-4">
-              <CandlestickChart signal={signal} />
+              <CandlestickChart data={[]} timeframe="1m" signal={signal} />
             </div>
           </div>
           

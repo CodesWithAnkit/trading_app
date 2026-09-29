@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#f8f9ff","surface-tint":"#2151da","on-tertiary-container":"#ffcaae","surface":"#f8f9ff","surface-container-highest":"#d5e3fb","on-error":"#ffffff","surface-container-low":"#eff4ff","surface-container":"#e5eeff","on-primary-fixed":"#001551","primary-container":"#1d4ed8","on-tertiary-fixed":"#331200","on-primary-fixed-variant":"#0039b5","on-error-container":"#93000a","inverse-on-surface":"#eaf1ff","on-primary-container":"#cad3ff","surface-container-high":"#dce9ff","on-secondary-fixed-variant":"#00513a","surface-container-lowest":"#ffffff","on-primary":"#ffffff","primary":"#0037b0","secondary-fixed":"#97f5cc","on-tertiary-fixed-variant":"#763300","primary-fixed-dim":"#b7c4ff","inverse-primary":"#b7c4ff","outline":"#747686","tertiary-container":"#984300","secondary-fixed-dim":"#7bd8b1","secondary-container":"#97f5cc","surface-dim":"#cddbf2","inverse-surface":"#233143","on-background":"#0e1c2d","outline-variant":"#c4c5d7","tertiary-fixed-dim":"#ffb68e","error":"#ba1a1a","tertiary-fixed":"#ffdbca","primary-fixed":"#dce1ff","tertiary":"#733100","background":"#f8f9ff","on-tertiary":"#ffffff","on-secondary-fixed":"#002115","on-surface":"#0e1c2d","surface-variant":"#d5e3fb","on-secondary-container":"#007353","error-container":"#ffdad6","on-secondary":"#ffffff","secondary":"#006c4e","on-surface-variant":"#434655"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xl":"1.5rem","space-lg":"1rem","space-xs":"0.25rem","space-sm":"0.5rem","space-md":"0.75rem",gutter:"0.75rem",margin:"1rem"},fontFamily:{"body-sm":["Inter"],"body-lg":["Inter"],"label-numeric-sm":["JetBrains Mono"],"headline-lg":["Inter"],"label-numeric-md":["JetBrains Mono"],"label-numeric-lg":["JetBrains Mono"],"label-caps":["Inter"],"display-lg":["Inter"],"body-md":["Inter"],"headline-sm":["Inter"]},fontSize:{"body-sm":["0.8125rem",{lineHeight:"1.125rem",fontWeight:"400"}],"body-lg":["0.9375rem",{lineHeight:"1.375rem",fontWeight:"500"}],"label-numeric-sm":["0.75rem",{lineHeight:"1rem",letterSpacing:"0em",fontWeight:"500"}],"headline-lg":["1.5rem",{lineHeight:"2rem",fontWeight:"600"}],"label-numeric-md":["0.875rem",{lineHeight:"1.25rem",letterSpacing:"-0.01em",fontWeight:"500"}],"label-numeric-lg":["1.25rem",{lineHeight:"1.5rem",letterSpacing:"-0.02em",fontWeight:"600"}],"label-caps":["0.6875rem",{lineHeight:"0.875rem",letterSpacing:"0.06em",fontWeight:"700"}],"display-lg":["2rem",{lineHeight:"2.5rem",fontWeight:"700"}],"body-md":["0.875rem",{lineHeight:"1.25rem",fontWeight:"400"}],"headline-sm":["1.125rem",{lineHeight:"1.5rem",fontWeight:"600"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[248px] bg-surface-container-lowest border-r border-outline-variant/40 z-50 flex flex-col justify-between select-none"><div class="flex flex-col"><div class="h-14 px-space-lg flex items-center gap-space-sm border-b border-outline-variant/30"><img alt="Intraday Stock Tracker Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UxFa8RRW4xfGiHV7iI7l2LxYdqev9pMB-L13Bem3d6LpuiYwf4Daj00kNk8RUnwQJAM_1JSx0WsedV2pkz4vNp1cDuFu7bp5BF-yu7-98fuaasD9CFM7PgizzF-dCwHYXipShIP3LDo9zMrHsOUiCI1lUrC4c_GOHS89fUjn1UdnnYaxbirC8bQpHLHSVewNYB2dRQ8nTK50v-J7DJf6H2nbY19QAOgkwuzNH7Th3KkJDCBcnnHXmuVQ"/><div class="flex flex-col min-w-0 leading-none"><span class="font-headline-sm text-body-lg text-on-surface font-semibold truncate tracking-tight">Intraday Tracker</span><span class="font-label-caps text-label-caps text-on-surface-variant truncate uppercase">NSE Cash Decision Support</span></div></div><nav class="p-space-sm flex flex-col gap-1" data-active-classes="bg-surface-container-high text-primary font-semibold"><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dashboard" href="#"><span class="font-body-md text-body-md truncate">Dashboard</span></a><a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm rounded-lg transition-colors bg-surface-container-high text-primary font-semibold" data-path="markets" href="#"><span class="font-body-md text-body-md truncate">Markets</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="signals" href="#"><span class="font-body-md text-body-md truncate">Signals</span><span class="px-1.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-numeric-sm text-label-numeric-sm">2 active</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="trades" href="#"><span class="font-body-md text-body-md truncate">Trades</span><span class="px-1.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-numeric-sm text-label-numeric-sm">2 open</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="journal" href="#"><span class="font-body-md text-body-md truncate">Journal</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="performance" href="#"><span class="font-body-md text-body-md truncate">Performance</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="font-body-md text-body-md truncate">Settings</span></a></nav></div><div class="p-space-sm border-t border-outline-variant/30"><div class="p-space-sm rounded-lg bg-surface-container-low border border-outline-variant/40 flex items-start gap-space-xs"><span class="material-symbols-outlined text-secondary text-[18px] mt-0.5 shrink-0">verified_user</span><div class="flex flex-col min-w-0"><span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider font-bold">Safe Execution Mode</span><span class="font-body-sm text-body-sm text-on-surface-variant leading-tight truncate mt-0.5">Manual Journal Only · No Broker Order Triggered</span></div></div></div></aside><div class="pl-[248px]"><header class="fixed top-0 left-[248px] right-0 h-14 bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant/40 z-40 px-space-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md min-w-0"><div class="flex items-center gap-2 px-space-sm py-1 rounded bg-secondary-fixed/30 border border-secondary-fixed shrink-0"><span class="flex h-2 w-2 relative"><span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span></span><span class="font-label-caps text-label-caps text-secondary font-bold uppercase tracking-wider">LIVE</span><span class="font-label-numeric-sm text-label-numeric-sm text-on-surface border-l border-outline-variant/40 pl-2 whitespace-nowrap">Angel One SmartAPI · IST 03:29:59 PM · Freshness 0.8s</span></div><div class="relative w-72 lg:w-96"><span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span><input class="w-full h-8 pl-8 pr-8 rounded bg-surface border border-outline-variant/50 font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20" placeholder="Search eligible NSE cash equities (e.g. RELIANCE, HDFCBANK)..." type="text"/><kbd class="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-label-numeric-sm text-on-surface-variant bg-surface-container border border-outline-variant/40 rounded">⌘K</kbd></div></div><div class="flex items-center gap-space-md shrink-0"><button class="relative p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="h-4 w-px bg-outline-variant/40"></div><div class="flex items-center gap-space-sm"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-outline-variant/40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwnqcbM0hYSSkxrEym_0ya38soh7OTs3LYBkI0SHvd0fuIvGgwtxIycRh5a7sUjUptUmlYFLcqnkQqYxjHWTA9zd5RJ9SMc4Q0lJL-tGYaX64OqehqOkokPLyrbmC3skSuG5QlJxlDnOlR5C6AGp40rSn11eIzQPH7SuikO_qvaFBg9CUfZYPqS7YwdpqwelEoypoPc0fKICOPL5sWKg4lk-of1k0EPACOse1OPAyE93Frw2nbGP5f"/><div class="flex flex-col text-left leading-tight"><span class="font-body-sm text-body-sm font-semibold text-on-surface truncate">Ankit Sharma</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Intraday Equity</span></div></div></div></header><main class="relative pt-14 bg-background min-h-screen"><div class="flex flex-col w-full">
+<div class="px-space-lg py-space-md flex flex-col gap-space-md max-w-[1720px] mx-auto w-full">
+<!-- Section 1: Markets Page Header -->
+<header class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-sm pb-space-xs">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Markets</h1>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed/50 text-secondary font-label-caps text-label-caps uppercase tracking-wider">
+            Cash Equities
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          NSE Cash Equities · Universe: Eligible High-Liquidity Stocks (50 Monitored)
+        </p>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm">
+<div class="flex items-center gap-2 px-space-sm py-1.5 rounded-lg bg-surface-container-low shadow-sm">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+<span class="font-label-numeric-sm text-label-numeric-sm font-semibold text-secondary">LIVE</span>
+<span class="h-3 w-px bg-outline-variant/60"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">Angel One SmartAPI</span>
+<span class="h-3 w-px bg-outline-variant/60"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-semibold">IST 03:29:59 PM</span>
+<span class="h-3 w-px bg-outline-variant/60"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary">0.8s fresh</span>
+</div>
+<div class="flex items-center gap-1.5 px-space-sm py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">schedule</span>
+<span class="font-label-numeric-sm text-label-numeric-sm">09:15–15:30 IST · Regular Market Hours · 14ms</span>
+</div>
+</div>
+</header>
+<!-- Section 2: Top 4 Metric Overview Cards -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-sm">
+<!-- Card 1 -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Stocks Monitored</span>
+<span class="p-1 rounded-md bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[18px]">view_list</span>
+</span>
+</div>
+<div class="mt-2">
+<div class="flex items-baseline gap-1">
+<span class="font-label-numeric-lg text-label-numeric-lg text-on-surface font-bold">50</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Monitored</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+<span class="font-semibold text-secondary">42 eligible</span> · 8 filtered by spread
+          </p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Feed Health</span>
+<span class="p-1 rounded-md bg-secondary-fixed/40 text-secondary">
+<span class="material-symbols-outlined text-[18px]">wifi_tethering</span>
+</span>
+</div>
+<div class="mt-2">
+<div class="flex items-center gap-1.5">
+<span class="h-2.5 w-2.5 rounded-full bg-secondary"></span>
+<span class="font-label-numeric-lg text-label-numeric-lg text-secondary font-bold">Connected</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+<span class="font-label-numeric-sm text-label-numeric-sm font-semibold text-on-surface">1,284</span> ticks/min · 0 reconnects today
+          </p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Candle Engine</span>
+<span class="p-1 rounded-md bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[18px]">stacked_bar_chart</span>
+</span>
+</div>
+<div class="mt-2">
+<div class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">
+            1m &amp; 5m Sync
+          </div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 truncate">
+            5m closed <span class="font-label-numeric-sm text-label-numeric-sm font-medium text-on-surface">03:25</span> · Forming 03:25–03:30
+          </p>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Strategy Evaluation</span>
+<span class="p-1 rounded-md bg-surface-container-high text-primary">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+</span>
+</div>
+<div class="mt-2">
+<div class="flex items-baseline gap-1">
+<span class="font-label-numeric-lg text-label-numeric-lg text-on-surface font-bold">42</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Evaluated</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+<span class="font-semibold text-primary">2 setups active</span> · 40 consolidating
+          </p>
+</div>
+</div>
+</section>
+<!-- Section 3: Scanner Pipeline Visualization (Trader-Facing System Health) -->
+<section class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">schema</span>
+<span class="font-headline-sm text-body-lg text-on-surface font-semibold">Real-Time Evaluation Pipeline</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase ml-2">Pipeline Latency: ~14ms</span>
+</div>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary bg-secondary-fixed/30 px-2 py-0.5 rounded-full">
+          All Nodes Operational
+        </span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
+<!-- Node 1 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between relative group hover:bg-surface-container transition-colors">
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Node 1</span>
+<span class="h-2 w-2 rounded-full bg-secondary"></span>
+</div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface block">SmartAPI Feed</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant text-[11px] block mt-0.5">WebSocket Live</span>
+</div>
+<span class="font-label-caps text-label-caps text-secondary font-medium mt-2">STREAM ACTIVE</span>
+</div>
+<!-- Node 2 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between relative group hover:bg-surface-container transition-colors">
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Node 2</span>
+<span class="h-2 w-2 rounded-full bg-secondary"></span>
+</div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface block">Tick Normalizer</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant text-[11px] block mt-0.5">1,284 ticks/min</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant font-medium mt-2">RAW TICK PARSED</span>
+</div>
+<!-- Node 3 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between relative group hover:bg-surface-container transition-colors">
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Node 3</span>
+<span class="h-2 w-2 rounded-full bg-secondary"></span>
+</div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface block">Candle Engine</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant text-[11px] block mt-0.5">1m &amp; 5m Synced</span>
+</div>
+<span class="font-label-caps text-label-caps text-secondary font-medium mt-2">03:25:00 CONFIRMED</span>
+</div>
+<!-- Node 4 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between relative group hover:bg-surface-container transition-colors">
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Node 4</span>
+<span class="h-2 w-2 rounded-full bg-primary"></span>
+</div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface block">Liquidity Filter</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant text-[11px] block mt-0.5">42 Passed · 8 Dropped</span>
+</div>
+<span class="font-label-caps text-label-caps text-primary font-medium mt-2">SPREAD &lt; 0.05%</span>
+</div>
+<!-- Node 5 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col justify-between relative group hover:bg-surface-container transition-colors">
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Node 5</span>
+<span class="h-2 w-2 rounded-full bg-secondary"></span>
+</div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface block">Strategy Engine</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant text-[11px] block mt-0.5">intraday-momentum-v1</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant font-medium mt-2">42 EVALUATED</span>
+</div>
+<!-- Node 6 -->
+<div class="p-space-sm rounded-lg bg-secondary-fixed/20 flex flex-col justify-between relative group hover:bg-secondary-fixed/30 transition-colors">
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps text-secondary uppercase tracking-wider font-bold">Node 6</span>
+<span class="h-2 w-2 rounded-full bg-secondary"></span>
+</div>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface block">Active Signals</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-secondary text-[11px] block mt-0.5 font-bold">RELIANCE · INFY</span>
+</div>
+<span class="font-label-caps text-label-caps text-secondary font-bold mt-2">2 ACTIONABLE SETUPS</span>
+</div>
+</div>
+</section>
+<!-- Section 4: Feed Health & Candle Engine Detailed Section (Two-Column Layout) -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-space-sm">
+<!-- Left Column: Feed Health Card -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-sm mb-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary">sensors</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Feed Health</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed/30 font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">
+              ● Connected
+            </span>
+</div>
+<div class="space-y-2.5">
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-sm rounded-lg">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Provider</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Angel One SmartAPI WebSocket</span>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-sm rounded-lg">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Connection State</span>
+<span class="font-label-numeric-sm text-label-numeric-sm font-bold text-secondary">● LIVE / CONNECTED</span>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-sm rounded-lg">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Connection Uptime</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface">Since 09:14:52 AM IST <span class="text-on-surface-variant">(6h 15m)</span></span>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-sm rounded-lg">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Reconnections</span>
+<span class="font-label-numeric-sm text-label-numeric-sm font-semibold text-on-surface">0 today</span>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-sm rounded-lg">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Last Tick Received</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-on-surface font-semibold">
+                03:29:59.412 PM IST <span class="text-secondary font-normal">(412ms ago)</span>
+</span>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 flex items-center justify-between text-on-surface-variant">
+<span class="font-label-caps text-label-caps uppercase">Average Ping Latency</span>
+<div class="flex items-center gap-1.5">
+<span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-numeric-sm text-label-numeric-sm font-bold text-on-surface">16ms</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Candle Engine Status Card -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-sm mb-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">data_thresholding</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Candle Engine Status</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-numeric-sm text-label-numeric-sm text-primary font-semibold">
+              42 Instruments Syncing
+            </span>
+</div>
+<div class="space-y-2.5">
+<div class="p-2.5 rounded-lg bg-surface-container-low">
+<div class="flex items-center justify-between mb-1">
+<span class="font-body-sm text-body-sm font-medium text-on-surface">1-Minute Candle aggregation</span>
+<span class="font-label-numeric-sm text-label-numeric-sm font-semibold text-secondary">● Synced</span>
+</div>
+<p class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">
+                Last Completed: <span class="text-on-surface font-semibold">03:29:00 PM IST</span> · 42 instruments aggregated
+              </p>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-low">
+<div class="flex items-center justify-between mb-1">
+<span class="font-body-sm text-body-sm font-medium text-on-surface">5-Minute Candle aggregation</span>
+<span class="font-label-numeric-sm text-label-numeric-sm font-semibold text-secondary">● Synced</span>
+</div>
+<p class="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">
+                Last Completed: <span class="text-on-surface font-semibold">03:25:00 PM IST</span> · 42 instruments aggregated
+              </p>
+</div>
+<!-- Forming Candle Progress -->
+<div class="p-2.5 rounded-lg bg-surface-container">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant font-bold">Currently Forming Candle</span>
+<span class="font-label-numeric-sm text-label-numeric-sm text-primary font-bold">03:25:00 – 03:30:00 PM IST</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5 my-1.5 overflow-hidden">
+<div class="bg-primary h-1.5 rounded-full transition-all duration-300" style="width: 99%"></div>
+</div>
+<div class="flex justify-between font-label-numeric-sm text-label-numeric-sm text-on-surface-variant text-[11px]">
+<span>Elapsed: 4m 59s</span>
+<span class="font-semibold text-primary">99% complete (1s to next close)</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-3 flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-tertiary">info</span>
+<span class="font-body-sm text-body-sm text-[12px] italic">
+            Strategy conditions only evaluate against confirmed completed candles.
+          </span>
+</div>
+</div>
+</section>
+<!-- Section 5: Monitored Universe Market Watch Table -->
+<section class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-sm">
+<!-- Toolbar & Filters -->
+<div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm pb-space-xs">
+<div class="flex flex-wrap items-center gap-1.5" id="filter-container">
+<button class="px-space-sm py-1.5 rounded-lg font-body-sm text-body-sm font-semibold bg-primary text-on-primary shadow-sm hover:opacity-95 transition-opacity" data-filter="all">
+            All (50)
+          </button>
+<button class="px-space-sm py-1.5 rounded-lg font-body-sm text-body-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-filter="setups">
+            Actionable Setups (2)
+          </button>
+<button class="px-space-sm py-1.5 rounded-lg font-body-sm text-body-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-filter="intrade">
+            In Trade (2)
+          </button>
+<button class="px-space-sm py-1.5 rounded-lg font-body-sm text-body-sm text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" data-filter="highrvol">
+            High RVOL (6)
+          </button>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative w-full sm:w-64">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-[16px]">search</span>
+<input class="w-full h-8 pl-8 pr-3 rounded bg-surface-container-low font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface" id="symbol-search" placeholder="Filter symbol..." type="text"/>
+</div>
+<button class="h-8 px-space-sm flex items-center gap-1.5 rounded bg-surface-container text-on-surface hover:bg-surface-container-high text-body-sm font-body-sm transition-colors shrink-0">
+<span class="material-symbols-outlined text-[16px]">download</span>
+<span>Export CSV</span>
+</button>
+</div>
+</div>
+<!-- High-Density Institutional Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse" id="universe-table">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps tracking-wider">
+<th class="py-2 px-space-sm text-left">Symbol</th>
+<th class="py-2 px-space-sm text-right">LTP (₹)</th>
+<th class="py-2 px-space-sm text-right">Day %</th>
+<th class="py-2 px-space-sm text-right">1m %</th>
+<th class="py-2 px-space-sm text-right">5m %</th>
+<th class="py-2 px-space-sm text-right">Day Volume</th>
+<th class="py-2 px-space-sm text-right">RVOL</th>
+<th class="py-2 px-space-sm text-center">Volatility</th>
+<th class="py-2 px-space-sm text-center">Scanner State</th>
+<th class="py-2 px-space-sm text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface">
+<!-- Row 1: RELIANCE -->
+<tr class="h-9 hover:bg-surface-container-low transition-colors group cursor-pointer" data-category="setups highrvol">
+<td class="py-1 px-space-sm">
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary">RELIANCE</span>
+<span class="text-[10px] text-on-surface-variant truncate">Reliance Industries Ltd</span>
+</div>
+</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-md text-label-numeric-md font-semibold">1,452.80</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">+0.84%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary">+0.12%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-medium">+0.31%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">2.42M</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">1.82x</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-numeric-sm text-[11px]">Normal</span>
+</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-caps text-label-caps font-bold">
+                  ↑ Active Long Signal
+                </span>
+</td>
+<td class="py-1 px-space-sm text-right">
+<a class="inline-flex items-center gap-1 font-body-sm text-body-sm font-semibold text-primary hover:underline" href="/dashboard/markets/RELIANCE">
+<span>View</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 2: INFY -->
+<tr class="h-9 hover:bg-surface-container-low transition-colors group cursor-pointer" data-category="setups highrvol">
+<td class="py-1 px-space-sm">
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary">INFY</span>
+<span class="text-[10px] text-on-surface-variant truncate">Infosys Limited</span>
+</div>
+</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-md text-label-numeric-md font-semibold">1,418.50</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-error font-semibold">-0.84%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-error">-0.15%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-error font-medium">-0.40%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">1.95M</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-tertiary font-semibold">2.14x</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-numeric-sm text-[11px]">Elevated</span>
+</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-caps text-label-caps font-bold">
+                  ↓ Active Short Signal
+                </span>
+</td>
+<td class="py-1 px-space-sm text-right">
+<a class="inline-flex items-center gap-1 font-body-sm text-body-sm font-semibold text-primary hover:underline" href="/dashboard/markets/INFY">
+<span>View</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 3: HDFCBANK -->
+<tr class="h-9 hover:bg-surface-container-low transition-colors group cursor-pointer" data-category="intrade highrvol">
+<td class="py-1 px-space-sm">
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary">HDFCBANK</span>
+<span class="text-[10px] text-on-surface-variant truncate">HDFC Bank Limited</span>
+</div>
+</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-md text-label-numeric-md font-semibold">1,534.60</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">+1.08%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary">+0.05%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-medium">+0.22%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">1.85M</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">1.45x</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-numeric-sm text-[11px]">Normal</span>
+</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-caps text-label-caps font-bold">
+                  ● In Trade (Long)
+                </span>
+</td>
+<td class="py-1 px-space-sm text-right">
+<a class="inline-flex items-center gap-1 font-body-sm text-body-sm font-semibold text-primary hover:underline" href="/dashboard/markets/HDFCBANK">
+<span>View</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 4: TATAMOTORS -->
+<tr class="h-9 hover:bg-surface-container-low transition-colors group cursor-pointer" data-category="intrade highrvol">
+<td class="py-1 px-space-sm">
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary">TATAMOTORS</span>
+<span class="text-[10px] text-on-surface-variant truncate">Tata Motors Limited</span>
+</div>
+</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-md text-label-numeric-md font-semibold">969.20</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">+0.71%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary">+0.08%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-medium">+0.18%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">3.10M</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">1.32x</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-numeric-sm text-[11px]">Normal</span>
+</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-caps text-label-caps font-bold">
+                  ● In Trade (Long)
+                </span>
+</td>
+<td class="py-1 px-space-sm text-right">
+<a class="inline-flex items-center gap-1 font-body-sm text-body-sm font-semibold text-primary hover:underline" href="/dashboard/markets/TATAMOTORS">
+<span>View</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 5: ICICIBANK -->
+<tr class="h-9 hover:bg-surface-container-low transition-colors group cursor-pointer" data-category="all">
+<td class="py-1 px-space-sm">
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary">ICICIBANK</span>
+<span class="text-[10px] text-on-surface-variant truncate">ICICI Bank Limited</span>
+</div>
+</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-md text-label-numeric-md font-semibold">941.30</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">+0.73%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-error">-0.02%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-medium">+0.15%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">1.12M</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">1.10x</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-numeric-sm text-[11px]">Normal</span>
+</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps">
+                  Monitoring
+                </span>
+</td>
+<td class="py-1 px-space-sm text-right">
+<a class="inline-flex items-center gap-1 font-body-sm text-body-sm font-semibold text-primary hover:underline" href="/dashboard/markets/ICICIBANK">
+<span>View</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 6: SBIN -->
+<tr class="h-9 hover:bg-surface-container-low transition-colors group cursor-pointer" data-category="all">
+<td class="py-1 px-space-sm">
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary">SBIN</span>
+<span class="text-[10px] text-on-surface-variant truncate">State Bank of India</span>
+</div>
+</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-md text-label-numeric-md font-semibold">782.40</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">+0.35%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary">+0.02%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-medium">+0.08%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">2.20M</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">0.95x</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2 py-0.5 rounded-full bg-surface-variant text-on-surface-variant font-label-numeric-sm text-[11px]">Compressed</span>
+</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps">
+                  Monitoring
+                </span>
+</td>
+<td class="py-1 px-space-sm text-right">
+<a class="inline-flex items-center gap-1 font-body-sm text-body-sm font-semibold text-primary hover:underline" href="/dashboard/markets/SBIN">
+<span>View</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 7: TCS -->
+<tr class="h-9 hover:bg-surface-container-low transition-colors group cursor-pointer" data-category="all">
+<td class="py-1 px-space-sm">
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary">TCS</span>
+<span class="text-[10px] text-on-surface-variant truncate">Tata Consultancy Services</span>
+</div>
+</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-md text-label-numeric-md font-semibold">3,892.10</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-error font-semibold">-0.42%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-error">-0.08%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-error font-medium">-0.12%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">850K</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">0.88x</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-numeric-sm text-[11px]">Normal</span>
+</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps">
+                  Monitoring
+                </span>
+</td>
+<td class="py-1 px-space-sm text-right">
+<a class="inline-flex items-center gap-1 font-body-sm text-body-sm font-semibold text-primary hover:underline" href="/dashboard/markets/TCS">
+<span>View</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 8: AXISBANK -->
+<tr class="h-9 hover:bg-surface-container-low transition-colors group cursor-pointer" data-category="all">
+<td class="py-1 px-space-sm">
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary">AXISBANK</span>
+<span class="text-[10px] text-on-surface-variant truncate">Axis Bank Limited</span>
+</div>
+</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-md text-label-numeric-md font-semibold">1,124.50</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">+0.55%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary">+0.04%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-medium">+0.10%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">1.40M</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">1.05x</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-numeric-sm text-[11px]">Normal</span>
+</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps">
+                  Monitoring
+                </span>
+</td>
+<td class="py-1 px-space-sm text-right">
+<a class="inline-flex items-center gap-1 font-body-sm text-body-sm font-semibold text-primary hover:underline" href="/dashboard/markets/AXISBANK">
+<span>View</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 9: KOTAKBANK -->
+<tr class="h-9 hover:bg-surface-container-low transition-colors group cursor-pointer" data-category="all">
+<td class="py-1 px-space-sm">
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary">KOTAKBANK</span>
+<span class="text-[10px] text-on-surface-variant truncate">Kotak Mahindra Bank</span>
+</div>
+</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-md text-label-numeric-md font-semibold">1,780.00</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-error font-semibold">-0.20%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-error">-0.01%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-error font-medium">-0.05%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">920K</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">0.78x</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2 py-0.5 rounded-full bg-surface-variant text-on-surface-variant font-label-numeric-sm text-[11px]">Compressed</span>
+</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps">
+                  Monitoring
+                </span>
+</td>
+<td class="py-1 px-space-sm text-right">
+<a class="inline-flex items-center gap-1 font-body-sm text-body-sm font-semibold text-primary hover:underline" href="/dashboard/markets/KOTAKBANK">
+<span>View</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 10: LT -->
+<tr class="h-9 hover:bg-surface-container-low transition-colors group cursor-pointer" data-category="highrvol">
+<td class="py-1 px-space-sm">
+<div class="flex flex-col min-w-0">
+<span class="font-body-sm text-body-sm font-bold text-on-surface group-hover:text-primary">LT</span>
+<span class="text-[10px] text-on-surface-variant truncate">Larsen &amp; Toubro</span>
+</div>
+</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-md text-label-numeric-md font-semibold">3,620.40</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">+1.15%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary">+0.10%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-medium">+0.25%</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">780K</td>
+<td class="py-1 px-space-sm text-right font-label-numeric-sm text-label-numeric-sm text-secondary font-semibold">1.25x</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-numeric-sm text-[11px]">Normal</span>
+</td>
+<td class="py-1 px-space-sm text-center">
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps">
+                  Monitoring
+                </span>
+</td>
+<td class="py-1 px-space-sm text-right">
+<a class="inline-flex items-center gap-1 font-body-sm text-body-sm font-semibold text-primary hover:underline" href="/dashboard/markets/LT">
+<span>View</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex items-center justify-between pt-space-xs text-on-surface-variant font-label-numeric-sm text-label-numeric-sm">
+<span>Showing 10 of 50 active instruments</span>
+<span>Filter applied: Active universe</span>
+</div>
+</section>
+<!-- Section 6: Institutional Product Discipline Disclaimer Footer -->
+<footer class="p-space-sm rounded-lg bg-surface-container-low text-on-surface-variant flex items-start sm:items-center gap-space-sm shadow-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] shrink-0">verified_user</span>
+<p class="font-body-sm text-body-sm leading-relaxed">
+<span class="font-semibold text-on-surface">Institutional Product Discipline:</span> Intraday Stock Tracker is a personal market-observation, scanner-verification, and manual trade-journaling platform. No orders are placed or transmitted to SEBI registered brokers.
+      </p>
+</footer>
+</div>
+</div>
+<script>
+  (function() {
+    const filterButtons = document.querySelectorAll('#filter-container button');
+    const tableRows = document.querySelectorAll('#universe-table tbody tr');
+    const searchInput = document.getElementById('symbol-search');
+
+    function applyFilters() {
+      const activeFilterBtn = document.querySelector('#filter-container button.bg-primary');
+      const filterKey = activeFilterBtn ? activeFilterBtn.dataset.filter : 'all';
+      const query = (searchInput.value || '').trim().toUpperCase();
+
+      tableRows.forEach(row => {
+        const rowCategory = row.dataset.category || '';
+        const symbolText = row.querySelector('td:first-child span.font-body-sm').textContent.trim().toUpperCase();
+
+        const matchesFilter = filterKey === 'all' || rowCategory.includes(filterKey);
+        const matchesSearch = query === '' || symbolText.includes(query);
+
+        if (matchesFilter && matchesSearch) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => {
+          b.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+          b.classList.add('bg-surface-container', 'text-on-surface-variant');
+        });
+        btn.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+        btn.classList.remove('bg-surface-container', 'text-on-surface-variant');
+        applyFilters();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', applyFilters);
+    }
+  })();
+</script></main></div></body></html>
