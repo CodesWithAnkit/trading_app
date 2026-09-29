@@ -7,7 +7,7 @@ export function Topbar() {
   const timeString = new Date(updatedAt).toLocaleTimeString('en-US', { hour12: true })
 
   return (
-    <header className="h-14 bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant/40 z-40 px-space-lg flex items-center justify-between gap-space-md shrink-0">
+    <header className="fixed top-0 left-0 lg:left-[248px] right-0 h-14 bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant/40 z-40 px-space-lg flex items-center justify-between gap-space-md shrink-0">
       <div className="flex items-center gap-space-md min-w-0">
         <div className="flex items-center gap-2 px-space-sm py-1 rounded bg-secondary-fixed/30 border border-secondary-fixed hidden sm:flex">
           <span className="flex h-2 w-2 relative">

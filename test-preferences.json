@@ -1,0 +1,9 @@
+{
+  "tool": "vitest",
+  "gate": null,
+  "additionalTools": [],
+  "e2eTool": "@playwright/test",
+  "testDir": "",
+  "filePattern": "*.spec.ts",
+  "packageManager": "npm"
+}

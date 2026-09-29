@@ -20,7 +20,7 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="w-[248px] h-full hidden md:flex flex-col justify-between bg-surface-container-lowest border-r border-outline-variant/40 shrink-0 select-none">
+    <aside className="fixed left-0 top-0 h-full w-[248px] bg-surface-container-lowest border-r border-outline-variant/40 z-50 hidden lg:flex flex-col justify-between select-none">
       <div className="flex flex-col">
         <div className="h-14 px-space-lg flex items-center gap-space-sm border-b border-outline-variant/30">
           <img

@@ -1,6 +1,5 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, HttpException, HttpStatus } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service.js';
-import { mockTrades } from './mock-trades.data.js';
 
 @Controller('api/v1/trades')
 export class TradesController {
@@ -8,12 +7,30 @@ export class TradesController {
   
   @Get()
   async getTrades() {
-    return { data: mockTrades, meta: { total: mockTrades.length } };
+    if (!this.supabase.client) {
+      throw new HttpException('Database not configured', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    const { data, error } = await this.supabase.client.from('trades').select('*');
+    if (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return { data: data || [], meta: { total: data?.length || 0 } };
   }
 
   @Post()
   async createTrade(@Body() createTradeDto: any) {
-    return { id: 'new-trade-id', ...createTradeDto };
+    if (!this.supabase.client) {
+      throw new HttpException('Database not configured', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    const { data, error } = await this.supabase.client
+      .from('trades')
+      .insert([createTradeDto])
+      .select()
+      .single();
+    if (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return data;
   }
 
   @Post('validate-entry')
@@ -23,6 +40,18 @@ export class TradesController {
 
   @Post(':id/exits')
   async exitTrade(@Param('id') id: string, @Body() exitDto: any) {
-    return { tradeId: id, status: 'exited' };
+    if (!this.supabase.client) {
+      throw new HttpException('Database not configured', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    const { data, error } = await this.supabase.client
+      .from('trades')
+      .update({ status: 'CLOSED', ...exitDto })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return data;
   }
 }

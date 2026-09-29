@@ -1,7 +1,7 @@
 # 0002. Implement Intraday Stock Tracker Dashboard UI
 
-**Date**: 2026-09-28
-**Status**: In Progress
+**Date**: 2026-09-29
+**Status**: Accepted
 
 ## Summary
 
@@ -22,6 +22,7 @@ This decision defines the UI-only implementation phase for the Intraday Stock Tr
 - **AC-6**: The application state transitions properly through Signal lifecycles (Candidate → Active → Expiring → Expired) and Trade lifecycles (Open → Partial → Closed) using local context and URL state.
 - **AC-7**: Trade Journal properly displays the list of manual trade history and opens an Audit Drawer for detailed views.
 - **AC-8**: Placeholder assets (e.g., Unsplash/pravatar) are used for avatars where applicable.
+- **AC-9**: Layout must be fully responsive across mobile and desktop. On desktop, the sidebar is fixed on the left; on mobile, the sidebar is hidden and replaced by a fixed bottom floating navigation bar for thumb reach. Padding and alignments adapt across breakpoints.
 
 ## Feature design
 
@@ -71,10 +72,11 @@ There is no backend authentication or authorization in this phase. The applicati
 ## Build plan
 
 1. [x] Extract Stitch design tokens into Tailwind configuration and setup global layout shell. satisfies **AC-1**, **AC-8**
-2. [x] Build mock React Context providers (`useDashboardState`, `useSignals`, `useTrades`) and populate them with realistic mock data. satisfies **AC-6**
-3. [x] Implement Screen 1 (Main Dashboard) and explicitly handle Dashboard No Active Signals State and Dashboard Delayed/Disconnected Data State. satisfies **AC-1**, **AC-2**
-4. [x] Implement Screen 2 (Signal Detail) and Screen 3 (Expired Signal Detail state) with countdown timers. satisfies **AC-1**, **AC-3**
-5. [x] Implement Screen 4 (Record Trade Entry Modal) and Screen 5 (Risk Limit Validation Error Modal state) with client-side risk limit validation. satisfies **AC-1**, **AC-4**
-6. [x] Implement Screen 6 (Open Trade Detail) with interactions for Partial (25/50/75/100%) and Full Exits. satisfies **AC-1**, **AC-5**
-7. [x] Implement Screen 7 (Trade Journal + Audit Drawer). satisfies **AC-1**, **AC-7**
+2. [x] Update layout shell to be fully responsive, introducing a hidden-on-desktop mobile bottom navigation bar and breakpoint-aware padding/sidebar handling. satisfies **AC-9**
+3. [x] Build mock React Context providers (`useDashboardState`, `useSignals`, `useTrades`) and populate them with realistic mock data. satisfies **AC-6**
+4. [x] Implement Screen 1 (Main Dashboard) and explicitly handle Dashboard No Active Signals State and Dashboard Delayed/Disconnected Data State. satisfies **AC-1**, **AC-2**
+5. [x] Implement Screen 2 (Signal Detail) and Screen 3 (Expired Signal Detail state) with countdown timers. satisfies **AC-1**, **AC-3**
+6. [x] Implement Screen 4 (Record Trade Entry Modal) and Screen 5 (Risk Limit Validation Error Modal state) with client-side risk limit validation. satisfies **AC-1**, **AC-4**
+7. [x] Implement Screen 6 (Open Trade Detail) with interactions for Partial (25/50/75/100%) and Full Exits. satisfies **AC-1**, **AC-5**
+8. [x] Implement Screen 7 (Trade Journal + Audit Drawer). satisfies **AC-1**, **AC-7**
 

@@ -32,3 +32,7 @@ _Steps derived from spec 0002 acceptance criteria. `/check verify` runs these; `
 ## UI / manual (Trade Journal)
 - [ ] Visit `/dashboard/journal` → Ensure summary metrics and trade list render correctly → AC-7
 - [ ] Click "Audit" on a trade in the journal → Ensure Audit Drawer (Screen 7) opens showing timeline and details → AC-7
+
+## UI / manual (Responsive Layout)
+- [ ] Resize window to mobile width → Ensure `Sidebar` hides and `BottomNav` appears at the bottom of the screen → AC-9
+- [ ] On desktop width (lg+) → Ensure `Sidebar` is visible and `BottomNav` is hidden → AC-9

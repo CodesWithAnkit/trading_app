@@ -7,12 +7,12 @@ import { BottomNav } from "./BottomNav"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen bg-background overflow-hidden w-full">
+    <div className="bg-background font-body-md text-on-surface antialiased min-h-screen w-full">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
+      <div className="lg:pl-[248px]">
         <Topbar />
-        <main className="flex-1 overflow-auto relative">
-          <div className="mx-auto max-w-360 px-8 py-8">
+        <main className="relative pt-14 bg-background min-h-screen">
+          <div className="flex flex-col w-full pb-24 lg:pb-0">
             {children}
           </div>
         </main>

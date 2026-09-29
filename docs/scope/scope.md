@@ -7,7 +7,8 @@
 | Strategy Engine Implementation (Phase 2) | done |
 | Intraday Stock Tracker Dashboard UI | done |
 | Remaining Intraday Dashboard Pages | done |
-| Real API Implementation (Phase 3) | in-progress |
+| Real API Implementation (Phase 3) | done |
+| Angel One Market Data Integration (Phase 4) | planned |
 
 ---
 
@@ -60,7 +61,7 @@
 
 ---
 
-## Real API Implementation (Phase 3) `in-progress`
+## Real API Implementation (Phase 3) `done`
 
 **Intent**: Transition from local mock data to a production backend featuring a NestJS Backend for the API and Scanner, Supabase PostgreSQL for persistence, and migrating Next.js to `apps/web`.
 **Done when**: The UI runs against the real NestJS API, Supabase stores signals/trades securely, and the scanner runs continuously inside the NestJS worker.
@@ -71,5 +72,23 @@
   - [x] Migrate Scanner Pipeline into NestJS Module
   - [x] Implement Supabase Client and REST API Controllers
   - [x] Update frontend adapters to consume the new NestJS API
+- [x] Verify it: /check verify
+- [x] Test it: /test
+
+---
+
+## Angel One Market Data Integration (Phase 4) `planned`
+
+**Intent**: Integrate Angel One's SmartAPI as the real market data source for the Scanner Worker, discarding mock data.
+**Done when**: The worker maintains a stable WebSocket connection to Angel One, normalizes ticks into 1m/5m candles, and the strategy engine acts on this verified real market data.
+
+- [ ] Design it (spec): [0005](../specs/0005-angel-one-market-data.md)
+- [ ] Build it: /develop Angel One Market Data Integration
+  - [ ] Define Provider interface and canonical domain types (AC-3, AC-4)
+  - [ ] Implement TickNormalizer and CandleAggregator (AC-3, AC-4)
+  - [ ] Create AngelOneMarketDataProvider with SmartAPI SDK (AC-1, AC-2)
+  - [ ] Implement reconnect state machine (AC-5)
+  - [ ] Wire provider into Scanner, flush FeedHealth to Supabase (AC-1, AC-4, AC-6, AC-8)
+  - [ ] Implement live smoke-test CLI script (AC-7)
 - [ ] Verify it: /check verify
 - [ ] Test it: /test
