@@ -7,9 +7,6 @@ vi.mock('smartapi-javascript', () => {
       generateSession = vi.fn().mockResolvedValue({
         data: { feedToken: 'mock-feed-token', jwtToken: 'mock-jwt-token' }
       });
-      gainersLosers = vi.fn();
-      searchScrip = vi.fn();
-      getCandleData = vi.fn();
     },
     WebSocketV2: class {
       connect = vi.fn().mockResolvedValue(true);
@@ -88,28 +85,18 @@ describe('AngelOneMarketDataProvider', () => {
     expect(ticks[0]).toMatchObject({ symbol: 'RELIANCE', ltp: 1450.25, prevClose: 1415 });
   });
 
-  it('parses historical 1m candles and logs in again once on an auth error (covers 0009 AC-15)', async () => {
-    const api = (provider as any).smartApi;
-    api.getCandleData
-      .mockResolvedValueOnce({ status: false, errorcode: 'AG8001', message: 'Invalid Token' })
-      .mockResolvedValueOnce({ status: true, data: [['2026-09-29T09:15:00+05:30', 100, 101, 99, 100.5, 1200]] });
+  it('subscribes in chunks of 50 tokens with unique correlation ids, on add and on reconnect (covers 0009 AC-12)', async () => {
+    await provider.connect();
+    const socket = (provider as any).webSocket;
+    const tokens = Array.from({ length: 120 }, (_, i) => String(1000 + i));
 
-    const candles = await provider.getCandles1m('2885', new Date(), new Date());
+    await provider.subscribe([{ exchangeType: '1', tokens }]);
+    const first = socket.fetchData.mock.calls.map((c: any[]) => c[0]);
+    expect(first.map((r: any) => r.tokens.length)).toEqual([50, 50, 20]);
+    expect(new Set(first.map((r: any) => r.correlationID)).size).toBe(3);
 
-    expect(api.generateSession).toHaveBeenCalledTimes(1);
-    expect(api.getCandleData.mock.calls[0][0]).toMatchObject({ exchange: 'NSE', symboltoken: '2885', interval: 'ONE_MINUTE' });
-    expect(candles).toEqual([{ startTime: new Date('2026-09-29T03:45:00Z'), open: 100, high: 101, low: 99, close: 100.5, volume: 1200 }]);
-  });
-
-  it('surfaces a failed REST call as an error', async () => {
-    (provider as any).smartApi.gainersLosers.mockResolvedValue({ status: false, errorcode: 'AB2001', message: 'Internal error' });
-    await expect(provider.fetchFnoPriceGainers()).rejects.toThrow('AB2001');
-  });
-
-  it('reports an Angel error payload with no status flag instead of treating it as empty (AG8004)', async () => {
-    (provider as any).smartApi.getCandleData.mockResolvedValue({ success: false, message: 'Invalid API Key', errorCode: 'AG8004', data: '' });
-    await expect(provider.getCandles1m('2885', new Date(), new Date())).rejects.toThrow('AG8004 Invalid API Key');
-    (provider as any).smartApi.searchScrip.mockResolvedValue({ message: 'Invalid API Key', data: '' });
-    await expect(provider.searchScrip('M&M')).rejects.toThrow('Invalid API Key');
+    socket.fetchData.mockClear();
+    (provider as any).handleConnected(); // reconnect replays the full set in the same chunks
+    expect(socket.fetchData.mock.calls.map((c: any[]) => c[0].tokens.length)).toEqual([50, 50, 20]);
   });
 });

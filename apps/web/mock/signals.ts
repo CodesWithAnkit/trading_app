@@ -1,4 +1,9 @@
-export type SignalStatus = "ACTIVE" | "EXPIRING" | "EXPIRED" | "INVALIDATED" | "SKIPPED" | "ENTERED"
+export type SignalStatus =
+  | "ACTIVE" | "EXPIRING" | "EXPIRED" | "INVALIDATED" | "SKIPPED" | "ENTERED"
+  // Live exits (spec 0010)
+  | "TARGET_HIT" | "STOP_HIT" | "TIME_EXIT"
+
+export type ExitReason = "TARGET" | "STOP" | "TIME"
 
 export type Signal = {
   id: string
@@ -24,6 +29,22 @@ export type Signal = {
     liquidity: string
     riskReward: string
   }
+  /** Live exit (spec 0010); absent or null while the plan is open. */
+  exitPrice?: number | null
+  exitAt?: string | null
+  exitReason?: ExitReason | null
+}
+
+/** The `signal:exit` stream event (spec 0010 AC-6). */
+export type SignalExit = {
+  id: string
+  symbol: string
+  setup: string
+  reason: ExitReason
+  exitPrice: number
+  exitAt: string
+  pnlPct: number
+  stale: boolean
 }
 
 // Generate some mock timestamps relative to now

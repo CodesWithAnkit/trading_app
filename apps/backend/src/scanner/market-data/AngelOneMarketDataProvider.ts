@@ -3,20 +3,17 @@ import { SmartAPI, WebSocketV2 } from 'smartapi-javascript';
 import * as OTPAuth from 'otpauth';
 import {
   MarketDataProvider,
-  MarketDataRestClient,
-  HistoricalCandle,
   InstrumentSubscription,
   MarketTick,
   FeedHealth,
   FeedStatus
 } from './types.js';
 import { TickNormalizer, SymbolResolver } from './TickNormalizer.js';
-import { istDateTimeString } from '../time/ist.js';
 
 /** WebSocket V2 Quote mode: carries day open/high/low, previous close and day volume (spec 0009 AC-14). */
 const QUOTE_MODE = 2;
-/** Spacing between broker REST calls, to stay inside Angel One's per second limits. */
-const REST_SPACING_MS = 400;
+/** Tokens per subscribe request; larger requests can be rejected silently (spec 0009). */
+const SUBSCRIBE_CHUNK = 50;
 
 export interface AngelOneConfig {
   apiKey: string;
@@ -25,7 +22,7 @@ export interface AngelOneConfig {
   totpSecret: string;
 }
 
-export class AngelOneMarketDataProvider implements MarketDataProvider, MarketDataRestClient {
+export class AngelOneMarketDataProvider implements MarketDataProvider {
   private readonly logger = new Logger(AngelOneMarketDataProvider.name);
   private config: AngelOneConfig;
   
@@ -52,7 +49,6 @@ export class AngelOneMarketDataProvider implements MarketDataProvider, MarketDat
 
   /** Every token ever subscribed, per exchange type; replayed in full on reconnect. */
   private subscriptions = new Map<string, Set<string>>();
-  private restQueue: Promise<unknown> = Promise.resolve();
 
   constructor(config: AngelOneConfig) {
     this.config = config;
@@ -119,11 +115,6 @@ export class AngelOneMarketDataProvider implements MarketDataProvider, MarketDat
       throw new Error('Authentication succeeded but failed to receive a feedToken.');
     }
     return session.data;
-  }
-
-  /** Logs in for REST calls only (no WebSocket), e.g. for CLI tools. */
-  public async loginForRest(): Promise<void> {
-    await this.login();
   }
 
   public async disconnect(): Promise<void> {
@@ -237,19 +228,21 @@ export class AngelOneMarketDataProvider implements MarketDataProvider, MarketDat
   }
 
   private applySubscriptions(instruments: InstrumentSubscription[]) {
-    // Angel One V2 req structure for SDK's fetchData function
+    // Angel V2 request structure for the SDK's fetchData, sent in chunks of SUBSCRIBE_CHUNK tokens
+    let requests = 0;
     for (const inst of instruments) {
-      const req = {
-        correlationID: `sub-${Date.now()}`,
-        action: 1, // 1=sub
-        mode: QUOTE_MODE,
-        exchangeType: Number(inst.exchangeType),
-        tokens: inst.tokens
-      };
-      this.webSocket.fetchData(req);
+      for (let i = 0; i < inst.tokens.length; i += SUBSCRIBE_CHUNK) {
+        this.webSocket.fetchData({
+          correlationID: `sub-${Date.now()}-${requests++}`,
+          action: 1, // 1=sub
+          mode: QUOTE_MODE,
+          exchangeType: Number(inst.exchangeType),
+          tokens: inst.tokens.slice(i, i + SUBSCRIBE_CHUNK)
+        });
+      }
     }
     const count = instruments.reduce((sum, i) => sum + i.tokens.length, 0);
-    this.logger.log(`Requested Quote mode subscription for ${count} token(s); ${this.health.subscribedInstrumentCount} subscribed in total`);
+    this.logger.log(`Requested Quote mode subscription for ${count} token(s) in ${requests} request(s); ${this.health.subscribedInstrumentCount} subscribed in total`);
   }
 
   private handleRawTick(data: any) {
@@ -277,99 +270,4 @@ export class AngelOneMarketDataProvider implements MarketDataProvider, MarketDat
       this.logger.log(`Feed status changed to: ${status}`);
     }
   }
-
-  // --- Broker REST helpers (spec 0009 AC-12, AC-13, AC-15) ---
-
-  public async fetchFnoPriceGainers(): Promise<{ tradingSymbol?: string; percentChange?: number | string }[]> {
-    const res = await this.rest(() => this.smartApi.gainersLosers({ datatype: 'PercPriceGainers', expirytype: 'NEAR' }));
-    return Array.isArray(res?.data) ? res.data : [];
-  }
-
-  public async searchScrip(symbol: string): Promise<{ exchange?: string; tradingsymbol?: string; symboltoken?: string }[]> {
-    // The SDK resolves (never rejects) and returns the result list, or the raw error payload.
-    const res = await this.rest(() => this.smartApi.searchScrip({ exchange: 'NSE', searchscrip: symbol }));
-    return Array.isArray(res) ? res : [];
-  }
-
-  public async getCandles1m(token: string, from: Date, to: Date): Promise<HistoricalCandle[]> {
-    const res = await this.rest(() => this.smartApi.getCandleData({
-      exchange: 'NSE',
-      symboltoken: token,
-      interval: 'ONE_MINUTE',
-      fromdate: istDateTimeString(from),
-      todate: istDateTimeString(to)
-    }));
-    const rows: any[] = Array.isArray(res?.data) ? res.data : [];
-    return rows.map(([ts, open, high, low, close, volume]) => ({
-      startTime: new Date(ts),
-      open: Number(open),
-      high: Number(high),
-      low: Number(low),
-      close: Number(close),
-      volume: Number(volume)
-    }));
-  }
-
-  /**
-   * Runs broker REST calls one at a time, spaced out. Retries once after a rate limit
-   * error, and once after logging in again on an auth error.
-   */
-  private rest<T = any>(call: () => Promise<T>): Promise<T> {
-    const run = async (): Promise<T> => {
-      let res = await this.attempt(call);
-      if (isRateLimited(res)) {
-        await sleep(1000);
-        res = await this.attempt(call);
-      } else if (isAuthError(res)) {
-        this.logger.warn('Angel One REST session rejected; logging in again.');
-        await this.login();
-        res = await this.attempt(call);
-      }
-      if (res instanceof Error) throw res;
-      if (isFailure(res)) {
-        const r = res as any;
-        throw new Error(`Angel One REST call failed: ${r?.errorcode ?? r?.errorCode ?? ''} ${r?.message ?? 'unexpected response'}`.trim());
-      }
-      return res;
-    };
-    const next = this.restQueue.then(run, run);
-    this.restQueue = next.catch(() => undefined).then(() => sleep(REST_SPACING_MS));
-    return next;
-  }
-
-  private async attempt<T>(call: () => Promise<T>): Promise<T | Error> {
-    try {
-      return await call();
-    } catch (err: any) {
-      return err instanceof Error ? err : new Error(String(err?.message ?? err));
-    }
-  }
-}
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function errorText(res: any): string {
-  return `${res?.errorcode ?? res?.errorCode ?? ''} ${res?.message ?? ''} ${res?.response?.status ?? ''}`.toLowerCase();
-}
-
-function isRateLimited(res: any): boolean {
-  const text = errorText(res);
-  return text.includes('ab1004') || text.includes('rate') || text.includes('429');
-}
-
-function isAuthError(res: any): boolean {
-  const text = errorText(res);
-  return text.includes('ag8001') || text.includes('ag8002') || text.includes('invalid token') || text.includes('401');
-}
-
-/**
- * Success is an array (the SDK unwraps searchScrip) or `status`/`success` true. Angel's
- * errors come as `{ success: false, errorCode, message }` or `{ status: false, errorcode }`,
- * and some carry neither flag, so anything else is a failure.
- */
-function isFailure(res: any): boolean {
-  if (Array.isArray(res)) return false;
-  return !(res && typeof res === 'object' && (res.status === true || res.success === true));
 }

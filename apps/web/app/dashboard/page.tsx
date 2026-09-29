@@ -10,10 +10,11 @@ import { ScannerPipelineSummary } from "@/components/domain/ScannerPipelineSumma
 import { ApproachingCard } from "@/components/domain/ApproachingCard"
 import { MomentumLeaders } from "@/components/domain/MomentumLeaders"
 import { OutcomesComparison } from "@/components/domain/OutcomesComparison"
-import { isAfterMarketHours, nextGainersPull } from "@/lib/scanner-types"
+import { isAfterMarketHours, isBeforeMarketOpen } from "@/lib/scanner-types"
+import { ClosedPlans } from "@/components/domain/ClosedPlans"
 
 export default function DashboardPage() {
-  const { activeSignals, approachingSignals, momentum, watchingCount, streamStatus, hydrated } = useSignals()
+  const { activeSignals, closedSignals, approachingSignals, momentum, watchingCount, streamStatus, hydrated } = useSignals()
   const { openTrades } = useTrades()
   const { marketState, marketStatus, setMarketState, sessionElapsedMinutes, instruments } = useDashboardState()
   const elapsedHours = Math.floor(sessionElapsedMinutes / 60)
@@ -22,11 +23,11 @@ export default function DashboardPage() {
 
   // Client clock only, so server and first client render agree.
   const [afterHours, setAfterHours] = React.useState(false)
-  const [nextPull, setNextPull] = React.useState<string | null>(null)
+  const [beforeOpen, setBeforeOpen] = React.useState(false)
   React.useEffect(() => {
     const check = () => {
       setAfterHours(isAfterMarketHours())
-      setNextPull(nextGainersPull())
+      setBeforeOpen(isBeforeMarketOpen())
     }
     check()
     const id = setInterval(check, 60_000)
@@ -182,13 +183,13 @@ export default function DashboardPage() {
               <Inbox className="w-8 h-8 text-text-muted" />
             </div>
             <h3 className="text-lg font-semibold text-text">
-              {!hydrated ? "Connecting to scanner…" : afterHours ? "Market is closed" : watching === 0 ? "Waiting for today's gainers" : "No active signals"}
+              {!hydrated ? "Connecting to scanner…" : afterHours ? "Market is closed" : beforeOpen ? "Waiting for the market to open" : watching === 0 ? "Scanner is connecting" : "No active signals"}
             </h3>
             <p className="text-sm text-text-muted max-w-md mt-1">
               {afterHours
                 ? "The session ended at 15:30 IST. See how today's calls played out above; the scanner resumes at 09:15."
                 : watching === 0
-                ? `The scanner watches today's top gainers only.${nextPull ? ` Next gainers pull at ${nextPull} IST.` : ""} Signals appear here as soon as a strategy triggers.`
+                ? "The scanner streams every F&O stock from 09:15 IST and only lets the top 20 gainers raise signals. Signals appear here as soon as a strategy triggers."
                 : `Scanner is watching ${watching} stocks. No strategy has triggered yet${approachingSignals.length > 0 ? `, but ${approachingSignals.length} ${approachingSignals.length === 1 ? "is" : "are"} approaching a trigger below` : ""}.`}
             </p>
           </div>
@@ -199,6 +200,7 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+        <ClosedPlans signals={closedSignals} />
       </div>
 
       {/* Approaching setups + momentum leaders */}
@@ -235,7 +237,7 @@ export default function DashboardPage() {
           </div>
           {momentum.length === 0 ? (
             <p className="text-sm text-on-surface-variant py-8 text-center">
-              {watching === 0 ? `Waiting for today's gainers.${nextPull ? ` Next pull at ${nextPull} IST.` : ""}` : `Watching ${watching} stocks. Rankings update on each 5-minute close.`}
+              {watching === 0 ? (beforeOpen ? "Rankings start when the market opens at 09:15 IST." : "Waiting for the first ticks from the feed.") : `Watching ${watching} stocks. Rankings update on each 5-minute close.`}
             </p>
           ) : (
             <MomentumLeaders stocks={momentum} />

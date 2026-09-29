@@ -65,20 +65,3 @@ export interface MarketDataProvider {
   /** Optional: called after every (re)connect. */
   onConnected?(handler: () => void): void;
 }
-
-/** A 1m candle from the broker's historical API, used to backfill a stock added mid session. */
-export interface HistoricalCandle {
-  startTime: Date;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-}
-
-/** Broker REST calls the stock universe needs (spec 0009 AC-12, AC-13, AC-15). */
-export interface MarketDataRestClient {
-  fetchFnoPriceGainers(): Promise<{ tradingSymbol?: string; percentChange?: number | string }[]>;
-  searchScrip(symbol: string): Promise<{ exchange?: string; tradingsymbol?: string; symboltoken?: string }[]>;
-  getCandles1m(token: string, from: Date, to: Date): Promise<HistoricalCandle[]>;
-}

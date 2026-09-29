@@ -60,10 +60,19 @@ function SummaryBadge({ summary }: { summary: OutcomesPayload["summary"] }) {
   )
 }
 
+const LIVE_EXIT: Record<string, { label: string; style: string }> = {
+  TARGET: { label: "Target hit", style: STATUS_STYLE.WON },
+  STOP: { label: "Stop hit", style: STATUS_STYLE.LOST },
+  TIME: { label: "Time exit", style: STATUS_STYLE.NEUTRAL },
+}
+
 function OutcomeRow({ outcome: o }: { outcome: SignalOutcome }) {
   const isLong = o.direction === "LONG"
   const wentTo = isLong ? o.actualHigh : o.actualLow
-  const pnl = o.outcomePnlPct
+  // The live exit is the primary result (spec 0010 AC-9); the 15:32 candle check sits beside it.
+  const live = o.exitReason && o.exitPrice != null ? LIVE_EXIT[o.exitReason] : null
+  const livePnl = live && o.referenceEntry ? ((o.exitPrice! - o.referenceEntry) / o.referenceEntry) * 100 * (isLong ? 1 : -1) : null
+  const pnl = livePnl ?? o.outcomePnlPct
 
   return (
     <li className="flex flex-col gap-2 bg-surface-container-lowest rounded-lg p-space-md shadow-xs">
@@ -75,15 +84,24 @@ function OutcomeRow({ outcome: o }: { outcome: SignalOutcome }) {
           </span>
           <span className="text-xs text-on-surface-variant truncate">{strategyLabel(o.setup)}</span>
         </div>
-        {o.outcomeStatus ? (
-          <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold uppercase", STATUS_STYLE[o.outcomeStatus])}>{o.outcomeStatus}</span>
-        ) : (
-          <span className="inline-flex items-center gap-1 text-xs text-on-surface-variant"><Hourglass className="w-3 h-3" /> Pending</span>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {live && <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold uppercase", live.style)}>{live.label}</span>}
+          {o.outcomeStatus ? (
+            <span
+              title="End of day candle check (15:32)"
+              className={cn("px-2 py-0.5 rounded-full text-xs font-bold uppercase", live ? "border border-outline-variant text-on-surface-variant" : STATUS_STYLE[o.outcomeStatus])}
+            >
+              {live ? `Candle check: ${o.outcomeStatus}` : o.outcomeStatus}
+            </span>
+          ) : !live ? (
+            <span className="inline-flex items-center gap-1 text-xs text-on-surface-variant"><Hourglass className="w-3 h-3" /> Pending</span>
+          ) : null}
+        </div>
       </div>
       <p className="font-label-numeric-sm text-label-numeric-sm text-on-surface-variant">
         We said entry at <span className="text-on-surface font-semibold">₹{o.referenceEntry.toFixed(2)}</span>
         {" "}(target ₹{o.targets.t1?.toFixed(2)}, stop ₹{o.stop.toFixed(2)})
+        {live && <>, we exited at <span className="text-on-surface font-semibold">₹{o.exitPrice!.toFixed(2)}</span> ({live.label.toLowerCase()})</>}
         {wentTo !== null && <>, it went to <span className="text-on-surface font-semibold">₹{wentTo.toFixed(2)}</span></>}
         {o.actualClose !== null && <> and closed at ₹{o.actualClose.toFixed(2)}</>}
         {pnl !== null && (

@@ -114,3 +114,29 @@ A read only cross check on a second model found gaps that the first draft left f
 - The rules for matching `M&M` and index underlyings are explicit.
 - Backfilled candles are saved, with a uniqueness key so no minute is stored twice. Without this, end of day reconciliation would miss the morning of a stock added mid session.
 - Refreshes run 2 minutes after each quarter hour, so they don't compete with the 5m candle close work.
+
+## Stock universe, second revision (stream every F&O stock)
+
+*Added 2026-09-29, after the first revision was built.*
+
+### Context
+
+Running the day replay against Angel One showed that our API key gets `AG8004 Invalid API Key` on every REST data call: `gainersLosers`, `searchScrip`, `getCandleData`, and quotes. It works for login and the WebSocket feed, and the running backend received live ticks and saved candles on 2026-09-29. So the first revision (gainers pull, token search, candle backfill) could never run with this key. Angel's instrument file, though, is public and needs no key. On 2026-09-29 it listed 228 stocks with stock futures, and every one had an NSE `-EQ` cash token.
+
+### Options considered
+
+**1. Stream every F&O stock and rank gainers ourselves (chosen).**
+- Pros: needs only the WebSocket permission we have. Every stock has full history from 09:15, so no backfill is needed. The ranking updates on every tick instead of every 15 minutes.
+- Cons: about 230 streams to aggregate and save. Our ranking can differ slightly from published gainers lists. A restart loses the minutes the backend was down.
+
+**2. Get a REST data key and keep the first revision.**
+- Pros: the built code works as is.
+- Cons: depends on the account getting another API app type, which is outside our control. It also keeps three failure points (gainers, search, backfill) in the session.
+
+**3. A manual watchlist.**
+- Pros: simplest.
+- Cons: contradicts the engineer's choice of top gainers only.
+
+### Rationale
+
+Option 1 turns a missing permission into a better design. We see every F&O stock from the open, so "top gainers" is computed from live data instead of polled, and the strategies always have real history. The engineer chose to let only the top 20 gainers raise signals, which keeps the "only top gainers" intent, while streaming all of them keeps the data complete. If the file download fails, the last saved list is used, since the F&O list changes rarely. The runner up, a REST data key, stays a follow-up: it would let us fill downtime gaps, but nothing should depend on it.

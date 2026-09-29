@@ -67,19 +67,10 @@ export function isAfterMarketHours(now: Date = new Date()): boolean {
   return ist.getHours() * 100 + ist.getMinutes() >= 1530
 }
 
-/**
- * Next top gainers pull as IST "HH:MM": 09:22 then every 15 minutes to 15:22 on weekdays
- * (spec 0009 AC-12). Null when no pull is left today.
- */
-export function nextGainersPull(now: Date = new Date()): string | null {
+/** True before 09:15 IST: the scanner starts streaming every F&O stock at the open (spec 0009 AC-1). */
+export function isBeforeMarketOpen(now: Date = new Date()): boolean {
   const ist = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
-  const day = ist.getDay()
-  if (day === 0 || day === 6) return null
-  const minute = ist.getHours() * 60 + ist.getMinutes()
-  for (let slot = 9 * 60 + 22; slot <= 15 * 60 + 22; slot += 15) {
-    if (slot > minute) return `${String(Math.floor(slot / 60)).padStart(2, "0")}:${String(slot % 60).padStart(2, "0")}`
-  }
-  return null
+  return ist.getHours() * 60 + ist.getMinutes() < 9 * 60 + 15
 }
 
 export function formatVolume(volume: number): string {

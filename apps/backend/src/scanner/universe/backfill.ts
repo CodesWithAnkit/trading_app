@@ -1,15 +1,18 @@
-import { Candle, HistoricalCandle } from '../market-data/types.js';
+import { Candle } from '../market-data/types.js';
+
+/** A saved 1m candle, as read back from the `candles` table. */
+export type CandleRow = { startTime: Date; open: number; high: number; low: number; close: number; volume: number };
 
 const MINUTE = 60_000;
 const FIVE_MINUTES = 5 * MINUTE;
 
 /**
- * Turns historical 1m candles into completed 1m and 5m candles for a stock that joined
- * mid session (spec 0009 AC-15). Only minutes that ended before `now` count, and a 5m
- * candle is built only from a 5 minute window that has fully elapsed. IST is a whole
- * number of 5 minute steps from UTC, so epoch aligned windows match IST windows.
+ * Rebuilds completed 1m and 5m history from today's saved 1m candles after a restart
+ * (spec 0009 AC-15). Only minutes that ended before `now` count, and a 5m candle is built
+ * only from a fully elapsed window with all 5 minutes present. IST is a whole number of
+ * 5 minute steps from UTC, so epoch aligned windows match IST windows.
  */
-export function buildBackfill(symbol: string, token: string, rows: HistoricalCandle[], now: Date) {
+export function buildBackfill(symbol: string, token: string, rows: CandleRow[], now: Date) {
   const currentMinute = Math.floor(now.getTime() / MINUTE) * MINUTE;
   const oneMinute: Candle[] = rows
     .filter(r => r.startTime.getTime() < currentMinute)
@@ -23,6 +26,7 @@ export function buildBackfill(symbol: string, token: string, rows: HistoricalCan
     groups.set(bucket, [...(groups.get(bucket) ?? []), c]);
   }
   const fiveMinute: Candle[] = [...groups.entries()]
+    .filter(([, cs]) => cs.length === 5)
     .sort(([a], [b]) => a - b)
     .map(([bucket, cs]) => toCandle(symbol, token, '5m', new Date(bucket), FIVE_MINUTES, {
       open: cs[0].open,

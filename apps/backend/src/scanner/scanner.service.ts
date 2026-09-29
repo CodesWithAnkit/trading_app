@@ -13,14 +13,17 @@ import { calculateRvol } from './strategy/features/rvolCalculator.js';
 import { calculateTrend } from './strategy/features/trendCalculator.js';
 import { evaluateAllStrategies, evaluateStrategyProximity, StrategyProximity } from './strategy/setup/multiStrategyEngine.js';
 import { validateRiskReward } from './strategy/plan/riskRewardValidator.js';
+import { TradePlan } from './strategy/plan/planTypes.js';
 import { buildSignalSnapshot } from './strategy/signal/signalSnapshot.js';
 import { calculateMomentumScore, MomentumStock, rankByMomentum, relativeVolumeFrom5m, trendFrom5m } from './analysis/momentumScore.js';
-import { toApiSignal } from './signalMapper.js';
 import { reconcileOutcomes } from './outcomes/reconcileOutcomes.js';
+import { toApiSignal, referenceEntryOf, stopOf, target1Of } from './signalMapper.js';
 import { IST_TIMEZONE, istDateString, istDayRange } from './time/ist.js';
 import { UniverseService, UniverseStatus, WatchedStock } from './universe/UniverseService.js';
-import { buildBackfill } from './universe/backfill.js';
-import { REFRESH_CRON, isFirstRefreshSlot, isInRefreshWindow, isIstWeekday, nextRefreshAt } from './universe/schedule.js';
+import { buildBackfill, CandleRow } from './universe/backfill.js';
+import { downloadFnoStocks } from './universe/instrumentFile.js';
+import { isAtOrAfterTimeExit, isInExitWindow, isIstWeekday } from './universe/schedule.js';
+import { checkExit, EXIT_STATUS, ExitReason, pnlPct, Plan, PlanBook } from './plans/planBook.js';
 
 export type ApproachingSetup = {
   symbol: string;
@@ -37,14 +40,30 @@ export type ApproachingSetup = {
 export type ScannerEvent =
   | { type: 'signal:new'; data: ReturnType<typeof toApiSignal> }
   | { type: 'approaching:update'; data: ApproachingSetup[] }
-  | { type: 'momentum:update'; data: { watching: number; stocks: MomentumStock[] } };
+  | { type: 'momentum:update'; data: { watching: number; stocks: MomentumStock[] } }
+  | { type: 'signal:exit'; data: SignalExit };
+
+export type SignalExit = {
+  id: string;
+  symbol: string;
+  setup: string;
+  reason: ExitReason;
+  exitPrice: number;
+  exitAt: string;
+  pnlPct: number;
+  stale: boolean;
+};
 
 // 5m candles for every watched symbol close together; coalesce their updates into one push.
 const PUSH_COALESCE_MS = 1000;
 // A full session is 375 one minute candles; keep the opening range all day (spec 0009 AC-15).
 const HISTORY_1M_LIMIT = 400;
 const HISTORY_5M_LIMIT = 80;
-const FIRST_REFRESH_RETRY_MS = 60_000;
+/** Only the strongest gainers may open plans (spec 0009 AC-16). */
+const TOP_GAINERS = 20;
+const CANDLE_FLUSH_MS = 2000;
+const CANDLE_QUEUE_LIMIT = 5000;
+const PAGE_SIZE = 1000;
 
 type LatestTick = { symbol: string, ltp: number, timestamp: Date, dayOpen: number, volume: number, change1dPct: number, prevClose: number | null };
 
@@ -71,7 +90,6 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
   };
 
   private aggregator = new CandleAggregator();
-  private angel: AngelOneMarketDataProvider | null = null;
   private universe: UniverseService | null = null;
   /** Stocks whose history is still being backfilled; they skip strategy checks. */
   private readonly warming = new Set<string>();
@@ -80,6 +98,13 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
   private history5m = new Map<string, any[]>();
 
   private readonly approaching = new Map<string, ApproachingSetup>();
+  /** Open trade plans, one per stock and strategy (spec 0010). */
+  readonly planBook = new PlanBook();
+  /** Top gainers, frozen for the 5m bucket they were computed in (spec 0009 AC-16). */
+  private topGainers: { bucket: string; symbols: Set<string> } | null = null;
+  /** Completed candles waiting for the next batched upsert (spec 0009 AC-15). */
+  private readonly candleQueue = new Map<string, Candle>();
+  private candleFlushTimer: NodeJS.Timeout | null = null;
   /** Scanner pushes for SSE subscribers. */
   public readonly events$ = new Subject<ScannerEvent>();
   private pushTimer: NodeJS.Timeout | null = null;
@@ -113,11 +138,10 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
         password: config.angelOne.password,
         totpSecret: config.angelOne.totpSecret
       });
-      this.angel = angel;
       this.provider = angel;
       this.universe = new UniverseService({
         client: this.supabase.client,
-        rest: angel,
+        download: () => downloadFnoStocks(),
         subscribe: tokens => angel.subscribe([{ exchangeType: '1', tokens }]), // 1 = NSE cash
         onAdded: async stocks => this.warmUp(stocks)
       });
@@ -140,7 +164,7 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
       if (hist.length > HISTORY_1M_LIMIT) hist.shift();
       this.history1m.set(candle.symbol, hist);
       
-      await this.persistCandle(candle);
+      this.queueCandle(candle);
       await this.flushHealth();
     };
 
@@ -154,7 +178,7 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
       if (hist.length > HISTORY_5M_LIMIT) hist.shift();
       this.history5m.set(candle.symbol, hist);
 
-      await this.persistCandle(candle);
+      this.queueCandle(candle);
       await this.evaluateStrategy(candle.symbol);
       this.updateApproaching(candle.symbol);
       this.schedulePush();
@@ -168,7 +192,9 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     // Start connection
     await this.provider.connect();
 
-    // Restore today's universe (after a restart mid session) and pull gainers if due
+    this.candleFlushTimer = setInterval(() => void this.flushCandles(), CANDLE_FLUSH_MS);
+
+    // Close or reload open plans, then stream today's F&O list
     setTimeout(() => {
       this.startUniverse().catch(err => this.logger.error(`Universe startup failed: ${err.message}`));
     }, 5000);
@@ -179,49 +205,23 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     }, 60000);
   }
 
-  /** Startup: re-subscribe today's stocks, backfill them, and refresh now if inside the window (spec 0009 AC-13). */
+  /** Startup: settle open plans, then stream today's F&O list (spec 0009 AC-12, spec 0010 AC-7). */
   async startUniverse(now: Date = new Date()) {
-    if (!this.universe || !isIstWeekday(now)) return;
-    const state = this.getSessionState(now);
-    if (state === 'CLOSED' && !isInRefreshWindow(now)) return;
-
-    try {
-      await this.universe.restoreToday(istDateString(now));
-    } catch (err: any) {
-      this.logger.error(err.message);
-    }
-    this.universe.setNextRefreshAt(nextRefreshAt(now));
-    if (isInRefreshWindow(now)) {
-      await this.runUniverseRefresh(false);
-    }
-  }
-
-  /** Top gainers refresh, 09:22 to 15:22 IST every 15 minutes, add only (spec 0009 AC-12). */
-  @Cron(REFRESH_CRON, { name: 'universe-refresh', timeZone: IST_TIMEZONE })
-  async handleUniverseRefresh() {
-    const now = new Date();
-    if (!isInRefreshWindow(now)) return;
-    await this.runUniverseRefresh(isFirstRefreshSlot(now));
-  }
-
-  private async runUniverseRefresh(retryOnFailure: boolean) {
     if (!this.universe) return;
-    const now = new Date();
-    this.universe.setNextRefreshAt(nextRefreshAt(now));
-    try {
-      await this.universe.refresh(istDateString(now));
-      this.schedulePush();
-    } catch {
-      // Already logged and recorded for diagnostics; the watched stocks stay as they are.
-      if (retryOnFailure) {
-        setTimeout(() => void this.runUniverseRefresh(false), FIRST_REFRESH_RETRY_MS);
-      }
-    }
+    await this.catchUpPlans(now);
+    if (!isIstWeekday(now)) return;
+    await this.universe.load(istDateString(now));
+  }
+
+  /** Reload the F&O list before the open (spec 0009 AC-12). */
+  @Cron('0 45 8 * * 1-5', { name: 'universe-load', timeZone: IST_TIMEZONE })
+  async handleUniverseLoad() {
+    await this.universe?.load(istDateString());
   }
 
   /** New trading day: forget yesterday's stocks, histories and volume baselines (spec 0009 invariant). */
   @Cron('0 0 9 * * 1-5', { name: 'universe-daily-reset', timeZone: IST_TIMEZONE })
-  dailyReset() {
+  async dailyReset() {
     this.universe?.reset();
     this.aggregator.reset();
     this.history1m.clear();
@@ -229,39 +229,65 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     this.latestTicks.clear();
     this.approaching.clear();
     this.warming.clear();
+    this.topGainers = null;
+    this.planBook.clear();
     this.schedulePush();
-    this.logger.log('Daily reset: universe cleared until the 09:22 gainers pull.');
+    this.logger.log('Daily reset: universe cleared until the F&O list streams.');
+    await this.catchUpPlans(new Date());
+    await this.universe?.load(istDateString());
   }
 
   getUniverseStatus(): UniverseStatus | null {
     return this.universe?.getStatus() ?? null;
   }
 
-  /** New stocks skip strategy checks until today's candles are backfilled (spec 0009 AC-15). */
+  /** After a restart mid session, stocks skip strategy checks until today's saved candles are reloaded (spec 0009 AC-15). */
   warmUp(stocks: WatchedStock[]) {
-    if (!this.angel || this.getSessionState() !== 'OPEN') return;
+    const state = this.getSessionState();
+    if (state !== 'OPEN' && state !== 'CLOSING') return;
     stocks.forEach(s => this.warming.add(s.symbol));
-    void this.backfill(stocks);
+    void this.reloadHistory(stocks);
   }
 
-  private async backfill(stocks: WatchedStock[]) {
+  private async reloadHistory(stocks: WatchedStock[]) {
     for (const { symbol, token } of stocks) {
       try {
         const now = new Date();
-        const rows = await this.angel!.getCandles1m(token, istDayRange(istDateString(now)).sessionStart, now);
+        const rows = await this.loadSavedCandles(symbol, istDayRange(istDateString(now)).sessionStart, now);
         const { oneMinute, fiveMinute } = buildBackfill(symbol, token, rows, now);
         this.seedHistory(symbol, oneMinute, fiveMinute);
-        await this.persistCandles(oneMinute);
-        this.logger.log(`Backfilled ${oneMinute.length} 1m candle(s) for ${symbol}.`);
       } catch (err: any) {
-        this.logger.warn(`Backfill failed for ${symbol}, it starts cold: ${err.message}`);
+        this.logger.warn(`History reload failed for ${symbol}, it starts cold: ${err.message}`);
       } finally {
         this.warming.delete(symbol);
       }
     }
+    this.logger.log(`Reloaded today's saved candles for ${stocks.length} stock(s).`);
   }
 
-  /** Merges backfilled candles under any live ones by start time; a live candle wins for the same minute. */
+  /** Today's saved 1m candles for one stock, ordered and paged. */
+  private async loadSavedCandles(symbol: string, from: Date, to: Date): Promise<CandleRow[]> {
+    if (!this.supabase.client) return [];
+    const rows: CandleRow[] = [];
+    for (let offset = 0; ; offset += PAGE_SIZE) {
+      const { data, error } = await this.supabase.client
+        .from('candles')
+        .select('start_time, open, high, low, close, volume')
+        .eq('symbol', symbol)
+        .eq('timeframe', '1m')
+        .gte('start_time', from.toISOString())
+        .lt('start_time', to.toISOString())
+        .order('start_time', { ascending: true })
+        .range(offset, offset + PAGE_SIZE - 1);
+      if (error) throw new Error(error.message);
+      for (const r of data || []) {
+        rows.push({ startTime: new Date(r.start_time), open: Number(r.open), high: Number(r.high), low: Number(r.low), close: Number(r.close), volume: Number(r.volume) });
+      }
+      if (!data || data.length < PAGE_SIZE) return rows;
+    }
+  }
+
+  /** Merges reloaded candles under any live ones by start time; a live candle wins for the same minute. */
   seedHistory(symbol: string, oneMinute: Candle[], fiveMinute: Candle[]) {
     const merge = (store: Map<string, any[]>, candles: Candle[], limit: number) => {
       const byStart = new Map<string, any>();
@@ -272,6 +298,21 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     };
     merge(this.history1m, oneMinute, HISTORY_1M_LIMIT);
     merge(this.history5m, fiveMinute, HISTORY_5M_LIMIT);
+  }
+
+  /**
+   * Whether `symbol` is among the top gainers, computed once per 5m bucket and frozen for
+   * that evaluation pass: ranked stocks by day change, ties by symbol (spec 0009 AC-16).
+   */
+  isTopGainer(symbol: string, bucket: string): boolean {
+    if (this.topGainers?.bucket !== bucket) {
+      const ranked = [...this.latestTicks.values()]
+        .filter(t => t.prevClose !== null)
+        .sort((a, b) => b.change1dPct - a.change1dPct || a.symbol.localeCompare(b.symbol))
+        .slice(0, TOP_GAINERS);
+      this.topGainers = { bucket, symbols: new Set(ranked.map(t => t.symbol)) };
+    }
+    return this.topGainers.symbols.has(symbol);
   }
 
   processTick(tick: MarketTick) {
@@ -319,9 +360,141 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     existing.change1dPct = existing.prevClose ? ((existing.ltp - existing.prevClose) / existing.prevClose) * 100 : 0;
 
     this.latestTicks.set(tick.symbol, existing);
+    this.checkPlans(tick);
 
     // Only aggregate candles if OPEN or CLOSING grace period
     this.aggregator.processTick(tick);
+  }
+
+  /** Target or stop on every valid tick (spec 0010 AC-2). */
+  private checkPlans(tick: MarketTick) {
+    if (!(tick.ltp > 0) || !isInExitWindow(tick.timestamp)) return;
+    for (const plan of this.planBook.openFor(tick.symbol)) {
+      if (!plan.signalId || tick.timestamp.getTime() <= new Date(plan.firedAt).getTime()) continue;
+      const reason = checkExit(plan, tick.ltp);
+      if (reason) void this.closePlan(plan, reason, tick.ltp, tick.timestamp);
+    }
+  }
+
+  /** Records an exit once: out of the book first, then the atomic RPC, then the alert (spec 0010 AC-5, AC-6). */
+  async closePlan(plan: Plan, reason: ExitReason, price: number, at: Date, stale = false) {
+    const taken = this.planBook.take(plan.symbol, plan.setup);
+    if (!taken || !taken.signalId) return;
+    await this.recordExit(taken.signalId, reason, price, at);
+    this.scannerMetrics.activeSignals = Math.max(0, this.scannerMetrics.activeSignals - 1);
+    const exit: SignalExit = {
+      id: taken.signalId,
+      symbol: taken.symbol,
+      setup: taken.setup,
+      reason,
+      exitPrice: Math.round(price * 100) / 100,
+      exitAt: at.toISOString(),
+      pnlPct: pnlPct(taken, price),
+      stale
+    };
+    this.logger.log(`Exit ${exit.symbol} ${exit.setup}: ${reason} at ${exit.exitPrice} (${exit.pnlPct}%)${stale ? ' [stale]' : ''}`);
+    this.events$.next({ type: 'signal:exit', data: exit });
+  }
+
+  /** Conditional update plus history row in one transaction; retried once (spec 0010). */
+  private async recordExit(signalId: string, reason: ExitReason, price: number, at: Date): Promise<boolean> {
+    if (!this.supabase.client) return false;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const { data, error } = await this.supabase.client.rpc('close_signal_plan', {
+        p_signal_id: signalId,
+        p_to_status: EXIT_STATUS[reason],
+        p_exit_price: price,
+        p_exit_at: at.toISOString(),
+        p_exit_reason: reason
+      });
+      if (!error) return data === true;
+      this.logger.error(`Failed to record exit for signal ${signalId} (attempt ${attempt + 1}): ${error.message}`);
+    }
+    return false;
+  }
+
+  /** Closes every open plan at 15:15 IST at its last price (spec 0010 AC-3). */
+  @Cron('0 15 15 * * 1-5', { name: 'plans-time-exit', timeZone: IST_TIMEZONE })
+  async handleTimeExit(at: Date = new Date()) {
+    for (const plan of this.planBook.all()) {
+      const { price, stale } = this.lastPriceFor(plan);
+      await this.closePlan(plan, 'TIME', price, at, stale);
+    }
+  }
+
+  private lastPriceFor(plan: Plan): { price: number; stale: boolean } {
+    const tick = this.latestTicks.get(plan.symbol);
+    if (tick && tick.ltp > 0) return { price: tick.ltp, stale: Date.now() - tick.timestamp.getTime() > 5 * 60_000 };
+    const hist = this.history1m.get(plan.symbol) || [];
+    if (hist.length > 0) return { price: hist[hist.length - 1].close, stale: true };
+    return { price: plan.entry, stale: true };
+  }
+
+  /**
+   * Startup and daily reset: closes plans left open from earlier days, closes today's if it is
+   * already 15:15, and otherwise loads today's open plans into the book (spec 0010 AC-7).
+   */
+  async catchUpPlans(now: Date) {
+    if (!this.supabase.client) return;
+    const { dayStart, dayEnd } = istDayRange(istDateString(now));
+    const { data, error } = await this.supabase.client
+      .from('signals')
+      .select('*')
+      .eq('status', 'ACTIVE')
+      .lt('created_at', dayEnd.toISOString());
+    if (error) {
+      this.logger.error(`Failed to load open plans: ${error.message}`);
+      return;
+    }
+
+    const afterTimeExit = isAtOrAfterTimeExit(now);
+    let loaded = 0;
+    for (const row of data || []) {
+      const plan = this.planFromRow(row);
+      if (!plan) continue;
+      const earlierDay = new Date(row.created_at) < dayStart;
+      if (earlierDay || afterTimeExit) {
+        const price = earlierDay ? plan.entry : (await this.lastSavedClose(plan.symbol)) ?? plan.entry;
+        if (await this.recordExit(plan.signalId!, 'TIME', price, now)) {
+          this.logger.warn(`Closed ${earlierDay ? 'stale' : "today's"} open plan ${plan.symbol} ${plan.setup} as TIME_EXIT at ${price}.`);
+        }
+        continue;
+      }
+      if (this.planBook.reserve(plan)) loaded++;
+    }
+    if (loaded > 0) this.logger.log(`Reloaded ${loaded} open plan(s) for tracking.`);
+  }
+
+  private planFromRow(row: any): Plan | null {
+    const symbol = row.snapshot_json?.symbol;
+    const entry = referenceEntryOf(row);
+    const target = target1Of(row);
+    if (!symbol || !entry || target === null) {
+      this.logger.warn(`Skipping open plan ${row.id}: incomplete snapshot.`);
+      return null;
+    }
+    return {
+      signalId: row.id,
+      symbol,
+      setup: row.setup_family,
+      direction: row.direction === 'SHORT' ? 'SHORT' : 'LONG',
+      entry,
+      stop: stopOf(row),
+      target,
+      firedAt: row.created_at
+    };
+  }
+
+  private async lastSavedClose(symbol: string): Promise<number | null> {
+    if (!this.supabase.client) return null;
+    const { data } = await this.supabase.client
+      .from('candles')
+      .select('close')
+      .eq('symbol', symbol)
+      .eq('timeframe', '1m')
+      .order('start_time', { ascending: false })
+      .limit(1);
+    return data?.[0] ? Number(data[0].close) : null;
   }
 
   private mapCandleForStrategy(c: Candle) {
@@ -349,6 +522,11 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     
     const current1m = hist1m[hist1m.length - 1];
     const current5m = hist5m[hist5m.length - 1];
+
+    // No new plan from a trigger candle ending at or after 15:15 IST (spec 0010 AC-3).
+    if (isAtOrAfterTimeExit(new Date(new Date(current1m.timestamp).getTime() + 60_000))) return;
+    // Only the current top gainers may open plans (spec 0009 AC-16).
+    if (!this.isTopGainer(symbol, current5m.timestamp)) return;
 
     const context = {
       symbol: symbol,
@@ -388,7 +566,9 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
 
     try {
       const eligibility = evaluateEligibility(dummyConfig, context);
-      if (!eligibility.eligible) return;
+      // Unset thresholds mean "no limit" for the F&O universe; any other rejection still blocks (spec 0011, Assumed).
+      const onlyUnsetThresholds = eligibility.status === 'CONFIG_INCOMPLETE' && eligibility.reasons.length === 1;
+      if (!eligibility.eligible && !onlyUnsetThresholds) return;
 
       this.scannerMetrics.eligibleSetups++;
 
@@ -400,24 +580,27 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
       const candidates = evaluateAllStrategies(symbol, current1m, hist1m, current5m, hist5m);
       
       for (const candidate of candidates) {
-        if (!candidate.valid) continue;
+        if (!candidate.valid || candidate.dynamicEntry === undefined || candidate.dynamicStop === undefined || candidate.dynamicTarget === undefined) continue;
+        // One open plan per stock and strategy (spec 0010 AC-4).
+        if (this.planBook.has(symbol, candidate.setupFamily)) continue;
 
-        // Build the dynamic plan
-        const plan = {
-          entryZone: {
-            upper: candidate.dynamicEntry! * 1.0005,
-            lower: candidate.dynamicEntry! * 0.9995,
-            referenceLevel: candidate.dynamicEntry!
-          },
+        const entry = candidate.dynamicEntry;
+        const stopPrice = candidate.dynamicStop;
+        const target = candidate.dynamicTarget;
+        // The engine's TradePlan shape (plan/planTypes.ts); the engine's levels are used unchanged.
+        const plan: TradePlan = {
+          direction: 'LONG',
+          entryZone: { entryLow: entry * 0.9995, entryHigh: entry * 1.0005, referenceEntry: entry },
           stop: {
-            level: candidate.dynamicStop!,
-            method: "TECHNICAL",
-            riskBps: Math.abs(candidate.dynamicEntry! - candidate.dynamicStop!) / candidate.dynamicEntry! * 10000
+            price: stopPrice,
+            method: 'TECHNICAL',
+            structuralReference: null,
+            distanceFromEntry: Math.abs(entry - stopPrice),
+            distanceBps: (Math.abs(entry - stopPrice) / entry) * 10000
           },
-          targets: {
-            t1: { level: candidate.dynamicTarget!, distanceBps: Math.abs(candidate.dynamicTarget! - candidate.dynamicEntry!) / candidate.dynamicEntry! * 10000 }
-          }
-        } as any;
+          targets: { t1: target, t2: null },
+          trailing: { enabled: false, activationCondition: null, trailingMethod: null, trailingDistance: null, initialStop: stopPrice }
+        };
 
         const rr = validateRiskReward(dummyConfig, plan);
 
@@ -437,10 +620,15 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
           rr
         );
 
-        this.scannerMetrics.activeSignals++;
-      
-      // Persist to Supabase
-      if (this.supabase.client) {
+        if (!this.supabase.client) continue;
+
+        // Reserve before the insert so a tick or a second candidate can't slip in (spec 0010).
+        const tracked: Plan = {
+          signalId: null, symbol, setup: candidate.setupFamily, direction: 'LONG',
+          entry, stop: stopPrice, target, firedAt: signal.createdAt
+        };
+        if (!this.planBook.reserve(tracked)) continue;
+
         const { data: inserted, error: insertError } = await this.supabase.client.from('signals').insert({
           direction: signal.direction,
           setup_family: signal.setupFamily,
@@ -455,7 +643,8 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
             setup: signal.setupFamily,
             price: signal.currentPrice,
             reference_entry: signal.referenceEntry,
-            stop: signal.stop,
+            // `level` is what the mapper, reconciliation and replay read.
+            stop: { ...signal.stop, level: signal.stop.price },
             targets: signal.targets,
             confidence: signal.confidence,
             confidence_band: signal.confidenceBand,
@@ -466,14 +655,21 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
           created_at: signal.createdAt
         }).select().single();
         if (insertError) {
+          this.planBook.release(symbol, candidate.setupFamily);
           this.logger.error(`Failed to insert signal for ${symbol}: ${insertError.message}`);
           continue;
         }
+
+        this.planBook.attach(symbol, candidate.setupFamily, inserted.id);
+        this.scannerMetrics.activeSignals++;
         this.logger.log(`Created new signal for ${symbol} (${signal.direction})`);
         this.events$.next({ type: 'signal:new', data: toApiSignal(inserted) });
-      }
 
-      } // End of for-loop
+        // A price that moved past a level during the insert closes the plan now.
+        const ltp = this.latestTicks.get(symbol)?.ltp;
+        const hit = ltp ? checkExit(tracked, ltp) : null;
+        if (hit && ltp) void this.closePlan(tracked, hit, ltp, new Date());
+      }
     } catch (e) {
       this.logger.warn(`Strategy evaluation failed for ${symbol}: ${e}`);
     }
@@ -482,6 +678,13 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
   /** Re-checks how close `symbol` is to each strategy trigger (AC-2). */
   updateApproaching(symbol: string) {
     if (this.warming.has(symbol)) return;
+    const hist5m = this.history5m.get(symbol) || [];
+    const bucket = hist5m[hist5m.length - 1]?.timestamp;
+    // Approaching cards follow the same top gainers gate as signals (spec 0009 AC-16).
+    if (bucket && !this.isTopGainer(symbol, bucket)) {
+      this.approaching.delete(symbol);
+      return;
+    }
     const hist1m = this.history1m.get(symbol) || [];
     const current1m = hist1m[hist1m.length - 1];
     const strategies = current1m ? evaluateStrategyProximity(current1m, hist1m) : [];
@@ -568,9 +771,32 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     await this.persistCandles([candle]);
   }
 
-  /** Upserts on (symbol, timeframe, start_time), so restarts, reconnects and backfill never duplicate a candle. */
-  async persistCandles(candles: Candle[]) {
-    if (!this.supabase.client || candles.length === 0) return;
+  /** Queues a completed candle for the next batched upsert; the latest write per key wins. */
+  queueCandle(candle: Candle) {
+    this.candleQueue.set(`${candle.symbol}|${candle.timeframe}|${candle.startTime.toISOString()}`, candle);
+    while (this.candleQueue.size > CANDLE_QUEUE_LIMIT) {
+      const oldest = this.candleQueue.keys().next().value!;
+      this.candleQueue.delete(oldest);
+      this.logger.warn('Candle queue full; dropped the oldest candle.');
+    }
+  }
+
+  /** One upsert for everything queued; failures go back in the queue (spec 0009 AC-15). */
+  async flushCandles() {
+    if (this.candleQueue.size === 0) return;
+    const batch = [...this.candleQueue.values()];
+    this.candleQueue.clear();
+    if (!(await this.persistCandles(batch))) {
+      for (const c of batch) {
+        const key = `${c.symbol}|${c.timeframe}|${c.startTime.toISOString()}`;
+        if (!this.candleQueue.has(key)) this.candleQueue.set(key, c);
+      }
+    }
+  }
+
+  /** Upserts on (symbol, timeframe, start_time), so restarts and reconnects never duplicate a candle. */
+  async persistCandles(candles: Candle[]): Promise<boolean> {
+    if (!this.supabase.client || candles.length === 0) return true;
     try {
       const { error } = await this.supabase.client
         .from('candles')
@@ -589,10 +815,13 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
         })), { onConflict: 'symbol,timeframe,start_time' });
 
       if (error) {
-        this.logger.error(`Failed to upsert candle(s): ${error.message}`);
+        this.logger.error(`Failed to upsert ${candles.length} candle(s): ${error.message}`);
+        return false;
       }
+      return true;
     } catch (err: any) {
       this.logger.error('Failed to persist candle(s):', err.message);
+      return false;
     }
   }
 
@@ -641,6 +870,10 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     if (this.pushTimer) {
       clearTimeout(this.pushTimer);
     }
+    if (this.candleFlushTimer) {
+      clearInterval(this.candleFlushTimer);
+    }
+    await this.flushCandles();
     this.events$.complete();
     if (this.provider) {
       await this.provider.disconnect();

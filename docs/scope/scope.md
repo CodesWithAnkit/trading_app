@@ -154,7 +154,7 @@
 **Intent**: Eliminate mock data entirely during market hours by using real-time Angel One data for daily momentum scoring and "approaching" strategy setups. Adds Server Sent Events (SSE) for real-time updates and an end-of-day reconciliation task to track predicted vs actual outcomes.
 **Done when**: The dashboard shows real stocks ranked by momentum score without mock fallbacks, approaching setups stream via SSE, and the system reconciles prediction outcomes at the end of the day to show accuracy summaries after hours.
 
-- [x] Design it (spec): [0009](../specs/0009-real-stock-analysis/index.md) · code in `apps/backend/src/scanner/` (universe in `universe/`) and `apps/web/app/dashboard/`
+- [x] Design it (spec): [0009](../specs/0009-real-stock-analysis/index.md), [0010](../specs/0010-live-exit-tracking/index.md) · assumed decision ([spec 0011](../specs/0011-live-eligibility-thresholds.md), owes /architect ratification) · code in `apps/backend/src/scanner/` (universe in `universe/`) and `apps/web/app/dashboard/`
 - [x] Build it: /develop Real Stock Analysis and Outcome Tracking
   - [x] Database migration: `actual_high/low/close` and outcome columns (AC-6)
   - [x] Daily momentum score & Approaching setup detection (AC-1, AC-2)
@@ -165,5 +165,9 @@
   - [x] Gainers only universe: token cache, merged subscriptions, candle upsert, and the 15 minute F&O gainers refresh (AC-1, AC-12, AC-13)
   - [x] Quote mode feed with day change from the previous close (AC-1, AC-14)
   - [x] Backfill, restart recovery, daily reset, and universe status (AC-1, AC-12, AC-15)
+  - [x] Stream all F&O stocks from the public instrument file, chunked subscriptions, REST paths removed (0009 AC-12, AC-13)
+  - [x] Restart reload from saved candles, batched candle writes, top 20 gate, replay from saved candles (0009 AC-15, AC-16, AC-17)
+  - [x] Live exit tracking: tick exits, 15:15 time exit, one open plan per stock and strategy, atomic writes, restart catch up (0010 AC-1 to AC-5, AC-7)
+  - [x] Exit alerts, Closed today list, and live vs candle check results on the dashboard (0010 AC-6, AC-8, AC-9)
 - [ ] Verify it: /check verify
 - [ ] Test it: /test

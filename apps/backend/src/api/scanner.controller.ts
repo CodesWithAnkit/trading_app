@@ -30,8 +30,12 @@ export class ScannerController {
     }
 
     if (data) {
-      data.sort((a, b) => (b.snapshot_json?.confidence || 0) - (a.snapshot_json?.confidence || 0));
-      data = data.slice(0, 10);
+      // Every open plan first (by confidence), then today's closed plans, newest exit first (spec 0010 AC-8).
+      const open = data.filter(s => (s.status || 'ACTIVE') === 'ACTIVE')
+        .sort((a, b) => (b.snapshot_json?.confidence || 0) - (a.snapshot_json?.confidence || 0));
+      const closed = data.filter(s => s.status && s.status !== 'ACTIVE')
+        .sort((a, b) => String(b.exit_at ?? '').localeCompare(String(a.exit_at ?? '')));
+      data = [...open, ...closed].slice(0, 200);
     }
 
     const signals = (data || []).map(toApiSignal);

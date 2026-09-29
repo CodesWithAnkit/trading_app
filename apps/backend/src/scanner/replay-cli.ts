@@ -1,16 +1,14 @@
-// Replays a full trading day through the live strategy engine to validate entries and exits.
-// Read only: nothing is written to signals or candles.
+// Replays a trading day from our own saved candles through the live strategy engine, to
+// validate entries and exits (spec 0009 AC-17). Read only: nothing is written anywhere.
 // Usage: npm run scanner:replay -- [YYYY-MM-DD] [SYMBOL,SYMBOL,...] [--json <path>]
-//   No symbols: today's Angel One F&O price gainers (the live universe). That list has no
-//   date parameter, so a past date needs explicit symbols.
+//   No symbols: that day's F&O list from `instruments` (last_selected_on = that day).
 import { writeFileSync } from 'node:fs';
-import { config } from './config.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
-import { AngelOneMarketDataProvider } from './market-data/AngelOneMarketDataProvider.js';
 import { Candle } from './market-data/types.js';
-import { extractGainerSymbols, pickEquityToken } from './universe/gainers.js';
-import { replaySymbol, summarize, ReplayTrade } from './replay/replayDay.js';
+import { replayDay, summarize, ReplayTrade } from './replay/replayDay.js';
 import { istDateString, istDateTimeString, istDayRange, isValidDateString } from './time/ist.js';
+
+const PAGE_SIZE = 1000;
 
 async function main() {
   const args = process.argv.slice(2);
@@ -20,72 +18,72 @@ async function main() {
   const date = positional.find(isValidDateString) ?? istDateString();
   const symbolArg = positional.find(a => !isValidDateString(a));
 
-  if (!config.angelOne.apiKey || !config.angelOne.clientCode || !config.angelOne.totpSecret) {
-    fail('Missing Angel One credentials (ANGEL_ONE_API_KEY, ANGEL_ONE_CLIENT_ID, ANGEL_ONE_TOTP_SECRET).');
-  }
-  const angel = new AngelOneMarketDataProvider(config.angelOne);
-  await angel.loginForRest();
+  const { client } = new SupabaseService();
+  if (!client) fail('Missing Supabase credentials (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY).');
 
   let symbols: string[];
   if (symbolArg) {
     symbols = symbolArg.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
   } else {
-    if (date !== istDateString()) fail(`Angel's gainers list is always the latest session; pass symbols to replay ${date}.`);
-    const { symbols: gainers } = extractGainerSymbols(await angel.fetchFnoPriceGainers());
-    if (gainers.length === 0) fail('Angel returned no F&O price gainers. Pass symbols explicitly.');
-    symbols = gainers;
-    console.error(`Today's F&O price gainers: ${symbols.join(', ')}`);
+    const { data, error } = await client.from('instruments').select('symbol').eq('last_selected_on', date);
+    if (error) fail(`Failed to load the F&O list for ${date}: ${error.message}`);
+    symbols = (data || []).map(r => r.symbol as string).sort();
+    if (symbols.length === 0) fail(`No F&O list saved for ${date}. Pass symbols explicitly.`);
   }
 
-  const { client } = new SupabaseService();
   const { sessionStart, sessionEnd } = istDayRange(date);
-  const to = new Date(Math.min(sessionEnd.getTime(), Date.now()));
-  const trades: ReplayTrade[] = [];
+  const bySymbol = new Map<string, Candle[]>();
   const skipped: string[] = [];
-
   for (const symbol of symbols) {
-    const token = await resolveToken(symbol, angel, client);
-    if (!token) {
-      skipped.push(`${symbol} (no single NSE ${symbol}-EQ match)`);
-      continue;
-    }
-    const rows = await angel.getCandles1m(token, sessionStart, to);
-    const candles: Candle[] = rows
-      .filter(r => r.startTime < to)
-      .map(r => ({ ...r, symbol, instrumentToken: token, timeframe: '1m', endTime: new Date(r.startTime.getTime() + 60_000), isComplete: true }));
-    if (candles.length === 0) {
-      skipped.push(`${symbol} (no candles for ${date})`);
-      continue;
-    }
-    trades.push(...replaySymbol(symbol, candles));
-    console.error(`${symbol}: ${candles.length} 1m candles replayed`);
+    const candles = await loadCandles(client, symbol, sessionStart, sessionEnd);
+    if (candles.length === 0) skipped.push(symbol);
+    else bySymbol.set(symbol, candles);
   }
+  console.error(`Replaying ${bySymbol.size} stock(s) with saved candles for ${date}${skipped.length ? `; ${skipped.length} had none` : ''}.`);
 
-  console.log(report(date, symbols, trades, skipped));
+  const trades = replayDay(bySymbol);
+  console.log(report(date, bySymbol.size, trades, skipped));
   if (jsonPath) {
-    writeFileSync(jsonPath, JSON.stringify({ date, symbols, skipped, summary: summarize(trades), trades }, null, 2));
+    writeFileSync(jsonPath, JSON.stringify({ date, symbols: [...bySymbol.keys()], skipped, summary: summarize(trades), trades }, null, 2));
     console.error(`JSON written to ${jsonPath}`);
   }
 }
 
-async function resolveToken(symbol: string, angel: AngelOneMarketDataProvider, client: SupabaseService['client']): Promise<string | null> {
-  if (client) {
-    const { data } = await client.from('instruments').select('instrument_token').eq('symbol', symbol).eq('exchange', 'NSE').limit(1);
-    if (data?.[0]?.instrument_token) return data[0].instrument_token as string;
+async function loadCandles(client: NonNullable<SupabaseService['client']>, symbol: string, from: Date, to: Date): Promise<Candle[]> {
+  const candles: Candle[] = [];
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    const { data, error } = await client
+      .from('candles')
+      .select('instrument_token, start_time, open, high, low, close, volume')
+      .eq('symbol', symbol)
+      .eq('timeframe', '1m')
+      .gte('start_time', from.toISOString())
+      .lt('start_time', to.toISOString())
+      .order('start_time', { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (error) fail(`Failed to load candles for ${symbol}: ${error.message}`);
+    for (const r of data || []) {
+      const startTime = new Date(r.start_time);
+      candles.push({
+        symbol, instrumentToken: r.instrument_token ?? '', timeframe: '1m',
+        open: Number(r.open), high: Number(r.high), low: Number(r.low), close: Number(r.close), volume: Number(r.volume),
+        startTime, endTime: new Date(startTime.getTime() + 60_000), isComplete: true
+      });
+    }
+    if (!data || data.length < PAGE_SIZE) return candles;
   }
-  return pickEquityToken(await angel.searchScrip(symbol), symbol);
 }
 
-function report(date: string, symbols: string[], trades: ReplayTrade[], skipped: string[]): string {
-  const hhmm = (iso: string | null) => (iso ? istDateTimeString(new Date(iso)).slice(11) : '15:30');
+function report(date: string, stockCount: number, trades: ReplayTrade[], skipped: string[]): string {
+  const hhmm = (iso: string | null) => (iso ? istDateTimeString(new Date(iso)).slice(11) : '15:15');
   const lines = [
-    `# Strategy replay · ${date} · ${symbols.length} stock(s)`,
+    `# Strategy replay · ${date} · ${stockCount} stock(s)`,
     '',
-    'Entries are at the close of the 1m candle that triggered on a 5m close. Exits are the first candle to touch the stop (LOST) or target (WON), else the 15:30 close (NEUTRAL). A candle touching both counts as LOST. No costs or slippage.',
+    'Same rules as live: strategies run on each 5m close, only the top 20 gainers may open a plan (approximated from each stock\'s first open of the day, since the previous close is not stored), one open plan per stock and strategy, no new plan from 15:15. Exits: first candle to touch the stop (LOST) or target (WON), else a time exit at 15:15 (NEUTRAL). A candle touching both counts as LOST. No costs or slippage.',
     '',
-    '## Results by strategy (first signals only; repeats excluded)',
+    '## Results by strategy',
     '',
-    '| Strategy | Trades | Won | Lost | Neutral | Win % | Avg P&L % | Total P&L % |',
+    '| Strategy | Trades | Won | Lost | Time exit | Win % | Avg P&L % | Total P&L % |',
     '|---|---|---|---|---|---|---|---|',
     ...summarize(trades).map(s => `| ${s.setup} | ${s.trades} | ${s.won} | ${s.lost} | ${s.neutral} | ${s.winRatePct} | ${s.avgPnlPct} | ${s.totalPnlPct} |`),
     '',
@@ -93,10 +91,10 @@ function report(date: string, symbols: string[], trades: ReplayTrade[], skipped:
     '',
     '| Stock | Strategy | Entry time | Entry | Stop | Target | R:R | Result | Exit time | Exit | P&L % | Notes |',
     '|---|---|---|---|---|---|---|---|---|---|---|---|',
-    ...trades.map(t => `| ${t.symbol} | ${t.setup} | ${hhmm(t.firedAt)} | ${t.entry} | ${t.stop} | ${t.target} | ${t.riskReward} | ${t.outcome} | ${hhmm(t.exitAt)} | ${t.exitPrice} | ${t.pnlPct} | ${[t.repeat ? 'repeat while open' : '', ...t.planIssues].filter(Boolean).join('; ')} |`),
+    ...trades.map(t => `| ${t.symbol} | ${t.setup} | ${hhmm(t.firedAt)} | ${t.entry} | ${t.stop} | ${t.target} | ${t.riskReward} | ${t.outcome === 'NEUTRAL' ? 'TIME EXIT' : t.outcome} | ${hhmm(t.exitAt)} | ${t.exitPrice} | ${t.pnlPct} | ${t.planIssues.join('; ')} |`),
   ];
   if (trades.length === 0) lines.push('', 'No strategy fired on any stock.');
-  if (skipped.length > 0) lines.push('', `Skipped: ${skipped.join(', ')}`);
+  if (skipped.length > 0) lines.push('', `No saved candles: ${skipped.join(', ')}`);
   return lines.join('\n');
 }
 

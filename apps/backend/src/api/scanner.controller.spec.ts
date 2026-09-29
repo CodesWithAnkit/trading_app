@@ -110,6 +110,41 @@ describe('ScannerController', () => {
     await expect(controller.getTopSetups()).rejects.toThrow('Database not configured');
   });
 
+  it('lists every open plan first, then closed plans newest exit first, with exit fields (covers 0010 AC-8)', async () => {
+    const row = (id: string, status: string, confidence: number, exit?: { at: string; reason: string; price: string }) => ({
+      id, direction: 'LONG', setup_family: 'VWAP_TREND', status, created_at: '2026-09-30T04:00:00Z',
+      snapshot_json: { symbol: id.toUpperCase(), confidence, reference_entry: 100 },
+      exit_at: exit?.at ?? null, exit_reason: exit?.reason ?? null, exit_price: exit?.price ?? null
+    });
+    supabaseServiceMock.client.gte.mockResolvedValue({
+      data: [
+        row('closed-early', 'STOP_HIT', 99, { at: '2026-09-30T05:00:00Z', reason: 'STOP', price: '98.9' }),
+        row('open-low', 'ACTIVE', 60),
+        row('closed-late', 'TARGET_HIT', 99, { at: '2026-09-30T06:00:00Z', reason: 'TARGET', price: '102.1' }),
+        row('open-high', 'ACTIVE', 90),
+      ],
+      error: null
+    });
+
+    const result = await controller.getTopSetups();
+
+    expect(result.data.map(s => s.id)).toEqual(['open-high', 'open-low', 'closed-late', 'closed-early']);
+    expect(result.data[2]).toMatchObject({ status: 'TARGET_HIT', exitReason: 'TARGET', exitPrice: 102.1, exitAt: '2026-09-30T06:00:00Z' });
+    expect(result.data[0]).toMatchObject({ exitPrice: null, exitReason: null, exitAt: null });
+  });
+
+  it('never drops an open plan behind closed ones, even past the old 10 row limit (covers 0010 AC-8)', async () => {
+    const rows = Array.from({ length: 12 }, (_, i) => ({
+      id: `open-${i}`, direction: 'LONG', setup_family: 'VWAP_TREND', status: 'ACTIVE', created_at: '2026-09-30T04:00:00Z',
+      snapshot_json: { symbol: `S${i}`, confidence: 50 + i, reference_entry: 100 }
+    }));
+    supabaseServiceMock.client.gte.mockResolvedValue({ data: rows, error: null });
+
+    const result = await controller.getTopSetups();
+
+    expect(result.data).toHaveLength(12);
+  });
+
   it('includes approaching setups when requested (covers 0009 AC-3)', async () => {
     supabaseServiceMock.client.gte.mockResolvedValue({ data: [], error: null });
 

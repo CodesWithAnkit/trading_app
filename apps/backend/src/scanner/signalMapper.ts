@@ -24,6 +24,10 @@ export function toApiSignal(signal: any) {
     expiresAt: snap.expires_at || new Date(Date.now() + 1800000).toISOString(),
     rationale: snap.rationale || 'Automated Strategy',
     metrics: snap.metrics || { relativeVolume: '1x', trendAlignment: 'Neutral', volatility: 'Normal', liquidity: 'High', riskReward: '1:2' },
+    // Live exit (spec 0010); null while the plan is open.
+    exitPrice: signal.exit_price === null || signal.exit_price === undefined ? null : Number(signal.exit_price),
+    exitAt: signal.exit_at ?? null,
+    exitReason: signal.exit_reason ?? null,
   };
 }
 
