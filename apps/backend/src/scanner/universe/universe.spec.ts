@@ -47,6 +47,20 @@ describe('instrument file (0009 AC-12, AC-13)', () => {
     expect(parseFnoStocks(withTestSymbols).stocks.map(s => s.symbol)).not.toContain('011NSETEST');
   });
 
+  it('keeps a real stock whose name starts with a digit, like 360ONE', () => {
+    const withDigitName: InstrumentRow[] = [
+      ...FILE,
+      { token: '36002', symbol: '360ONE28OCT26FUT', name: '360ONE', exch_seg: 'NFO', instrumenttype: 'FUTSTK' },
+      { token: '13061', symbol: '360ONE-EQ', name: '360ONE', exch_seg: 'NSE', instrumenttype: '' },
+      { token: '36001', symbol: '181NSETEST28OCT26FUT', name: '181NSETEST', exch_seg: 'NFO', instrumenttype: 'FUTSTK' },
+      { token: '18', symbol: '181NSETEST-EQ', name: '181NSETEST', exch_seg: 'NSE', instrumenttype: '' },
+    ];
+    const symbols = parseFnoStocks(withDigitName).stocks.map(s => s.symbol);
+    expect(symbols).toContain('360ONE');
+    expect(symbols).not.toContain('181NSETEST');
+    expect(symbols).toHaveLength(4); // BAJAJ-AUTO, M&M, RELIANCE, 360ONE
+  });
+
   it('retries once, then reports the failure', async () => {
     const fetchImpl = vi.fn()
       .mockRejectedValueOnce(new Error('timeout'))

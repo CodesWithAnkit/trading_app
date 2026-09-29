@@ -170,4 +170,4 @@
   - [x] Live exit tracking: tick exits, 15:15 time exit, one open plan per stock and strategy, atomic writes, restart catch up (0010 AC-1 to AC-5, AC-7)
   - [x] Exit alerts, Closed today list, and live vs candle check results on the dashboard (0010 AC-6, AC-8, AC-9)
 - [ ] Verify it: /check verify
-- [ ] Test it: /test
+- [x] Test it: /test

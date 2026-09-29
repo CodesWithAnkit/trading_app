@@ -5,6 +5,9 @@ export type InstrumentRow = { token?: string; symbol?: string; name?: string; ex
 
 export type FnoStock = { symbol: string; token: string };
 
+/** NSE's exchange test instruments (011NSETEST … 181NSETEST) look like stock futures but are not stocks. */
+const NSE_TEST_INSTRUMENT = /^\d+NSETEST$/;
+
 /**
  * Every underlying with a stock future (NFO FUTSTK), paired with its NSE cash token from
  * the row whose symbol is exactly `<name>-EQ`. Names with no such row, or several, are skipped.
@@ -13,7 +16,7 @@ export function parseFnoStocks(rows: InstrumentRow[]): { stocks: FnoStock[]; ski
   const futureNames = new Set<string>();
   const equityTokens = new Map<string, string[]>();
   for (const r of rows) {
-    if (r.exch_seg === 'NFO' && r.instrumenttype === 'FUTSTK' && r.name) {
+    if (r.exch_seg === 'NFO' && r.instrumenttype === 'FUTSTK' && r.name && !NSE_TEST_INSTRUMENT.test(r.name)) {
       futureNames.add(r.name);
     } else if (r.exch_seg === 'NSE' && r.symbol?.endsWith('-EQ') && r.token) {
       const name = r.symbol.slice(0, -3);
