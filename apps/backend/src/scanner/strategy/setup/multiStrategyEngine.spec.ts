@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateAllStrategies } from './multiStrategyEngine.js';
+import { evaluateAllStrategies, evaluateStrategyProximity, APPROACHING_THRESHOLD_PCT } from './multiStrategyEngine.js';
 import { Candle } from '../../market-data/types.js';
 
 describe('multiStrategyEngine', () => {
@@ -78,5 +78,43 @@ describe('multiStrategyEngine', () => {
     
     const scalpingSetup = results.find(r => r.setupFamily === 'SCALPING');
     expect(scalpingSetup).toBeDefined();
+  });
+
+  describe('evaluateStrategyProximity (0009 AC-2)', () => {
+    const flatHistory = (currentClose: number) => {
+      const hist1m = createMockCandles(30, 100).map(c => ({ ...c, close: 100 }));
+      hist1m[29] = { ...hist1m[29], close: currentClose };
+      return hist1m;
+    };
+
+    it('flags VWAP_TREND as approaching when price sits just under VWAP', () => {
+      const hist1m = flatHistory(99.5);
+      const results = evaluateStrategyProximity(hist1m[29], hist1m);
+
+      const vwap = results.find(r => r.setupFamily === 'VWAP_TREND');
+      expect(vwap).toBeDefined();
+      expect(vwap!.direction).toBe('LONG');
+      expect(vwap!.distancePct).toBeGreaterThan(0);
+      expect(vwap!.distancePct).toBeLessThanOrEqual(APPROACHING_THRESHOLD_PCT);
+      expect(vwap!.proximity).toBeGreaterThan(0);
+      expect(vwap!.proximity).toBeLessThanOrEqual(100);
+      // Opening range high (102) is 2.5% away, outside the 1% window.
+      expect(results.find(r => r.setupFamily === 'BREAKOUT_MOMENTUM')).toBeUndefined();
+    });
+
+    it('ignores triggers further than 1% away and returns closest first', () => {
+      const hist1m = flatHistory(95);
+      const results = evaluateStrategyProximity(hist1m[29], hist1m);
+
+      expect(results.find(r => r.setupFamily === 'VWAP_TREND')).toBeUndefined();
+      const distances = results.map(r => r.distancePct);
+      expect(distances).toEqual([...distances].sort((a, b) => a - b));
+      expect(distances.every(d => d <= APPROACHING_THRESHOLD_PCT)).toBe(true);
+    });
+
+    it('returns nothing without 25 candles of history', () => {
+      const hist1m = createMockCandles(10);
+      expect(evaluateStrategyProximity(hist1m[9], hist1m)).toEqual([]);
+    });
   });
 });

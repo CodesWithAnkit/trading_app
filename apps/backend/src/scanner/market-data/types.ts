@@ -24,11 +24,15 @@ export interface MarketTick {
   symbol: string;
   ltp: number;
   timestamp: Date;
+  /** Per tick traded volume, when the feed sends it (tests, mock). */
   volume?: number;
+  /** Quote mode: cumulative traded volume for the day (`vol_traded`). */
+  cumulativeVolume?: number;
   open?: number;
   high?: number;
   low?: number;
-  close?: number;
+  /** Quote mode: the previous session's close (`close_price`). */
+  prevClose?: number;
   rawTimestamp?: number;
 }
 
@@ -58,4 +62,23 @@ export interface MarketDataProvider {
   unsubscribe(instruments: InstrumentSubscription[]): Promise<void>;
   onTick(handler: (tick: MarketTick) => void): void;
   getHealth(): FeedHealth;
+  /** Optional: called after every (re)connect. */
+  onConnected?(handler: () => void): void;
+}
+
+/** A 1m candle from the broker's historical API, used to backfill a stock added mid session. */
+export interface HistoricalCandle {
+  startTime: Date;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+/** Broker REST calls the stock universe needs (spec 0009 AC-12, AC-13, AC-15). */
+export interface MarketDataRestClient {
+  fetchFnoPriceGainers(): Promise<{ tradingSymbol?: string; percentChange?: number | string }[]>;
+  searchScrip(symbol: string): Promise<{ exchange?: string; tradingsymbol?: string; symboltoken?: string }[]>;
+  getCandles1m(token: string, from: Date, to: Date): Promise<HistoricalCandle[]>;
 }

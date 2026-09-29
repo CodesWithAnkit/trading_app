@@ -9,10 +9,10 @@
 | Remaining Intraday Dashboard Pages | done |
 | Real API Implementation (Phase 3) | done |
 | Angel One Market Data Integration (Phase 4) | done |
-| Live Dashboard Integration (Phase 4B) | in-progress |
-| Live Market and Scanner UI (Phase 4C) | in-progress |
+| Live Dashboard Integration (Phase 4B) | done |
+| Live Market and Scanner UI (Phase 4C) | done |
 | Dynamic Stock Analysis & Strategy Engine (Phase 5) | done |
-
+| Real Stock Analysis and Outcome Tracking (Phase 6) | in-progress |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -146,3 +146,24 @@
   - [x] UI Integration: Top Bullish dashboard, Analysis page, Trade Plan component, and Journal UI (AC-6, AC-7, AC-8, AC-9, AC-10)
 - [x] Verify it: /check verify
 - [x] Test it: /test
+
+---
+
+## Real Stock Analysis and Outcome Tracking (Phase 6) `in-progress`
+
+**Intent**: Eliminate mock data entirely during market hours by using real-time Angel One data for daily momentum scoring and "approaching" strategy setups. Adds Server Sent Events (SSE) for real-time updates and an end-of-day reconciliation task to track predicted vs actual outcomes.
+**Done when**: The dashboard shows real stocks ranked by momentum score without mock fallbacks, approaching setups stream via SSE, and the system reconciles prediction outcomes at the end of the day to show accuracy summaries after hours.
+
+- [x] Design it (spec): [0009](../specs/0009-real-stock-analysis/index.md) · code in `apps/backend/src/scanner/` (universe in `universe/`) and `apps/web/app/dashboard/`
+- [x] Build it: /develop Real Stock Analysis and Outcome Tracking
+  - [x] Database migration: `actual_high/low/close` and outcome columns (AC-6)
+  - [x] Daily momentum score & Approaching setup detection (AC-1, AC-2)
+  - [x] SSE `/stream` and analysis API endpoints (AC-3, AC-4, AC-5)
+  - [x] EOD reconciliation cron and CLI task (AC-7, AC-8)
+  - [x] Frontend: Remove mock fallback, integrate SSE for SignalContext (AC-1, AC-4, AC-11)
+  - [x] Frontend: Approaching setup cards and after-hours outcome UI (AC-2, AC-9, AC-10)
+  - [x] Gainers only universe: token cache, merged subscriptions, candle upsert, and the 15 minute F&O gainers refresh (AC-1, AC-12, AC-13)
+  - [x] Quote mode feed with day change from the previous close (AC-1, AC-14)
+  - [x] Backfill, restart recovery, daily reset, and universe status (AC-1, AC-12, AC-15)
+- [ ] Verify it: /check verify
+- [ ] Test it: /test

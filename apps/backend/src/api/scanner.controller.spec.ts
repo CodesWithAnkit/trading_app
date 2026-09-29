@@ -1,12 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ScannerController } from './scanner.controller.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
+import { ScannerService } from '../scanner/scanner.service.js';
+import { Subject, firstValueFrom, take, toArray } from 'rxjs';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('ScannerController', () => {
   let controller: ScannerController;
   let supabaseServiceMock: any;
+  let scannerServiceMock: any;
 
   beforeEach(async () => {
     supabaseServiceMock = {
@@ -17,6 +20,14 @@ describe('ScannerController', () => {
       }
     };
 
+    scannerServiceMock = {
+      latestTicks: new Map([['RELIANCE', {}], ['TCS', {}]]),
+      events$: new Subject(),
+      getApproachingSetups: vi.fn().mockReturnValue([{ symbol: 'TCS', closestDistancePct: 0.4 }]),
+      getApproachingSetup: vi.fn().mockReturnValue(undefined),
+      getMomentumRanking: vi.fn().mockReturnValue([{ symbol: 'RELIANCE', momentumScore: 3.2 }]),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ScannerController],
       providers: [
@@ -24,6 +35,7 @@ describe('ScannerController', () => {
           provide: SupabaseService,
           useValue: supabaseServiceMock,
         },
+        { provide: ScannerService, useValue: scannerServiceMock },
       ],
     }).compile();
 
@@ -96,5 +108,64 @@ describe('ScannerController', () => {
     
     await expect(controller.getTopSetups()).rejects.toThrow(HttpException);
     await expect(controller.getTopSetups()).rejects.toThrow('Database not configured');
+  });
+
+  it('includes approaching setups when requested (covers 0009 AC-3)', async () => {
+    supabaseServiceMock.client.gte.mockResolvedValue({ data: [], error: null });
+
+    const result: any = await controller.getTopSetups('approaching');
+
+    expect(result.data).toEqual([]);
+    expect(result.approaching).toEqual([{ symbol: 'TCS', closestDistancePct: 0.4 }]);
+  });
+
+  it('returns momentum ranking with the watched count (covers 0009 AC-1)', () => {
+    expect(controller.getMomentum()).toEqual({ watching: 2, data: [{ symbol: 'RELIANCE', momentumScore: 3.2 }] });
+  });
+
+  it('streams a snapshot then live scanner events (covers 0009 AC-4)', async () => {
+    const received = firstValueFrom(controller.stream().pipe(take(3), toArray()));
+    scannerServiceMock.events$.next({ type: 'signal:new', data: { id: 'sig-1' } });
+
+    const events = await received;
+    expect(events.map((e: any) => e.type)).toEqual(['approaching:update', 'momentum:update', 'signal:new']);
+    expect(events[2].data).toEqual({ id: 'sig-1' });
+  });
+
+  it('returns 404 from analysis when a symbol has no signal or approaching setup (covers 0009 AC-5)', async () => {
+    supabaseServiceMock.client = {
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+    };
+
+    await expect(controller.getAnalysis('reliance')).rejects.toMatchObject({ status: 404 });
+    expect(supabaseServiceMock.client.eq).toHaveBeenCalledWith('snapshot_json->>symbol', 'RELIANCE');
+  });
+
+  it('summarises outcomes for a day (covers 0009 AC-9, AC-10)', async () => {
+    const row = (id: string, outcome_status: string | null) => ({
+      id, direction: 'LONG', setup_family: 'VWAP_TREND', status: 'ACTIVE', created_at: '2026-09-29T05:00:00Z',
+      snapshot_json: { symbol: 'RELIANCE', reference_entry: 100 }, actual_high: '103', outcome_status,
+    });
+    supabaseServiceMock.client = {
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnThis(),
+      lt: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data: [row('a', 'WON'), row('b', 'LOST'), row('c', null)], error: null }),
+    };
+
+    const result = await controller.getOutcomes('2026-09-29');
+
+    expect(result.summary).toEqual({ total: 3, winners: 1, losers: 1, neutral: 0, pending: 1 });
+    expect(result.data[0].actualHigh).toBe(103);
+  });
+
+  it('rejects malformed outcome dates', async () => {
+    await expect(controller.getOutcomes('29-09-2026')).rejects.toMatchObject({ status: 400 });
   });
 });

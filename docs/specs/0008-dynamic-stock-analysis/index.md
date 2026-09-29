@@ -6,10 +6,10 @@ date: 2026-09-29
 # Dynamic Stock Analysis and Multi-Strategy Engine
 
 ## Summary
-Implements a dynamic market scanner that automatically selects top bullish stocks (e.g., from Nifty 50 or Top Gainers) without relying on a predefined hardcoded list. The backend Strategy Engine will concurrently evaluate these stocks against four specific intraday trading strategies derived from our deep research (VWAP, Momentum/Breakout, Mean-Reversion, and Scalping). The engine will automatically generate precise Trade Plans (Entry, Stop Loss, Target), surfacing the best active or "approaching" setups to the UI, allowing the user to easily save them to a Manual Journal.
+Implements a dynamic market scanner that automatically selects top bullish stocks (the stock universe is defined in [spec 0009](../0009-real-stock-analysis/index.md), AC-1 and AC-12 to AC-15) without relying on a predefined hardcoded list. The backend Strategy Engine will concurrently evaluate these stocks against four specific intraday trading strategies derived from our deep research (VWAP, Momentum/Breakout, Mean-Reversion, and Scalping). The engine will automatically generate precise Trade Plans (Entry, Stop Loss, Target), surfacing the best active or "approaching" setups to the UI, allowing the user to easily save them to a Manual Journal.
 
 ## Requirements
-- **AC-1**: On startup or market open, the backend fetches a dynamic universe of stocks (e.g. Nifty 50 constituents or Angel One Top Gainers) to monitor, overriding the static `SCANNER_INSTRUMENTS` list.
+- **AC-1**: On startup or market open, the backend builds a dynamic universe of stocks to monitor instead of relying only on a static list. The universe is defined in [spec 0009](../0009-real-stock-analysis/index.md) (Angel One F&O price gainers mapped to cash stocks, top gainers only).
 - **AC-2**: The `ScannerService` subscribes to the live tick stream for this dynamic universe.
 - **AC-3**: The `StrategyEngine` evaluates four concurrent strategies for each tick/candle: Momentum/Breakout, Mean-Reversion, Scalping, and VWAP Breakout/Pullback.
 - **AC-4**: The Engine calculates exact Trade Plan levels (Entry, Stop, Target) based on the quantitative rules defined in the research doc.
@@ -52,7 +52,7 @@ We are building this feature entirely on the existing stack (Next.js frontend, N
 1. **Database Migration** (Backend)
    - Create the `journal_entries` table in Supabase with RLS policies mapping to the `JournalEntry` schema.
 2. **Dynamic Instrument Discovery** (Backend)
-   - Update `ScannerService.onModuleInit` to fetch the Nifty 50 or Top Gainers list from Angel One instead of relying strictly on `.env` `SCANNER_INSTRUMENTS`.
+   - Update `ScannerService.onModuleInit` to build the dynamic universe described in [spec 0009](../0009-real-stock-analysis/index.md) instead of the static `.env` `SCANNER_INSTRUMENTS` list, which is no longer used.
 3. **Multi-Strategy Implementation** (Backend)
    - Implement the `StrategyEngine` with individual evaluators for each of the 8 rules defined in the deep research:
      - **Momentum/Breakout**: Buy if price > OpenRangeHigh & volume > AvgVolume*1.2. Stop: ORLow. Target: 1:1 or 2:1 RR.

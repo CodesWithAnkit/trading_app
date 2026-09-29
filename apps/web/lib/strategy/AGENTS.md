@@ -22,6 +22,6 @@ This area contains the deterministic, stateless, side-effect-free pipeline for s
 
 - **Verification:**
   - Verify changes with deterministic unit tests and the `/check verify` runtime proofs.
-  - See [0001-strategy-engine-implementation](../../docs/specs/0001-strategy-engine-implementation/index.md) for the governing spec.
+  - See [0001-strategy-engine-implementation](../../../../docs/specs/0001-strategy-engine-implementation/index.md) for the governing spec.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

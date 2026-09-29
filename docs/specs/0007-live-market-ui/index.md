@@ -1,7 +1,7 @@
 # 0007. Live Market and Scanner UI
 
 **Date**: 2026-09-29
-**Status**: Proposed
+**Status**: Accepted
 
 ## Summary
 

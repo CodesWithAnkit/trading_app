@@ -1,4 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+import { Subject } from 'rxjs';
 import { config } from './config.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
 import { AngelOneMarketDataProvider } from './market-data/AngelOneMarketDataProvider.js';
@@ -9,9 +11,42 @@ import { evaluateEligibility } from './strategy/eligibility/eligibilityEngine.js
 import { calculateStructure } from './strategy/features/structureCalculator.js';
 import { calculateRvol } from './strategy/features/rvolCalculator.js';
 import { calculateTrend } from './strategy/features/trendCalculator.js';
-import { evaluateAllStrategies } from './strategy/setup/multiStrategyEngine.js';
+import { evaluateAllStrategies, evaluateStrategyProximity, StrategyProximity } from './strategy/setup/multiStrategyEngine.js';
 import { validateRiskReward } from './strategy/plan/riskRewardValidator.js';
 import { buildSignalSnapshot } from './strategy/signal/signalSnapshot.js';
+import { calculateMomentumScore, MomentumStock, rankByMomentum, relativeVolumeFrom5m, trendFrom5m } from './analysis/momentumScore.js';
+import { toApiSignal } from './signalMapper.js';
+import { reconcileOutcomes } from './outcomes/reconcileOutcomes.js';
+import { IST_TIMEZONE, istDateString, istDayRange } from './time/ist.js';
+import { UniverseService, UniverseStatus, WatchedStock } from './universe/UniverseService.js';
+import { buildBackfill } from './universe/backfill.js';
+import { REFRESH_CRON, isFirstRefreshSlot, isInRefreshWindow, isIstWeekday, nextRefreshAt } from './universe/schedule.js';
+
+export type ApproachingSetup = {
+  symbol: string;
+  price: number;
+  dayChangePct: number;
+  volume: number;
+  relativeVolume: number;
+  momentumScore: number;
+  strategies: StrategyProximity[];
+  closestDistancePct: number;
+  updatedAt: string;
+};
+
+export type ScannerEvent =
+  | { type: 'signal:new'; data: ReturnType<typeof toApiSignal> }
+  | { type: 'approaching:update'; data: ApproachingSetup[] }
+  | { type: 'momentum:update'; data: { watching: number; stocks: MomentumStock[] } };
+
+// 5m candles for every watched symbol close together; coalesce their updates into one push.
+const PUSH_COALESCE_MS = 1000;
+// A full session is 375 one minute candles; keep the opening range all day (spec 0009 AC-15).
+const HISTORY_1M_LIMIT = 400;
+const HISTORY_5M_LIMIT = 80;
+const FIRST_REFRESH_RETRY_MS = 60_000;
+
+type LatestTick = { symbol: string, ltp: number, timestamp: Date, dayOpen: number, volume: number, change1dPct: number, prevClose: number | null };
 
 @Injectable()
 export class ScannerService implements OnModuleInit, OnModuleDestroy {
@@ -20,7 +55,7 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
   private healthFlushInterval: NodeJS.Timeout | null = null;
   private lastHealthStatus = '';
 
-  public readonly latestTicks = new Map<string, { symbol: string, ltp: number, timestamp: Date, dayOpen: number, volume: number, change1dPct: number }>();
+  public readonly latestTicks = new Map<string, LatestTick>();
   public readonly scannerMetrics = {
     ticksReceived: 0,
     candlesCompleted1m: 0,
@@ -35,11 +70,19 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     uptimeStart: new Date()
   };
 
-  private tokenToSymbol = new Map<string, string>();
   private aggregator = new CandleAggregator();
+  private angel: AngelOneMarketDataProvider | null = null;
+  private universe: UniverseService | null = null;
+  /** Stocks whose history is still being backfilled; they skip strategy checks. */
+  private readonly warming = new Set<string>();
   
   private history1m = new Map<string, any[]>();
   private history5m = new Map<string, any[]>();
+
+  private readonly approaching = new Map<string, ApproachingSetup>();
+  /** Scanner pushes for SSE subscribers. */
+  public readonly events$ = new Subject<ScannerEvent>();
+  private pushTimer: NodeJS.Timeout | null = null;
 
   constructor(private readonly supabase: SupabaseService) {}
 
@@ -64,12 +107,23 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
         this.logger.error('❌ Missing Angel One credentials in environment while MARKET_DATA_PROVIDER is angelone. FAILING FAST.');
         process.exit(1);
       }
-      this.provider = new AngelOneMarketDataProvider({
+      const angel = new AngelOneMarketDataProvider({
         apiKey: config.angelOne.apiKey,
         clientCode: config.angelOne.clientCode,
         password: config.angelOne.password,
         totpSecret: config.angelOne.totpSecret
       });
+      this.angel = angel;
+      this.provider = angel;
+      this.universe = new UniverseService({
+        client: this.supabase.client,
+        rest: angel,
+        subscribe: tokens => angel.subscribe([{ exchangeType: '1', tokens }]), // 1 = NSE cash
+        onAdded: async stocks => this.warmUp(stocks)
+      });
+      angel.setSymbolResolver(token => this.universe?.resolveSymbol(token));
+      // Volume gathered while disconnected must not land in one candle.
+      angel.onConnected(() => this.aggregator.resetVolumeBaselines());
     } else {
       this.logger.warn('⚠️ Starting with Mock Market Data Provider (Not fully implemented yet for new interface).');
       return;
@@ -83,7 +137,7 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
       
       const hist = this.history1m.get(candle.symbol) || [];
       hist.push(this.mapCandleForStrategy(candle));
-      if (hist.length > 100) hist.shift();
+      if (hist.length > HISTORY_1M_LIMIT) hist.shift();
       this.history1m.set(candle.symbol, hist);
       
       await this.persistCandle(candle);
@@ -97,11 +151,13 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
       
       const hist = this.history5m.get(candle.symbol) || [];
       hist.push(this.mapCandleForStrategy(candle));
-      if (hist.length > 50) hist.shift();
+      if (hist.length > HISTORY_5M_LIMIT) hist.shift();
       this.history5m.set(candle.symbol, hist);
 
       await this.persistCandle(candle);
       await this.evaluateStrategy(candle.symbol);
+      this.updateApproaching(candle.symbol);
+      this.schedulePush();
     };
 
     // Receive ticks from provider
@@ -112,9 +168,9 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     // Start connection
     await this.provider.connect();
 
-    // Setup subscriptions based on instruments table
+    // Restore today's universe (after a restart mid session) and pull gainers if due
     setTimeout(() => {
-      this.setupSubscriptions();
+      this.startUniverse().catch(err => this.logger.error(`Universe startup failed: ${err.message}`));
     }, 5000);
 
     // Flush health every 60s
@@ -123,49 +179,99 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     }, 60000);
   }
 
-  async setupSubscriptions() {
-    const symbols = (process.env.SCANNER_INSTRUMENTS || '').split(',').map(s => s.trim()).filter(Boolean);
+  /** Startup: re-subscribe today's stocks, backfill them, and refresh now if inside the window (spec 0009 AC-13). */
+  async startUniverse(now: Date = new Date()) {
+    if (!this.universe || !isIstWeekday(now)) return;
+    const state = this.getSessionState(now);
+    if (state === 'CLOSED' && !isInRefreshWindow(now)) return;
 
-    if (!this.supabase.client) return;
-
-    let query = this.supabase.client
-      .from('instruments')
-      .select('*')
-      .eq('status', 'ACTIVE');
-
-    if (symbols.length > 0) {
-      query = query.in('symbol', symbols);
-    } else {
-      this.logger.log('No SCANNER_INSTRUMENTS defined. Dynamically fetching up to 50 active instruments from DB.');
-      query = query.limit(50);
+    try {
+      await this.universe.restoreToday(istDateString(now));
+    } catch (err: any) {
+      this.logger.error(err.message);
     }
-
-    // Fetch tokens from db
-    const { data: instruments, error } = await query;
-
-    if (error) {
-      this.logger.error('Failed to fetch instruments from DB:', error.message);
-      return;
+    this.universe.setNextRefreshAt(nextRefreshAt(now));
+    if (isInRefreshWindow(now)) {
+      await this.runUniverseRefresh(false);
     }
+  }
 
-    if (!instruments || instruments.length === 0) {
-      this.logger.warn('No active instruments found in DB matching SCANNER_INSTRUMENTS. Ensure seed-instruments was run.');
-      return;
-    }
+  /** Top gainers refresh, 09:22 to 15:22 IST every 15 minutes, add only (spec 0009 AC-12). */
+  @Cron(REFRESH_CRON, { name: 'universe-refresh', timeZone: IST_TIMEZONE })
+  async handleUniverseRefresh() {
+    const now = new Date();
+    if (!isInRefreshWindow(now)) return;
+    await this.runUniverseRefresh(isFirstRefreshSlot(now));
+  }
 
-    const tokens = instruments.map(i => {
-      this.tokenToSymbol.set(i.token, i.symbol);
-      return i.token;
-    });
-
-    this.logger.log(`Subscribing to ${tokens.length} instruments...`);
-
-    this.provider?.subscribe([
-      {
-        exchangeType: '1', // NSE
-        tokens: tokens
+  private async runUniverseRefresh(retryOnFailure: boolean) {
+    if (!this.universe) return;
+    const now = new Date();
+    this.universe.setNextRefreshAt(nextRefreshAt(now));
+    try {
+      await this.universe.refresh(istDateString(now));
+      this.schedulePush();
+    } catch {
+      // Already logged and recorded for diagnostics; the watched stocks stay as they are.
+      if (retryOnFailure) {
+        setTimeout(() => void this.runUniverseRefresh(false), FIRST_REFRESH_RETRY_MS);
       }
-    ]);
+    }
+  }
+
+  /** New trading day: forget yesterday's stocks, histories and volume baselines (spec 0009 invariant). */
+  @Cron('0 0 9 * * 1-5', { name: 'universe-daily-reset', timeZone: IST_TIMEZONE })
+  dailyReset() {
+    this.universe?.reset();
+    this.aggregator.reset();
+    this.history1m.clear();
+    this.history5m.clear();
+    this.latestTicks.clear();
+    this.approaching.clear();
+    this.warming.clear();
+    this.schedulePush();
+    this.logger.log('Daily reset: universe cleared until the 09:22 gainers pull.');
+  }
+
+  getUniverseStatus(): UniverseStatus | null {
+    return this.universe?.getStatus() ?? null;
+  }
+
+  /** New stocks skip strategy checks until today's candles are backfilled (spec 0009 AC-15). */
+  warmUp(stocks: WatchedStock[]) {
+    if (!this.angel || this.getSessionState() !== 'OPEN') return;
+    stocks.forEach(s => this.warming.add(s.symbol));
+    void this.backfill(stocks);
+  }
+
+  private async backfill(stocks: WatchedStock[]) {
+    for (const { symbol, token } of stocks) {
+      try {
+        const now = new Date();
+        const rows = await this.angel!.getCandles1m(token, istDayRange(istDateString(now)).sessionStart, now);
+        const { oneMinute, fiveMinute } = buildBackfill(symbol, token, rows, now);
+        this.seedHistory(symbol, oneMinute, fiveMinute);
+        await this.persistCandles(oneMinute);
+        this.logger.log(`Backfilled ${oneMinute.length} 1m candle(s) for ${symbol}.`);
+      } catch (err: any) {
+        this.logger.warn(`Backfill failed for ${symbol}, it starts cold: ${err.message}`);
+      } finally {
+        this.warming.delete(symbol);
+      }
+    }
+  }
+
+  /** Merges backfilled candles under any live ones by start time; a live candle wins for the same minute. */
+  seedHistory(symbol: string, oneMinute: Candle[], fiveMinute: Candle[]) {
+    const merge = (store: Map<string, any[]>, candles: Candle[], limit: number) => {
+      const byStart = new Map<string, any>();
+      for (const c of candles) byStart.set(c.startTime.toISOString(), this.mapCandleForStrategy(c));
+      for (const c of store.get(symbol) || []) byStart.set(c.timestamp, c);
+      const merged = [...byStart.values()].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+      store.set(symbol, merged.slice(-limit));
+    };
+    merge(this.history1m, oneMinute, HISTORY_1M_LIMIT);
+    merge(this.history5m, fiveMinute, HISTORY_5M_LIMIT);
   }
 
   processTick(tick: MarketTick) {
@@ -177,39 +283,40 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    // Resolve symbol from token if not provided by provider
+    // After the daily reset the socket still carries yesterday's tokens; only today's universe counts.
+    if (this.universe && !this.universe.resolveSymbol(tick.instrumentToken)) return;
     if (!tick.symbol) {
-      tick.symbol = this.tokenToSymbol.get(tick.instrumentToken) || tick.instrumentToken;
+      tick.symbol = this.universe?.resolveSymbol(tick.instrumentToken) || tick.instrumentToken;
     }
 
     this.scannerMetrics.ticksReceived++;
     this.scannerMetrics.lastTickAt = tick.timestamp;
 
     // Update latestTicks Map
-    const existing = this.latestTicks.get(tick.symbol) || {
+    const existing: LatestTick = this.latestTicks.get(tick.symbol) || {
       symbol: tick.symbol,
       ltp: tick.ltp,
       timestamp: tick.timestamp,
       dayOpen: tick.ltp, // Fallback if open not provided
       volume: 0,
-      change1dPct: 0
+      change1dPct: 0,
+      prevClose: null
     };
 
     existing.ltp = tick.ltp;
     existing.timestamp = tick.timestamp;
-    if (tick.open && existing.dayOpen === existing.ltp) {
-      existing.dayOpen = tick.open; // Real open price if tick supplies it
-    }
-    
-    // Some providers send cumulative volume, some send interval volume. Angel One sends cumulative (often) or interval.
-    // In our Angel One normalization, we expect cumulative or we accumulate it.
-    if (tick.volume) {
-      existing.volume = tick.volume; // Assuming cumulative for now
+    if (tick.open) existing.dayOpen = tick.open;
+    if (tick.prevClose) existing.prevClose = tick.prevClose;
+
+    // Quote mode sends the day's cumulative volume; other feeds send per tick volume.
+    if (tick.cumulativeVolume !== undefined) {
+      existing.volume = tick.cumulativeVolume;
+    } else if (tick.volume) {
+      existing.volume += tick.volume;
     }
 
-    if (existing.dayOpen > 0) {
-      existing.change1dPct = ((existing.ltp - existing.dayOpen) / existing.dayOpen) * 100;
-    }
+    // Day change is measured from the previous close (spec 0009 AC-14); without one the stock is unranked.
+    existing.change1dPct = existing.prevClose ? ((existing.ltp - existing.prevClose) / existing.prevClose) * 100 : 0;
 
     this.latestTicks.set(tick.symbol, existing);
 
@@ -233,6 +340,7 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async evaluateStrategy(symbol: string) {
+    if (this.warming.has(symbol)) return;
     this.scannerMetrics.strategyEvaluations++;
     const hist1m = this.history1m.get(symbol) || [];
     const hist5m = this.history5m.get(symbol) || [];
@@ -333,7 +441,7 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
       
       // Persist to Supabase
       if (this.supabase.client) {
-        await this.supabase.client.from('signals').insert({
+        const { data: inserted, error: insertError } = await this.supabase.client.from('signals').insert({
           direction: signal.direction,
           setup_family: signal.setupFamily,
           status: signal.state,
@@ -356,8 +464,13 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
             expires_at: signal.expiresAt
           },
           created_at: signal.createdAt
-        });
+        }).select().single();
+        if (insertError) {
+          this.logger.error(`Failed to insert signal for ${symbol}: ${insertError.message}`);
+          continue;
+        }
         this.logger.log(`Created new signal for ${symbol} (${signal.direction})`);
+        this.events$.next({ type: 'signal:new', data: toApiSignal(inserted) });
       }
 
       } // End of for-loop
@@ -366,12 +479,102 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /** Re-checks how close `symbol` is to each strategy trigger (AC-2). */
+  updateApproaching(symbol: string) {
+    if (this.warming.has(symbol)) return;
+    const hist1m = this.history1m.get(symbol) || [];
+    const current1m = hist1m[hist1m.length - 1];
+    const strategies = current1m ? evaluateStrategyProximity(current1m, hist1m) : [];
+    if (strategies.length === 0) {
+      this.approaching.delete(symbol);
+      return;
+    }
+
+    const stock = this.momentumFor(symbol);
+    this.approaching.set(symbol, {
+      symbol,
+      price: stock?.ltp ?? current1m.close,
+      dayChangePct: stock?.dayChangePct ?? 0,
+      volume: stock?.volume ?? 0,
+      relativeVolume: stock?.relativeVolume ?? 1,
+      momentumScore: stock?.momentumScore ?? 0,
+      strategies,
+      closestDistancePct: strategies[0].distancePct,
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  /** Approaching setups, closest to triggering first (AC-3). */
+  getApproachingSetups(): ApproachingSetup[] {
+    return [...this.approaching.values()].sort((a, b) => a.closestDistancePct - b.closestDistancePct);
+  }
+
+  getApproachingSetup(symbol: string): ApproachingSetup | undefined {
+    return this.approaching.get(symbol);
+  }
+
+  /** Every watched stock ranked by daily momentum score (AC-1). */
+  getMomentumRanking(): MomentumStock[] {
+    const stocks = [...this.latestTicks.keys()]
+      .map(symbol => this.momentumFor(symbol))
+      .filter((s): s is MomentumStock => s !== null);
+    return rankByMomentum(stocks);
+  }
+
+  private momentumFor(symbol: string): MomentumStock | null {
+    const tick = this.latestTicks.get(symbol);
+    if (!tick) return null;
+    const hist5m = this.history5m.get(symbol) || [];
+    const relativeVolume = relativeVolumeFrom5m(hist5m);
+    const trend = trendFrom5m(hist5m);
+    const ranked = tick.prevClose !== null;
+    return {
+      symbol,
+      ltp: tick.ltp,
+      dayChangePct: Math.round(tick.change1dPct * 100) / 100,
+      volume: tick.volume,
+      relativeVolume,
+      trend,
+      ranked,
+      momentumScore: ranked ? calculateMomentumScore(tick.change1dPct, relativeVolume, trend) : 0,
+      lastTickAt: tick.timestamp.toISOString()
+    };
+  }
+
+  private schedulePush() {
+    if (this.pushTimer) return;
+    this.pushTimer = setTimeout(() => {
+      this.pushTimer = null;
+      this.events$.next({ type: 'approaching:update', data: this.getApproachingSetups() });
+      this.events$.next({ type: 'momentum:update', data: { watching: this.latestTicks.size, stocks: this.getMomentumRanking() } });
+    }, PUSH_COALESCE_MS);
+  }
+
+  /** End-of-day outcome reconciliation, 15:32 IST on trading weekdays (AC-7). */
+  @Cron('32 15 * * 1-5', { name: 'eod-reconciliation', timeZone: IST_TIMEZONE })
+  async handleEodReconciliation() {
+    if (!this.supabase.client) {
+      this.logger.warn('Skipping EOD reconciliation: database not configured.');
+      return;
+    }
+    try {
+      await reconcileOutcomes(this.supabase.client, istDateString());
+    } catch (err: any) {
+      this.logger.error(`EOD reconciliation failed: ${err.message}`);
+    }
+  }
+
   async persistCandle(candle: Candle) {
-    if (!this.supabase.client) return;
+    await this.persistCandles([candle]);
+  }
+
+  /** Upserts on (symbol, timeframe, start_time), so restarts, reconnects and backfill never duplicate a candle. */
+  async persistCandles(candles: Candle[]) {
+    if (!this.supabase.client || candles.length === 0) return;
     try {
       const { error } = await this.supabase.client
         .from('candles')
-        .insert({
+        .upsert(candles.map(candle => ({
           symbol: candle.symbol,
           instrument_token: candle.instrumentToken,
           timeframe: candle.timeframe,
@@ -383,13 +586,13 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
           start_time: candle.startTime.toISOString(),
           end_time: candle.endTime.toISOString(),
           is_complete: candle.isComplete
-        });
-      
+        })), { onConflict: 'symbol,timeframe,start_time' });
+
       if (error) {
-        this.logger.error(`Failed to insert candle: ${error.message}`);
+        this.logger.error(`Failed to upsert candle(s): ${error.message}`);
       }
     } catch (err: any) {
-      this.logger.error('Failed to persist candle:', err.message);
+      this.logger.error('Failed to persist candle(s):', err.message);
     }
   }
 
@@ -435,6 +638,10 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     if (this.healthFlushInterval) {
       clearInterval(this.healthFlushInterval);
     }
+    if (this.pushTimer) {
+      clearTimeout(this.pushTimer);
+    }
+    this.events$.complete();
     if (this.provider) {
       await this.provider.disconnect();
     }

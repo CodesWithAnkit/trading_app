@@ -151,3 +151,93 @@ export function evaluateAllStrategies(
 
     return candidates;
 }
+
+/** Stocks within this distance (percent of price) of a trigger level are "approaching". */
+export const APPROACHING_THRESHOLD_PCT = 1;
+
+export type StrategyProximity = {
+    setupFamily: SetupFamily;
+    direction: "LONG" | "SHORT";
+    triggerLevel: number;
+    /** Distance from the current close to the trigger, as a percent of price (0 to 1). */
+    distancePct: number;
+    /** 0 to 100, where 100 means the trigger is touching. */
+    proximity: number;
+    condition: string;
+};
+
+/**
+ * Price-level strategies that have not triggered yet but sit within
+ * APPROACHING_THRESHOLD_PCT of their trigger. OSCILLATOR_THRESHOLD is left out
+ * because its trigger is an RSI value, not a price.
+ */
+export function evaluateStrategyProximity(current1m: Candle, hist1m: Candle[]): StrategyProximity[] {
+    const close1m = hist1m.map(c => c.close);
+    if (close1m.length < 25) return [];
+
+    const price = current1m.close;
+    const results: StrategyProximity[] = [];
+    const consider = (
+        setupFamily: SetupFamily,
+        direction: "LONG" | "SHORT",
+        triggerLevel: number,
+        gap: number,
+        condition: string
+    ) => {
+        if (!Number.isFinite(triggerLevel) || gap < 0) return;
+        const distancePct = (gap / price) * 100;
+        if (distancePct > APPROACHING_THRESHOLD_PCT) return;
+        results.push({
+            setupFamily,
+            direction,
+            triggerLevel: round2(triggerLevel),
+            distancePct: round3(distancePct),
+            proximity: Math.round((1 - distancePct / APPROACHING_THRESHOLD_PCT) * 100),
+            condition
+        });
+    };
+
+    const vwap = VWAP.calculate({
+        high: hist1m.map(c => c.high),
+        low: hist1m.map(c => c.low),
+        close: close1m,
+        volume: hist1m.map(c => c.volume)
+    }).at(-1);
+    if (vwap !== undefined && price <= vwap) {
+        consider("VWAP_TREND", "LONG", vwap, vwap - price, "1m close crossing above VWAP");
+    }
+
+    const openingRange = hist1m.slice(0, 15);
+    if (openingRange.length === 15) {
+        const orHigh = Math.max(...openingRange.map(c => c.high));
+        if (price <= orHigh) {
+            consider("BREAKOUT_MOMENTUM", "LONG", orHigh, orHigh - price, "Close above opening range high on 1.2x volume");
+        }
+    }
+
+    const bb = BollingerBands.calculate({ period: 20, values: close1m, stdDev: 2 }).at(-1);
+    if (bb && price >= bb.lower) {
+        consider("MEAN_REVERSION", "LONG", bb.lower, price - bb.lower, "Close below lower Bollinger band with RSI < 30");
+    }
+
+    const ema9 = EMA.calculate({ period: 9, values: close1m }).at(-1);
+    const ema21 = EMA.calculate({ period: 21, values: close1m }).at(-1);
+    if (ema9 !== undefined && ema21 !== undefined) {
+        if (ema9 > ema21 && price <= ema9) {
+            consider("SCALPING", "LONG", ema9, ema9 - price, "Close above 9-EMA in uptrend on 2x volume spike");
+        }
+        if (ema9 <= ema21) {
+            consider("MA_CROSSOVER", "LONG", ema21, ema21 - ema9, "9-EMA crossing above 21-EMA");
+        }
+    }
+
+    return results.sort((a, b) => a.distancePct - b.distancePct);
+}
+
+function round2(n: number) {
+    return Math.round(n * 100) / 100;
+}
+
+function round3(n: number) {
+    return Math.round(n * 1000) / 1000;
+}

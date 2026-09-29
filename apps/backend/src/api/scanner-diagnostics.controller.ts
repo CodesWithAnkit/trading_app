@@ -26,7 +26,8 @@ export class ScannerDiagnosticsController {
       lastCandleAt: metrics.lastCandleAt,
       sessionState: metrics.sessionState,
       providerType: metrics.providerType,
-      uptime: uptimeSeconds
+      uptime: uptimeSeconds,
+      universe: this.scannerService.getUniverseStatus()
     };
   }
 }

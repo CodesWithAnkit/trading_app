@@ -4,16 +4,34 @@ import { SignalCard } from "@/components/domain/SignalCard"
 import { useSignals } from "@/lib/contexts/SignalContext"
 import { useTrades } from "@/lib/contexts/TradeContext"
 import { useDashboardState } from "@/lib/contexts/DashboardContext"
-import { ShieldCheck, Radar, TrendingUp, History, AlertTriangle, Inbox, Edit, ArrowUpRight, ArrowDownRight, BadgeInfo, Signal, CheckCircle2, ChevronRight } from "lucide-react"
+import { ShieldCheck, Radar, TrendingUp, History, AlertTriangle, Inbox, Edit, ArrowUpRight, ArrowDownRight, BadgeInfo, Signal, CheckCircle2, ChevronRight, Crosshair, Flame } from "lucide-react"
 import { MarketWatch } from "@/components/domain/MarketWatch"
 import { ScannerPipelineSummary } from "@/components/domain/ScannerPipelineSummary"
+import { ApproachingCard } from "@/components/domain/ApproachingCard"
+import { MomentumLeaders } from "@/components/domain/MomentumLeaders"
+import { OutcomesComparison } from "@/components/domain/OutcomesComparison"
+import { isAfterMarketHours, nextGainersPull } from "@/lib/scanner-types"
 
 export default function DashboardPage() {
-  const { activeSignals } = useSignals()
+  const { activeSignals, approachingSignals, momentum, watchingCount, streamStatus, hydrated } = useSignals()
   const { openTrades } = useTrades()
   const { marketState, marketStatus, setMarketState, sessionElapsedMinutes, instruments } = useDashboardState()
   const elapsedHours = Math.floor(sessionElapsedMinutes / 60)
   const elapsedMins = sessionElapsedMinutes % 60
+  const watching = watchingCount || instruments.length
+
+  // Client clock only, so server and first client render agree.
+  const [afterHours, setAfterHours] = React.useState(false)
+  const [nextPull, setNextPull] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    const check = () => {
+      setAfterHours(isAfterMarketHours())
+      setNextPull(nextGainersPull())
+    }
+    check()
+    const id = setInterval(check, 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   const longSignalsCount = activeSignals.filter(s => s.direction === "LONG").length
   const shortSignalsCount = activeSignals.filter(s => s.direction === "SHORT").length
@@ -138,6 +156,9 @@ export default function DashboardPage() {
       {/* Scanner Pipeline Summary */}
       <ScannerPipelineSummary />
 
+      {/* After hours: prediction vs actual */}
+      {afterHours && <OutcomesComparison />}
+
       {/* Active Signals Section */}
       <div className="flex flex-col gap-4 bg-surface p-6 rounded-xl border border-border shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
@@ -160,9 +181,15 @@ export default function DashboardPage() {
             <div className="w-16 h-16 rounded-full bg-surface-muted flex items-center justify-center mb-4 border border-border">
               <Inbox className="w-8 h-8 text-text-muted" />
             </div>
-            <h3 className="text-lg font-semibold text-text">No active signals</h3>
+            <h3 className="text-lg font-semibold text-text">
+              {!hydrated ? "Connecting to scanner…" : afterHours ? "Market is closed" : watching === 0 ? "Waiting for today's gainers" : "No active signals"}
+            </h3>
             <p className="text-sm text-text-muted max-w-md mt-1">
-              The scanner is monitoring the market but no setups have met your criteria yet. Wait for the next scan cycle or adjust your parameters.
+              {afterHours
+                ? "The session ended at 15:30 IST. See how today's calls played out above; the scanner resumes at 09:15."
+                : watching === 0
+                ? `The scanner watches today's top gainers only.${nextPull ? ` Next gainers pull at ${nextPull} IST.` : ""} Signals appear here as soon as a strategy triggers.`
+                : `Scanner is watching ${watching} stocks. No strategy has triggered yet${approachingSignals.length > 0 ? `, but ${approachingSignals.length} ${approachingSignals.length === 1 ? "is" : "are"} approaching a trigger below` : ""}.`}
             </p>
           </div>
         ) : (
@@ -172,6 +199,48 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Approaching setups + momentum leaders */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+        <section className="xl:col-span-2 flex flex-col gap-4 bg-surface-container-low p-6 rounded-xl border border-outline-variant/40 shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-outline-variant/40 pb-4">
+            <div className="flex items-center gap-3">
+              <Crosshair className="text-primary w-6 h-6" />
+              <h2 className="text-lg font-bold text-on-surface tracking-tight">Approaching Setups ({approachingSignals.length})</h2>
+            </div>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant flex items-center gap-1.5" data-testid="stream-status">
+              <span className={`w-2 h-2 rounded-full ${streamStatus === "live" ? "bg-secondary animate-pulse" : "bg-outline"}`} />
+              {streamStatus === "live" ? "Live stream" : streamStatus === "reconnecting" ? "Reconnecting" : "Connecting"}
+            </span>
+          </div>
+          {approachingSignals.length === 0 ? (
+            <p className="text-sm text-on-surface-variant py-8 text-center">
+              No stock is within 1% of a strategy trigger right now. Checked on every 5-minute candle close.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {approachingSignals.map(setup => <ApproachingCard key={setup.symbol} setup={setup} />)}
+            </div>
+          )}
+        </section>
+
+        <section className="flex flex-col gap-2 bg-surface-container-low p-6 rounded-xl border border-outline-variant/40 shadow-sm">
+          <div className="flex flex-col gap-1 border-b border-outline-variant/40 pb-4 mb-1">
+            <div className="flex items-center gap-3">
+              <Flame className="text-primary w-6 h-6" />
+              <h2 className="text-lg font-bold text-on-surface tracking-tight">Momentum Leaders</h2>
+            </div>
+            <span className="text-xs text-on-surface-variant">% change × relative volume × 5m trend</span>
+          </div>
+          {momentum.length === 0 ? (
+            <p className="text-sm text-on-surface-variant py-8 text-center">
+              {watching === 0 ? `Waiting for today's gainers.${nextPull ? ` Next pull at ${nextPull} IST.` : ""}` : `Watching ${watching} stocks. Rankings update on each 5-minute close.`}
+            </p>
+          ) : (
+            <MomentumLeaders stocks={momentum} />
+          )}
+        </section>
       </div>
 
       {/* Trades & Journal Grid */}

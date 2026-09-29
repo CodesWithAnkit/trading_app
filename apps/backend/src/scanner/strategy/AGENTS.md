@@ -16,12 +16,13 @@ This area contains the deterministic, stateless, side-effect-free pipeline for s
   - `eligibility/`: Asset filtering logic (`eligibilityEngine.ts`).
   - `features/`: Mathematical indicator calculations (`rvolCalculator.ts`, `trendCalculator.ts`).
   - `setup/`: Trade candidate detection (`candidateDetection.ts`).
+  - `setup/multiStrategyEngine.ts`: live strategy triggers used by `ScannerService` (`evaluateAllStrategies`) and 1% proximity checks for approaching setups (`evaluateStrategyProximity`).
   - `plan/`: Entry/stop/target planning and risk reward (`tradePlanBuilder.ts`).
   - `signal/`: Immutable signal state (`signalSnapshot.ts`).
   - `simulation/`: Orchestration and historical evaluation (`simulationRunner.ts`, `calibration.ts`).
 
 - **Verification:**
   - Verify changes with deterministic unit tests and the `/check verify` runtime proofs.
-  - See [0001-strategy-engine-implementation](../../docs/specs/0001-strategy-engine-implementation/index.md) for the governing spec.
+  - See [0001-strategy-engine-implementation](../../../../../docs/specs/0001-strategy-engine-implementation/index.md) for the governing spec.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

@@ -2,16 +2,68 @@
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSignals } from "@/lib/contexts/SignalContext"
-import { ArrowLeft, Save, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, Save, TrendingUp, AlertCircle, CheckCircle2, Crosshair } from "lucide-react"
+import type { Signal } from "@/mock/signals"
+import type { ApproachingSetup } from "@/lib/scanner-types"
+import { ApproachingCard } from "@/components/domain/ApproachingCard"
+
+type AnalysisPayload = { signal?: Signal; approaching?: ApproachingSetup }
 
 export default function StockAnalysisPage() {
-  const params = useParams()
+  const params = useParams<{ symbol: string }>()
   const router = useRouter()
-  const symbol = params.symbol as string
-  const { activeSignals } = useSignals()
+  const symbol = decodeURIComponent(params.symbol).toUpperCase()
+  const { activeSignals, approachingSignals } = useSignals()
   const [isSaving, setIsSaving] = React.useState(false)
+  const [remote, setRemote] = React.useState<AnalysisPayload | null>(null)
+  const [loadState, setLoadState] = React.useState<"loading" | "done">("loading")
 
-  const signal = activeSignals.find(s => s.symbol === symbol)
+  const contextSignal = activeSignals.find(s => s.symbol === symbol)
+
+  // Direct navigation (spec 0009 AC-5): the context may not hold this symbol, so ask the API.
+  React.useEffect(() => {
+    if (contextSignal) return
+    let cancelled = false
+    fetch(`/api/v1/scanner/analysis/${encodeURIComponent(symbol)}`)
+      .then(res => (res.ok ? res.json() : null))
+      .then((payload: AnalysisPayload | null) => !cancelled && setRemote(payload))
+      .catch(err => console.error("Failed to load analysis", err))
+      .finally(() => !cancelled && setLoadState("done"))
+    return () => { cancelled = true }
+  }, [symbol, contextSignal])
+
+  const signal = contextSignal ?? remote?.signal
+  const approaching = approachingSignals.find(a => a.symbol === symbol) ?? remote?.approaching
+
+  if (!signal && loadState === "loading") {
+    return (
+      <div className="px-space-xl py-space-xl max-w-5xl mx-auto w-full flex items-center justify-center min-h-[60vh]">
+        <p className="text-on-surface-variant">Loading analysis for {symbol}…</p>
+      </div>
+    )
+  }
+
+  if (!signal && approaching) {
+    return (
+      <div className="px-space-xl py-space-lg flex flex-col gap-space-lg max-w-3xl mx-auto w-full">
+        <div className="flex items-center gap-4 border-b border-outline-variant/30 pb-4">
+          <button onClick={() => router.push("/dashboard")} className="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors" aria-label="Back to dashboard">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-on-surface flex items-center gap-2">
+              {symbol}
+              <span className="px-2 py-1 text-sm rounded-md font-bold bg-primary-container text-on-primary-container flex items-center gap-1">
+                <Crosshair className="w-4 h-4" /> Approaching
+              </span>
+            </h1>
+            <p className="text-on-surface-variant mt-1">No strategy has triggered yet. A trade plan appears here the moment one does.</p>
+          </div>
+        </div>
+        <ApproachingCard setup={approaching} />
+      </div>
+    )
+  }
 
   if (!signal) {
     return (
@@ -43,7 +95,7 @@ export default function StockAnalysisPage() {
         notes: signal.rationale
       }
       
-      const res = await fetch("http://localhost:3001/api/v1/journal", {
+      const res = await fetch("/api/v1/journal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

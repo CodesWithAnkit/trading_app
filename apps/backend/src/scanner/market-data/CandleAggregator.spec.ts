@@ -88,3 +88,38 @@ describe('CandleAggregator', () => {
     expect(completedCandle.open).toBe(110);
   });
 });
+
+describe('CandleAggregator cumulative volume (0009 AC-14)', () => {
+  const tick = (sec: number, cumulativeVolume: number) => ({
+    instrumentToken: '2885', exchange: 'NSE' as const, symbol: 'RELIANCE', ltp: 100,
+    timestamp: new Date(Date.UTC(2026, 8, 29, 4, 0, sec)), cumulativeVolume
+  });
+
+  it('adds only the change in day volume, seeding on the first tick and ignoring drops', () => {
+    const agg = new CandleAggregator();
+    const done: any[] = [];
+    agg.on1mComplete = c => done.push(c);
+
+    agg.processTick(tick(1, 5000)); // seeds, adds 0
+    agg.processTick(tick(2, 5600)); // +600
+    agg.processTick(tick(3, 5400)); // drop, adds 0 and reseeds
+    agg.processTick(tick(4, 5500)); // +100
+    agg.processTick({ ...tick(0, 5700), timestamp: new Date(Date.UTC(2026, 8, 29, 4, 1, 0)) }); // next minute, +200
+
+    expect(done[0].volume).toBe(700);
+  });
+
+  it('starts a fresh baseline after resetVolumeBaselines', () => {
+    const agg = new CandleAggregator();
+    const done: any[] = [];
+    agg.on1mComplete = c => done.push(c);
+
+    agg.processTick(tick(1, 1000));
+    agg.processTick(tick(2, 1100));
+    agg.resetVolumeBaselines();
+    agg.processTick(tick(3, 9000)); // reconnect gap is not dumped into the candle
+    agg.processTick({ ...tick(0, 9050), timestamp: new Date(Date.UTC(2026, 8, 29, 4, 1, 0)) });
+
+    expect(done[0].volume).toBe(100);
+  });
+});
