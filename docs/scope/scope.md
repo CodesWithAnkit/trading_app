@@ -13,7 +13,9 @@
 | Live Market and Scanner UI (Phase 4C) | done |
 | Dynamic Stock Analysis & Strategy Engine (Phase 5) | done |
 | Real Stock Analysis and Outcome Tracking (Phase 6) | in-progress |
-| Top Bar Symbol Search | in-progress |
+| Top Bar Symbol Search | done |
+| Analysis Page Chart | done |
+| Add bulk actions to manage multiple trades | in-progress |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -175,15 +177,47 @@
 
 ---
 
-## Top Bar Symbol Search `in-progress`
+## Top Bar Symbol Search `done`
 
 **Intent**: Make the top bar search box a quick jump to any of today's watched F&O stocks, with live price, change and plan status, reachable from the keyboard.
-**Done when**: Typing part of a symbol lists up to 8 watched stocks with live context; Enter or click opens the stock's analysis page (open plan) or market page; ⌘K / Ctrl+K, arrows and Esc work; it works before the open and falls back to live stocks if the list can't load.
+**Done when**: Typing part of a symbol lists up to 8 stocks, watched F&O ones first with live context and any other NSE stock tagged "Not watched"; Enter or click opens the stock's analysis page (open plan) or market page; ⌘K / Ctrl+K, arrows and Esc work; it works before the open and falls back to live stocks if the list can't load.
 
 - [x] Design it (spec): [0012](../specs/0012-topbar-symbol-search.md) · code in `apps/web/components/domain/SymbolSearch.tsx`, `apps/web/lib/symbolSearch.ts`, `GET /api/v1/scanner/universe`
 - [x] Build it: /develop Top Bar Symbol Search
   - [x] Universe endpoint and search core (matching, 8 cap, route choice) (AC-1, AC-2, AC-5)
   - [x] SymbolSearch combobox in the top bar with live rows, tags, empty, loading and fallback states (AC-1, AC-3, AC-4, AC-5, AC-8)
   - [x] Keyboard (⌘K / Ctrl+K, arrows, Enter, two step Esc) and accessible combobox roles, with tests (AC-6, AC-7)
-- [ ] Verify it: /check verify Top Bar Symbol Search
-- [ ] Test it: /test Top Bar Symbol Search
+  - [x] Every NSE stock findable: NSE list on the backend, F&O first ranking, "Not watched" rows, F&O only fallback note (AC-1 to AC-5, AC-10)
+  - [x] Not streamed banner on the market page for non F&O stocks, with tests (AC-9)
+- [x] Verify it: /check verify Top Bar Symbol Search
+- [x] Test it: /test Top Bar Symbol Search
+
+---
+
+## Analysis Page Chart `done`
+
+**Intent**: Implement an interactive candlestick chart on the dynamic stock analysis page to give traders visual confirmation of the strategy setup.
+**Done when**: The chart renders historical candles, live price updates, volume bars, and horizontal setup lines (Entry, Stop Loss, Target) using TradingView Lightweight Charts.
+
+- [x] Design it (spec): [0013](../specs/0013-analysis-page-chart.md)
+- [x] Build it: /develop Analysis Page Chart
+  - [x] Install library and create component skeleton (AC-1, AC-6)
+  - [x] Wire SignalContext and render candles with volume (AC-2, AC-5, AC-7)
+  - [x] Implement setup price lines and real-time tick updates (AC-3, AC-4)
+  - [x] Replace placeholder in UI
+- [x] Verify it: /check verify Analysis Page Chart
+- [x] Test it: /test Analysis Page Chart
+
+---
+
+## Add bulk actions to manage multiple trades `in-progress`
+
+**Intent**: Add bulk actions to the Trades page so users can manage multiple positions at once without repetitive clicking.
+**Done when**: The Trades table has checkboxes, a floating action bar appears on selection, and the bulk close action successfully iterates and executes the close logic for all selected trades.
+
+- [x] Design it (spec): [0014](../specs/0014-bulk-trade-actions/index.md)
+- [x] Build it: /develop Add bulk actions to manage multiple trades
+  - [x] Checkboxes and floating action bar (AC-1, AC-2)
+  - [x] Client side loop and notification (AC-3, AC-4)
+- [ ] Verify it: /check verify Add bulk actions to manage multiple trades
+- [ ] Test it: /test Add bulk actions to manage multiple trades

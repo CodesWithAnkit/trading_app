@@ -1,40 +1,41 @@
 import { describe, it, expect } from 'vitest'
 import { matchSymbols, searchTarget, MAX_RESULTS } from './symbolSearch'
 
-const LIST = ['AXISBANK', 'BANKBARODA', 'BANDHANBNK', 'HDFCBANK', 'IDEA', 'M&M', 'RELIANCE', 'BAJAJ-AUTO', '360ONE']
+const LIST = { fno: ['AXISBANK', 'BANKBARODA', 'BANDHANBNK', 'HDFCBANK', 'IDEA', 'M&M', 'RELIANCE', 'BAJAJ-AUTO', '360ONE'], nse: ['TCS'] }
 
 describe('matchSymbols (spec 0012 AC-2, AC-3)', () => {
   it('puts symbols that start with the text first, then ones that contain it, alphabetically', () => {
-    expect(matchSymbols(LIST, 'bank')).toEqual(['BANKBARODA', 'AXISBANK', 'HDFCBANK'])
+    expect(matchSymbols(LIST, 'bank')).toEqual({ fno: ['BANKBARODA', 'AXISBANK', 'HDFCBANK'], nse: [] })
   })
 
   it('is case insensitive and ignores surrounding spaces', () => {
-    expect(matchSymbols(LIST, '  rel ')).toEqual(['RELIANCE'])
+    expect(matchSymbols(LIST, '  rel ')).toEqual({ fno: ['RELIANCE'], nse: [] })
+    expect(matchSymbols(LIST, '  tcs ')).toEqual({ fno: [], nse: ['TCS'] })
   })
 
   it('returns nothing for an empty or blank box', () => {
-    expect(matchSymbols(LIST, '')).toEqual([])
-    expect(matchSymbols(LIST, '   ')).toEqual([])
+    expect(matchSymbols(LIST, '')).toEqual({ fno: [], nse: [] })
+    expect(matchSymbols(LIST, '   ')).toEqual({ fno: [], nse: [] })
   })
 
   it('returns nothing when no symbol matches', () => {
-    expect(matchSymbols(LIST, 'zzzz')).toEqual([])
+    expect(matchSymbols(LIST, 'zzzz')).toEqual({ fno: [], nse: [] })
   })
 
   it('handles symbols with special characters and leading digits', () => {
-    expect(matchSymbols(LIST, 'm&')).toEqual(['M&M'])
-    expect(matchSymbols(LIST, 'bajaj-')).toEqual(['BAJAJ-AUTO'])
-    expect(matchSymbols(LIST, '360')).toEqual(['360ONE'])
+    expect(matchSymbols(LIST, 'm&')).toEqual({ fno: ['M&M'], nse: [] })
+    expect(matchSymbols(LIST, 'bajaj-')).toEqual({ fno: ['BAJAJ-AUTO'], nse: [] })
+    expect(matchSymbols(LIST, '360')).toEqual({ fno: ['360ONE'], nse: [] })
   })
 
   it('caps the list at 8 results', () => {
-    const many = Array.from({ length: 20 }, (_, i) => `STOCK${String(i).padStart(2, '0')}`)
-    expect(matchSymbols(many, 'stock')).toHaveLength(MAX_RESULTS)
+    const many = { fno: Array.from({ length: 20 }, (_, i) => `STOCK${String(i).padStart(2, '0')}`), nse: [] }
+    expect(matchSymbols(many, 'stock').fno).toHaveLength(MAX_RESULTS)
     expect(MAX_RESULTS).toBe(8)
   })
 
   it('never lists a symbol twice', () => {
-    expect(matchSymbols(['IDEA', 'IDEA'], 'ide')).toEqual(['IDEA'])
+    expect(matchSymbols({ fno: ['IDEA', 'IDEA'], nse: [] }, 'ide')).toEqual({ fno: ['IDEA'], nse: [] })
   })
 })
 

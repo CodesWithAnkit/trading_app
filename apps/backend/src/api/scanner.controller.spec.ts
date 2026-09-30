@@ -27,6 +27,7 @@ describe('ScannerController', () => {
       getApproachingSetup: vi.fn().mockReturnValue(undefined),
       getMomentumRanking: vi.fn().mockReturnValue([{ symbol: 'RELIANCE', momentumScore: 3.2 }]),
       getWatchedSymbols: vi.fn().mockReturnValue(['360ONE', 'M&M', 'RELIANCE']),
+      getNseCashSymbols: vi.fn().mockReturnValue(['GLASSWALL', 'TCS-EQ']),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -156,12 +157,13 @@ describe('ScannerController', () => {
   });
 
   it('lists today\'s watched symbols for search (covers 0012 AC-1)', () => {
-    expect(controller.getUniverse()).toEqual({ data: [{ symbol: '360ONE' }, { symbol: 'M&M' }, { symbol: 'RELIANCE' }] });
+    expect(controller.getUniverse()).toEqual({ data: [{ symbol: '360ONE' }, { symbol: 'M&M' }, { symbol: 'RELIANCE' }], nse: ['GLASSWALL', 'TCS-EQ'] });
   });
 
   it('returns an empty list before the universe loads (covers 0012 AC-1)', () => {
     scannerServiceMock.getWatchedSymbols.mockReturnValue([]);
-    expect(controller.getUniverse()).toEqual({ data: [] });
+    scannerServiceMock.getNseCashSymbols.mockReturnValue([]);
+    expect(controller.getUniverse()).toEqual({ data: [], nse: [] });
   });
 
   it('returns momentum ranking with the watched count (covers 0009 AC-1)', () => {

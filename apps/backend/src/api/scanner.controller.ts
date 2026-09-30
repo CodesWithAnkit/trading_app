@@ -54,7 +54,8 @@ export class ScannerController {
   @Get('universe')
   getUniverse() {
     const data = this.scanner.getWatchedSymbols().map(symbol => ({ symbol }));
-    return { data };
+    const nse = this.scanner.getNseCashSymbols();
+    return { data, nse };
   }
 
   @Get('momentum')

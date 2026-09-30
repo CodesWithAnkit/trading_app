@@ -6,6 +6,7 @@ import { ArrowLeft, Save, TrendingUp, AlertCircle, CheckCircle2, Crosshair } fro
 import type { Signal } from "@/mock/signals"
 import type { ApproachingSetup } from "@/lib/scanner-types"
 import { ApproachingCard } from "@/components/domain/ApproachingCard"
+import { AnalysisChart } from "@/components/domain/AnalysisChart"
 
 type AnalysisPayload = { signal?: Signal; approaching?: ApproachingSetup }
 
@@ -159,12 +160,7 @@ export default function StockAnalysisPage() {
             </div>
           </div>
           
-          <div className="bg-surface-container-low rounded-xl p-6 shadow-sm border border-outline-variant/30 min-h-[300px] flex items-center justify-center">
-             <div className="text-center text-on-surface-variant">
-               <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
-               <p>Chart Component Placeholder</p>
-             </div>
-          </div>
+          <AnalysisChart symbol={symbol} signal={signal} />
         </div>
 
         {/* Right Column: Trade Plan */}

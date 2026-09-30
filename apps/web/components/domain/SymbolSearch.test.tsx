@@ -28,7 +28,7 @@ function stubUniverse(symbols: string[] | 'fail') {
 
 async function typeInto(text: string) {
   const user = userEvent.setup()
-  const box = screen.getByRole('combobox', { name: 'Search F&O stocks' })
+const box = screen.getByRole('combobox', { name: 'Search NSE stocks' })
   await user.click(box)
   if (text) await user.type(box, text)
   return { user, box }
@@ -80,7 +80,7 @@ describe('SymbolSearch (spec 0012)', () => {
     await user.type(box, 'ide')
     const idea = (await screen.findAllByRole('option'))[0]
     expect(idea).toHaveTextContent('IDEA')
-    expect(within(idea).getAllByText('–')).toHaveLength(2)
+    expect(within(idea).getAllByText('–')).toHaveLength(1)
   })
 
   it('shows at most 8 results (AC-3)', async () => {
@@ -93,7 +93,7 @@ describe('SymbolSearch (spec 0012)', () => {
   it('says so when nothing matches (AC-4)', async () => {
     render(<SymbolSearch />)
     await typeInto('zzzz')
-    expect(await screen.findByText('No F&O stock matches "zzzz"')).toBeInTheDocument()
+    expect(await screen.findByText('No NSE stock matches "zzzz"')).toBeInTheDocument()
   })
 
   it('opens the analysis page for a stock with an open plan, the market page otherwise, and clears (AC-5)', async () => {
@@ -181,7 +181,7 @@ describe('SymbolSearch (spec 0012)', () => {
     signals.momentum = [stock('IDEA', 13.46, -0.74)]
     render(<SymbolSearch />)
     await typeInto('ide')
-    await waitFor(() => expect(screen.getByText('Showing live stocks only')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Showing live F&O stocks only')).toBeInTheDocument())
     expect(screen.getByRole('option')).toHaveTextContent('IDEA')
   })
 })

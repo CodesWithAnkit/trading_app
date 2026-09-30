@@ -3,7 +3,7 @@ _Steps derived from spec 0009 acceptance criteria (universe revised to stream ev
 _Most steps need a live NSE session (weekday, 09:15 to 15:30 IST) with `MARKET_DATA_PROVIDER=angelone`. Exit tracking steps live in [spec 0010's verify.md](../0010-live-exit-tracking/verify.md)._
 
 ## Before the session
-- [ ] `npm run scanner:angelone:smoke` (apps/backend) during market hours → Quote mode ticks carry `close_price` as the previous close, prices in paise, `exchange_timestamp` in milliseconds, `vol_traded` cumulative → AC-14
+- [x] `npm run scanner:angelone:smoke` (apps/backend) during market hours → Quote mode ticks carry `close_price` as the previous close, prices in paise, `exchange_timestamp` in milliseconds, `vol_traded` cumulative → AC-14
 - [ ] Backend log at startup or 08:45 IST shows "Universe: 210 F&O stock(s) watched (… source file)" (the count may change monthly) → AC-12
 
 ## UI / manual

@@ -21,6 +21,7 @@ export function SymbolSearch() {
   const [open, setOpen] = React.useState(false)
   const [active, setActive] = React.useState(0)
   const [universe, setUniverse] = React.useState<string[]>([])
+  const [nseList, setNseList] = React.useState<string[]>([])
   const [loadState, setLoadState] = React.useState<LoadState>("idle")
   // Platform label: ⌘K on the server render, the real platform's label on the client.
   const shortcut = React.useSyncExternalStore(
@@ -57,8 +58,9 @@ export function SymbolSearch() {
     setLoadState("loading")
     fetch("/api/v1/scanner/universe")
       .then(res => (res.ok ? res.json() : Promise.reject(res.status)))
-      .then((payload: { data?: { symbol: string }[] }) => {
+      .then((payload: { data?: { symbol: string }[]; nse?: string[] }) => {
         setUniverse((payload.data ?? []).map(r => r.symbol))
+        setNseList(payload.nse ?? [])
         setLoadState("ready")
       })
       .catch(() => setLoadState("failed"))
@@ -71,10 +73,11 @@ export function SymbolSearch() {
 
   // If the list can't load, search the stocks the live stream has sent (spec 0012 AC-8).
   const liveOnly = loadState === "failed" || (loadState === "ready" && universe.length === 0)
-  const source = liveOnly ? momentum.map(m => m.symbol) : universe
-  const results = matchSymbols(source, text)
+  const source = liveOnly ? { fno: momentum.map(m => m.symbol), nse: [] } : { fno: universe, nse: nseList }
+  const matches = matchSymbols(source, text)
+  const flatResults = [...matches.fno, ...matches.nse]
   const showList = open && text.trim().length > 0
-  const waiting = loadState === "loading" && results.length === 0
+  const waiting = loadState === "loading" && flatResults.length === 0
 
   const go = (symbol: string) => {
     router.push(searchTarget(symbol, openPlans))
@@ -86,14 +89,14 @@ export function SymbolSearch() {
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault()
-      if (results.length === 0) return
+      if (flatResults.length === 0) return
       setOpen(true)
       const step = e.key === "ArrowDown" ? 1 : -1
-      setActive(i => (i + step + results.length) % results.length)
+      setActive(i => (i + step + flatResults.length) % flatResults.length)
     } else if (e.key === "Enter") {
-      if (showList && results[active]) {
+      if (showList && flatResults[active]) {
         e.preventDefault()
-        go(results[active])
+        go(flatResults[active])
       }
     } else if (e.key === "Escape") {
       e.preventDefault()
@@ -106,17 +109,61 @@ export function SymbolSearch() {
     }
   }
 
+  const renderOption = (symbol: string, i: number, isNse: boolean) => {
+    const row = live.get(symbol)
+    const priced = row && row.ranked
+    const up = (row?.dayChangePct ?? 0) >= 0
+    return (
+      <li
+        key={symbol}
+        id={optionId(i)}
+        role="option"
+        aria-selected={i === active}
+        onMouseEnter={() => setActive(i)}
+        onMouseDown={e => {
+          e.preventDefault()
+          go(symbol)
+        }}
+        className={cn(
+          "flex items-center justify-between gap-3 px-3 py-2 cursor-pointer",
+          i === active ? "bg-surface-container" : "bg-transparent"
+        )}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="font-bold text-on-surface truncate">{symbol}</span>
+          {!isNse && topGainers.has(symbol) && <Tag className="bg-secondary-container text-on-secondary-container">Top 20</Tag>}
+          {!isNse && openPlans.has(symbol) && <Tag className="bg-primary text-on-primary">Open plan</Tag>}
+          {!isNse && approaching.has(symbol) && <Tag className="bg-surface-container-highest text-on-surface-variant">Approaching</Tag>}
+        </div>
+        <div className="text-right font-label-numeric-sm text-label-numeric-sm shrink-0">
+          {priced ? (
+            <>
+              <span className="block font-semibold text-on-surface">₹{row.ltp.toFixed(2)}</span>
+              <span className={cn("font-semibold", up ? "text-secondary" : "text-error")}>
+                {up ? "+" : ""}{row.dayChangePct.toFixed(2)}%
+              </span>
+            </>
+          ) : (
+            <span className="block font-semibold text-on-surface-variant text-[11px] uppercase tracking-wide">
+              {isNse ? "Not Watched" : "–"}
+            </span>
+          )}
+        </div>
+      </li>
+    )
+  }
+
   return (
     <div ref={containerRef} className="relative w-72 lg:w-96">
       <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-[18px]" aria-hidden="true">search</span>
       <input
         ref={inputRef}
         role="combobox"
-        aria-label="Search F&O stocks"
+        aria-label="Search NSE stocks"
         aria-autocomplete="list"
         aria-expanded={showList}
         aria-controls={LISTBOX_ID}
-        aria-activedescendant={showList && results[active] ? optionId(active) : undefined}
+        aria-activedescendant={showList && flatResults[active] ? optionId(active) : undefined}
         className="w-full h-8 pl-8 pr-14 rounded bg-surface border border-outline-variant/50 font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
         placeholder="Search NSE cash (e.g. RELIANCE, HDFCBANK)..."
         type="text"
@@ -139,57 +186,28 @@ export function SymbolSearch() {
       </kbd>
 
       <p className="sr-only" aria-live="polite">
-        {showList ? (results.length ? `${results.length} result${results.length === 1 ? "" : "s"}` : waiting ? "Loading stocks" : "No results") : ""}
+        {showList ? (flatResults.length ? `${flatResults.length} result${flatResults.length === 1 ? "" : "s"}` : waiting ? "Loading stocks" : "No results") : ""}
       </p>
 
       {showList && (
         <div className="absolute left-0 top-full mt-1 w-full min-w-[20rem] rounded-lg border border-outline-variant/50 bg-surface-container-lowest shadow-lg z-50 overflow-hidden">
-          {results.length > 0 ? (
+          {flatResults.length > 0 ? (
             <ul id={LISTBOX_ID} role="listbox" aria-label="Matching stocks" className="py-1">
-              {results.map((symbol, i) => {
-                const row = live.get(symbol)
-                const priced = row && row.ranked
-                const up = (row?.dayChangePct ?? 0) >= 0
-                return (
-                  <li
-                    key={symbol}
-                    id={optionId(i)}
-                    role="option"
-                    aria-selected={i === active}
-                    onMouseEnter={() => setActive(i)}
-                    // mousedown keeps focus in the box so the click navigates before any blur
-                    onMouseDown={e => {
-                      e.preventDefault()
-                      go(symbol)
-                    }}
-                    className={cn(
-                      "flex items-center justify-between gap-3 px-3 py-2 cursor-pointer",
-                      i === active ? "bg-surface-container" : "bg-transparent"
-                    )}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-bold text-on-surface truncate">{symbol}</span>
-                      {topGainers.has(symbol) && <Tag className="bg-secondary-container text-on-secondary-container">Top 20</Tag>}
-                      {openPlans.has(symbol) && <Tag className="bg-primary text-on-primary">Open plan</Tag>}
-                      {approaching.has(symbol) && <Tag className="bg-surface-container-highest text-on-surface-variant">Approaching</Tag>}
-                    </div>
-                    <div className="text-right font-label-numeric-sm text-label-numeric-sm shrink-0">
-                      <span className="block font-semibold text-on-surface">{priced ? `₹${row.ltp.toFixed(2)}` : "–"}</span>
-                      <span className={cn("font-semibold", !priced ? "text-on-surface-variant" : up ? "text-secondary" : "text-error")}>
-                        {priced ? `${up ? "+" : ""}${row.dayChangePct.toFixed(2)}%` : "–"}
-                      </span>
-                    </div>
-                  </li>
-                )
-              })}
+              {matches.fno.map((symbol, i) => renderOption(symbol, i, false))}
+              {matches.nse.length > 0 && (
+                <li key="section-nse" className="px-3 py-1.5 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider bg-surface border-y border-outline-variant/40 mt-1 first:mt-0">
+                  Others (Cash)
+                </li>
+              )}
+              {matches.nse.map((symbol, i) => renderOption(symbol, matches.fno.length + i, true))}
             </ul>
           ) : (
             <p className="px-3 py-3 text-sm text-on-surface-variant">
-              {waiting ? "Loading stocks…" : `No F&O stock matches "${text.trim()}"`}
+              {waiting ? "Loading stocks…" : `No NSE stock matches "${text.trim()}"`}
             </p>
           )}
           {liveOnly && (
-            <p className="px-3 py-1.5 text-[11px] text-on-surface-variant border-t border-outline-variant/40">Showing live stocks only</p>
+            <p className="px-3 py-1.5 text-[11px] text-on-surface-variant border-t border-outline-variant/40">Showing live F&O stocks only</p>
           )}
         </div>
       )}

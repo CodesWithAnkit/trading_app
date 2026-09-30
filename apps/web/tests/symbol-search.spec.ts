@@ -5,13 +5,13 @@ import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/v1/scanner/universe', route =>
-    route.fulfill({ json: { data: ['E2EALPHA', 'E2EBETA', 'M&M'].map(symbol => ({ symbol })) } })
+    route.fulfill({ json: { data: ['E2EALPHA', 'E2EBETA', 'M&M'].map(symbol => ({ symbol })), nse: ['GLASSWALL'] } })
   );
 });
 
 test('typing and pressing Enter opens the stock\'s market page (AC-2, AC-5)', async ({ page }) => {
   await page.goto('/dashboard');
-  const box = page.getByRole('combobox', { name: 'Search F&O stocks' });
+  const box = page.getByRole('combobox', { name: 'Search NSE stocks' });
   await box.click();
   await box.fill('e2ea');
 
@@ -26,7 +26,7 @@ test('typing and pressing Enter opens the stock\'s market page (AC-2, AC-5)', as
 test('Cmd/Ctrl+K focuses search and a click opens an encoded symbol (AC-5, AC-6)', async ({ page }) => {
   await page.goto('/dashboard');
   await page.keyboard.press('ControlOrMeta+k');
-  const box = page.getByRole('combobox', { name: 'Search F&O stocks' });
+  const box = page.getByRole('combobox', { name: 'Search NSE stocks' });
   await expect(box).toBeFocused();
 
   await box.fill('m&');
@@ -36,8 +36,21 @@ test('Cmd/Ctrl+K focuses search and a click opens an encoded symbol (AC-5, AC-6)
 
 test('an unknown symbol shows the no match message (AC-4)', async ({ page }) => {
   await page.goto('/dashboard');
-  const box = page.getByRole('combobox', { name: 'Search F&O stocks' });
+  const box = page.getByRole('combobox', { name: 'Search NSE stocks' });
   await box.click();
   await box.fill('zzzz');
-  await expect(page.getByText('No F&O stock matches "zzzz"')).toBeVisible();
+  await expect(page.getByText('No NSE stock matches "zzzz"')).toBeVisible();
+});
+
+test('typing a non-F&O symbol opens its market page with the not streamed banner (AC-5, AC-9)', async ({ page }) => {
+  await page.goto('/dashboard');
+  const box = page.getByRole('combobox', { name: 'Search NSE stocks' });
+  await box.click();
+  await box.fill('glassw');
+
+  await expect(page.getByRole('option')).toContainText('GLASSWALL');
+  await box.press('Enter');
+
+  await expect(page).toHaveURL(/\/dashboard\/markets\/GLASSWALL$/);
+  await expect(page.getByText("GLASSWALL isn't an F&O stock, so the scanner doesn't stream it")).toBeVisible();
 });

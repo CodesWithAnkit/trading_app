@@ -34,6 +34,7 @@ describe('instrument file (0009 AC-12, AC-13)', () => {
         { symbol: 'RELIANCE', token: '2885' },
       ],
       skipped: ['ONLYBE', 'TWOEQ'],
+      nse: ['TWOEQ'],
     });
   });
 

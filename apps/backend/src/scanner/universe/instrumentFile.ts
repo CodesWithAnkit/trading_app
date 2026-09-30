@@ -12,7 +12,8 @@ const NSE_TEST_INSTRUMENT = /^\d+NSETEST$/;
  * Every underlying with a stock future (NFO FUTSTK), paired with its NSE cash token from
  * the row whose symbol is exactly `<name>-EQ`. Names with no such row, or several, are skipped.
  */
-export function parseFnoStocks(rows: InstrumentRow[]): { stocks: FnoStock[]; skipped: string[] } {
+export function parseFnoStocks(rows: InstrumentRow[]): { stocks: FnoStock[]; skipped: string[]; nse: string[] } {
+  const nseRaw = new Set<string>();
   const futureNames = new Set<string>();
   const equityTokens = new Map<string, string[]>();
   for (const r of rows) {
@@ -20,7 +21,10 @@ export function parseFnoStocks(rows: InstrumentRow[]): { stocks: FnoStock[]; ski
       futureNames.add(r.name);
     } else if (r.exch_seg === 'NSE' && r.symbol?.endsWith('-EQ') && r.token) {
       const name = r.symbol.slice(0, -3);
-      equityTokens.set(name, [...(equityTokens.get(name) ?? []), r.token]);
+      if (!NSE_TEST_INSTRUMENT.test(name)) {
+        nseRaw.add(name);
+        equityTokens.set(name, [...(equityTokens.get(name) ?? []), r.token]);
+      }
     }
   }
 
@@ -31,14 +35,18 @@ export function parseFnoStocks(rows: InstrumentRow[]): { stocks: FnoStock[]; ski
     if (tokens.length === 1) stocks.push({ symbol: name, token: tokens[0] });
     else skipped.push(name);
   }
-  return { stocks, skipped };
+
+  const watched = new Set(stocks.map(s => s.symbol));
+  const nse = [...nseRaw].filter(name => !watched.has(name)).sort();
+
+  return { stocks, skipped, nse };
 }
 
 /** Downloads the file with a timeout and one retry, returning only the F&O stocks. */
 export async function downloadFnoStocks(
   fetchImpl: typeof fetch = fetch,
   timeoutMs = 60_000
-): Promise<{ stocks: FnoStock[]; skipped: string[] }> {
+): Promise<{ stocks: FnoStock[]; skipped: string[]; nse: string[] }> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {

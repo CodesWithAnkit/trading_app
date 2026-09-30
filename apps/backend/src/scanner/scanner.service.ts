@@ -242,6 +242,10 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     return (this.universe?.watching() ?? []).map(s => s.symbol).sort((a, b) => a.localeCompare(b));
   }
 
+  getNseCashSymbols(): string[] {
+    return this.universe?.getNseCashSymbols() ?? [];
+  }
+
   getUniverseStatus(): UniverseStatus | null {
     return this.universe?.getStatus() ?? null;
   }

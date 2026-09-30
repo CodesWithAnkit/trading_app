@@ -14,7 +14,7 @@ export type UniverseStatus = {
 type Deps = {
   client: SupabaseClient | null;
   /** Downloads and parses Angel One's public instrument file. */
-  download: () => Promise<{ stocks: FnoStock[]; skipped: string[] }>;
+  download: () => Promise<{ stocks: FnoStock[]; skipped: string[]; nse: string[] }>;
   /** Subscribes tokens on the live feed (the provider merges, never replaces). */
   subscribe: (tokens: string[]) => Promise<void>;
   /** Called with stocks that just joined the universe, after they are subscribed. */
@@ -31,6 +31,8 @@ export class UniverseService {
   private loading: Promise<void> | null = null;
   private status: UniverseStatus = { stocks: 0, source: null, loadedAt: null, error: null };
 
+  private nseList: string[] = [];
+
   constructor(private readonly deps: Deps) {}
 
   resolveSymbol(token: string): string | undefined {
@@ -39,6 +41,10 @@ export class UniverseService {
 
   watching(): WatchedStock[] {
     return [...this.tokenToSymbol.entries()].map(([token, symbol]) => ({ symbol, token }));
+  }
+
+  getNseCashSymbols(): string[] {
+    return this.nseList;
   }
 
   getStatus(): UniverseStatus {
@@ -58,6 +64,7 @@ export class UniverseService {
   /** New day: forget the universe; the socket keeps yesterday's tokens until they are re-registered. */
   reset() {
     this.tokenToSymbol.clear();
+    this.nseList = [];
     this.status = { stocks: 0, source: null, loadedAt: null, error: null };
   }
 
@@ -68,12 +75,14 @@ export class UniverseService {
       if (parsed.stocks.length === 0) throw new Error('Instrument file listed no F&O stocks');
       if (parsed.skipped.length > 0) this.logger.warn(`No single NSE -EQ row for: ${parsed.skipped.join(', ')}`);
       stocks = parsed.stocks;
+      this.nseList = parsed.nse;
       await this.save(stocks, date);
       this.status.source = 'file';
       this.status.error = null;
     } catch (err: any) {
       this.status.error = err.message;
       stocks = await this.lastSavedList();
+      this.nseList = [];
       this.status.source = stocks.length > 0 ? 'fallback' : 'none';
       this.logger.warn(`${err.message}; streaming ${stocks.length} stock(s) from the last saved list.`);
     }

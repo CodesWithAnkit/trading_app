@@ -24,6 +24,17 @@ export default function StockDetailPage() {
   const [timeframe, setTimeframe] = React.useState<"1m" | "5m">("5m")
   const [candles, setCandles] = React.useState<any[]>([])
   const [loadingCandles, setLoadingCandles] = React.useState(true)
+  const [isFno, setIsFno] = React.useState<boolean | null>(null)
+  
+  React.useEffect(() => {
+    fetch("/api/v1/scanner/universe")
+      .then(res => res.json())
+      .then(payload => {
+         const fnoSymbols = new Set((payload.data || []).map((s: any) => s.symbol))
+         setIsFno(fnoSymbols.has(decodedSymbol))
+      })
+      .catch(() => setIsFno(null)) // fallback
+  }, [decodedSymbol])
   
   React.useEffect(() => {
     const fetchCandles = async () => {
@@ -64,6 +75,15 @@ export default function StockDetailPage() {
           <ArrowLeft className="w-4 h-4" /> Back to Markets
         </button>
       </div>
+
+      {isFno === false && (
+        <div className="bg-surface-container-highest border border-outline-variant rounded-lg p-4 mb-2 flex items-center gap-3">
+          <span className="material-symbols-outlined text-outline">info</span>
+          <p className="text-sm text-on-surface">
+            <strong>{decodedSymbol}</strong> isn't an F&O stock, so the scanner doesn't stream it. No live price, chart or signals.
+          </p>
+        </div>
+      )}
 
       {/* Stock Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4">
