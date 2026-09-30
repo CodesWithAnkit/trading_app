@@ -9,7 +9,7 @@ import * as React from "react"
 export function useNow(intervalMs = 30_000): number | null {
   const subscribe = React.useCallback(
     (onChange: () => void) => {
-      const id = setInterval(onChange, intervalMs)
+      const id = setInterval(onChange, 1000)
       return () => clearInterval(id)
     },
     [intervalMs]
