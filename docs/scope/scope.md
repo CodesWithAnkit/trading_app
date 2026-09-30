@@ -13,6 +13,7 @@
 | Live Market and Scanner UI (Phase 4C) | done |
 | Dynamic Stock Analysis & Strategy Engine (Phase 5) | done |
 | Real Stock Analysis and Outcome Tracking (Phase 6) | in-progress |
+| Top Bar Symbol Search | in-progress |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -171,3 +172,18 @@
   - [x] Exit alerts, Closed today list, and live vs candle check results on the dashboard (0010 AC-6, AC-8, AC-9)
 - [ ] Verify it: /check verify
 - [x] Test it: /test
+
+---
+
+## Top Bar Symbol Search `in-progress`
+
+**Intent**: Make the top bar search box a quick jump to any of today's watched F&O stocks, with live price, change and plan status, reachable from the keyboard.
+**Done when**: Typing part of a symbol lists up to 8 watched stocks with live context; Enter or click opens the stock's analysis page (open plan) or market page; ⌘K / Ctrl+K, arrows and Esc work; it works before the open and falls back to live stocks if the list can't load.
+
+- [x] Design it (spec): [0012](../specs/0012-topbar-symbol-search.md) · code in `apps/web/components/domain/SymbolSearch.tsx`, `apps/web/lib/symbolSearch.ts`, `GET /api/v1/scanner/universe`
+- [x] Build it: /develop Top Bar Symbol Search
+  - [x] Universe endpoint and search core (matching, 8 cap, route choice) (AC-1, AC-2, AC-5)
+  - [x] SymbolSearch combobox in the top bar with live rows, tags, empty, loading and fallback states (AC-1, AC-3, AC-4, AC-5, AC-8)
+  - [x] Keyboard (⌘K / Ctrl+K, arrows, Enter, two step Esc) and accessible combobox roles, with tests (AC-6, AC-7)
+- [ ] Verify it: /check verify Top Bar Symbol Search
+- [ ] Test it: /test Top Bar Symbol Search

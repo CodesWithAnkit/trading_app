@@ -19,7 +19,8 @@ export function CandlestickChart({ data, timeframe, signal }: { data: any[], tim
   // We'll use a thin bar for high/low and a thicker bar for open/close
   const chartData = data.map(d => ({
     ...d,
-    timeLabel: new Date(d.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+    // The candles API returns `start_time`; `timestamp` is kept as a fallback for older data.
+    timeLabel: new Date(d.start_time ?? d.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }),
     range: [d.low, d.high],
     body: [Math.min(d.open, d.close), Math.max(d.open, d.close)],
     isUp: d.close > d.open

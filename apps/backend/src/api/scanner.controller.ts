@@ -50,6 +50,13 @@ export class ScannerController {
     return { data: this.scanner.getApproachingSetups() };
   }
 
+  /** Today's watched F&O symbols, sorted, for the top bar search (spec 0012 AC-1). */
+  @Get('universe')
+  getUniverse() {
+    const data = this.scanner.getWatchedSymbols().map(symbol => ({ symbol }));
+    return { data };
+  }
+
   @Get('momentum')
   getMomentum() {
     return { watching: this.scanner.latestTicks.size, data: this.scanner.getMomentumRanking() };

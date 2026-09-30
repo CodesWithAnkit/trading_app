@@ -1,12 +1,23 @@
+"use client"
 import * as React from "react"
 import { type Signal } from "@/mock/signals"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { useNow } from "@/lib/useNow"
+
+/** Whole minutes until the entry window closes (rounded up), or null before the client clock is known. */
+export function minutesLeft(expiresAt: string, now: number | null): number | null {
+  if (now === null) return null
+  const ms = new Date(expiresAt).getTime() - now
+  return Number.isFinite(ms) ? Math.max(0, Math.ceil(ms / 60_000)) : null
+}
 
 export function SignalCard({ signal }: { signal: Signal }) {
   const isLong = signal.direction === "LONG"
   const isShort = signal.direction === "SHORT"
   const isActive = signal.status === "ACTIVE" || signal.status === "EXPIRING"
+  // The entry window: a signal is 30 minutes old at expiresAt (spec 0010 keeps tracking the plan after it).
+  const left = minutesLeft(signal.expiresAt, useNow())
 
   const percentChange = ((signal.price % 2) + 0.5).toFixed(2)
 
@@ -28,9 +39,15 @@ export function SignalCard({ signal }: { signal: Signal }) {
               NSE Cash
             </span>
           </div>
-          <div className="flex items-center gap-1 text-on-surface-variant font-label-numeric-sm text-label-numeric-sm bg-surface-container-lowest px-2 py-0.5 rounded shadow-xs">
+          <div
+            className={cn(
+              "flex items-center gap-1 font-label-numeric-sm text-label-numeric-sm bg-surface-container-lowest px-2 py-0.5 rounded shadow-xs",
+              left !== null && left <= 5 ? "text-error" : "text-on-surface-variant"
+            )}
+            title="Time left to enter at the planned price; the plan is still tracked for exits after this"
+          >
             <span className="material-symbols-outlined text-[14px] text-tertiary">timer</span>
-            <span>Expires in 18m</span>
+            <span>{left === null ? "Expires in –" : left === 0 ? "Entry window closed" : `Expires in ${left}m`}</span>
           </div>
         </div>
 

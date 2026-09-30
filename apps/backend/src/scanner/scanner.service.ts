@@ -237,6 +237,11 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     await this.universe?.load(istDateString());
   }
 
+  /** Today's watched symbols, sorted (spec 0012). */
+  getWatchedSymbols(): string[] {
+    return (this.universe?.watching() ?? []).map(s => s.symbol).sort((a, b) => a.localeCompare(b));
+  }
+
   getUniverseStatus(): UniverseStatus | null {
     return this.universe?.getStatus() ?? null;
   }

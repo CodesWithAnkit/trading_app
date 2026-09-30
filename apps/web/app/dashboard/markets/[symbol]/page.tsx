@@ -33,7 +33,8 @@ export default function StockDetailPage() {
         if (res.ok) {
           const json = await res.json()
           // Sort candles chronologically
-          const sorted = (json.data || []).sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+          const at = (c: any) => new Date(c.start_time ?? c.timestamp).getTime()
+          const sorted = (json.data || []).sort((a: any, b: any) => at(a) - at(b))
           setCandles(sorted)
         }
       } catch (err) {
