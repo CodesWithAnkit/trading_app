@@ -25,7 +25,9 @@
     "scanner:replay": "npx tsx src/scanner/replay-cli.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.1",
     "@nestjs/core": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
     "@nestjs/schedule": "^12.0.2",
