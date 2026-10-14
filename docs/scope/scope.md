@@ -16,6 +16,7 @@
 | Top Bar Symbol Search | done |
 | Analysis Page Chart | done |
 | Add bulk actions to manage multiple trades | in-progress |
+| Deploy Monorepo Web and Backend on Free Tier | in-progress |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -221,3 +222,20 @@
   - [x] Client side loop and notification (AC-3, AC-4)
 - [ ] Verify it: /check verify Add bulk actions to manage multiple trades
 - [ ] Test it: /test Add bulk actions to manage multiple trades
+
+---
+
+## Deploy Monorepo Web and Backend on Free Tier `in-progress`
+
+**Intent**: Deploy the Next.js frontend to Vercel and the NestJS backend scanner to Render free web service via Docker, with automated market hours pings for continuous trading hours uptime.
+**Done when**: The web app runs live on Vercel, the backend scanner runs on Render connected to Angel One and Supabase, Next.js rewrites proxy API and SSE traffic, and a scheduled pinger maintains backend wakefulness during trading hours.
+
+- [x] Design it (spec): [0016](../specs/0016-deployment-strategy/index.md) · code in `apps/backend/Dockerfile`, `render.yaml`, `apps/web/next.config.ts`, `docs/deployment/free_tier_setup_guide.md`
+- [x] Build it: /develop Deploy Monorepo Web and Backend on Free Tier
+  - [x] Production multi stage Dockerfile for backend in monorepo
+  - [x] Render blueprint configuration (render.yaml)
+  - [x] Vercel deployment and Next.js dynamic rewrites in next.config.ts
+  - [x] Market hours heartbeat schedule setup on cron job org
+- [ ] Verify it: /check verify Deploy Monorepo Web and Backend on Free Tier
+
+
