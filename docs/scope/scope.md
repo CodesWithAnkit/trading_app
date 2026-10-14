@@ -17,6 +17,7 @@
 | Analysis Page Chart | done |
 | Add bulk actions to manage multiple trades | in-progress |
 | Deploy Monorepo Web and Backend on Free Tier | in-progress |
+| Market Intelligence and Explainable Analysis | in-progress |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -237,5 +238,22 @@
   - [x] Vercel deployment and Next.js dynamic rewrites in next.config.ts
   - [x] Market hours heartbeat schedule setup on cron job org
 - [ ] Verify it: /check verify Deploy Monorepo Web and Backend on Free Tier
+
+---
+
+## Market Intelligence and Explainable Analysis `in-progress`
+
+**Intent**: Introduce broad market and sector context, official company announcements and news ingestion, derived investor sentiment, and delayed institutional activity reporting into an explainable analysis card and drawer that contrasts positive factors against contradictory factors and runs deterministic safety gates.
+**Done when**: The dashboard shows live market breadth and regime, official news and filings are ingested and deduplicated, institutional disclosures are clearly marked as delayed context, and the stock analysis page renders the complete Explainable Analysis Card with deterministic risk gates and evidence breakdown.
+
+- [x] Design it (spec): [0017](../specs/0017-market-intelligence-and-explainable-analysis/index.md) and [0018](../specs/0018-reusable-components-and-api-integration/index.md) · code in `apps/backend/src/intelligence/` and `apps/web/`
+- [ ] Build it: /develop Market Intelligence and Explainable Analysis
+  - [ ] Shared contracts and DTO schemas for market context, news, and evidence (0018 AC-1)
+  - [ ] IntelligenceController and backend ingestion services in NestJS (0017 AC-1..7, 0018 AC-2, AC-3)
+  - [ ] ExplainableAnalysisService for deterministic risk gates and factor scoring (0017 AC-8..10, AC-12)
+  - [ ] Reusable React hooks with SWR and latency safety gating (0018 AC-5, AC-7)
+  - [ ] Pure presentation UI components with loading and error boundaries (0017 AC-11, 0018 AC-4, AC-6, AC-8..10)
+- [ ] Verify it: /check verify Market Intelligence and Explainable Analysis
+- [ ] Test it: /test Market Intelligence and Explainable Analysis
 
 

@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-container-highest":"#d5e3ff","error-container":"#ffdad6","primary":"#0037b0","status-live-bg":"#ECFDF5","primary-fixed-dim":"#b7c4ff","border-subtle":"#D9E1EC","on-primary-container":"#cad3ff","surface-tint":"#2151da","text-primary":"#132238","inverse-surface":"#223148","status-stale-text":"#B45309","surface-container-low":"#f0f3ff","surface-container-lowest":"#ffffff","on-primary-fixed":"#001551","status-live-text":"#047857","outline":"#747686","on-tertiary-container":"#ffcba3","inverse-primary":"#b7c4ff","surface-bright":"#f9f9ff","status-disconnected-text":"#B91C1C","border-strong":"#CBD5E1","on-primary":"#ffffff","primary-container":"#1d4ed8","on-surface":"#0c1c32","on-error-container":"#93000a","secondary-fixed":"#85f8c4","surface-container-high":"#dee8ff","secondary-fixed-dim":"#68dba9","tertiary-fixed-dim":"#ffb77d","tertiary-fixed":"#ffdcc3","canvas":"#F6F8FB","on-secondary":"#ffffff","surface-container":"#e7eeff","on-error":"#ffffff","on-secondary-fixed-variant":"#005137","outline-variant":"#c4c5d7","on-primary-fixed-variant":"#0039b5","accent-bullish":"#059669","secondary-container":"#82f5c1","text-secondary":"#5E6C80","background":"#f9f9ff","primary-fixed":"#dce1ff","on-secondary-fixed":"#002114","on-tertiary":"#ffffff","surface-variant":"#d5e3ff","status-delayed-bg":"#F1F5F9","status-disconnected-bg":"#FEF2F2","accent-danger":"#DC2626","accent-bearish":"#D97706","accent-primary":"#1D4ED8","on-surface-variant":"#434655","inverse-on-surface":"#ecf1ff","on-tertiary-fixed":"#2f1500","secondary":"#006c4a","on-tertiary-fixed-variant":"#6e3900","surface-dim":"#ccdbf8","error":"#ba1a1a","on-background":"#0c1c32","surface-high":"#EDF2F7","on-secondary-container":"#00714e","tertiary-container":"#8d4b00","surface":"#FFFFFF","status-stale-bg":"#FFFBEB","status-delayed-text":"#475569","tertiary":"#6b3700"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},spacing:{"space-xs":"0.25rem","space-lg":"0.875rem","gutter-md":"1rem","space-md":"0.625rem",gutter:"0.75rem","margin-lg":"1.5rem","space-sm":"0.375rem",margin:"1rem","space-xl":"1.25rem"},fontFamily:{"body-sm":["Inter"],"headline-lg":["Inter"],"headline-sm":["Inter"],"label-code":["JetBrains Mono"],"metric-sm":["JetBrains Mono"],"metric-md":["JetBrains Mono"],"metric-lg":["JetBrains Mono"],"headline-md":["Inter"],"body-md":["Inter"],"headline-lg-mobile":["Inter"],"body-xs":["Inter"]},fontSize:{"body-sm":["0.8125rem",{lineHeight:"1.25rem",fontWeight:"400"}],"headline-lg":["1.5rem",{lineHeight:"2rem",letterSpacing:"-0.02em",fontWeight:"600"}],"headline-sm":["0.9375rem",{lineHeight:"1.375rem",fontWeight:"600"}],"label-code":["0.6875rem",{lineHeight:"1rem",letterSpacing:"0.02em",fontWeight:"500"}],"metric-sm":["0.8125rem",{lineHeight:"1.125rem",fontWeight:"500"}],"metric-md":["0.9375rem",{lineHeight:"1.25rem",fontWeight:"500"}],"metric-lg":["1.25rem",{lineHeight:"1.5rem",letterSpacing:"-0.02em",fontWeight:"600"}],"headline-md":["1.125rem",{lineHeight:"1.5rem",letterSpacing:"-0.01em",fontWeight:"600"}],"body-md":["0.875rem",{lineHeight:"1.375rem",fontWeight:"400"}],"headline-lg-mobile":["1.25rem",{lineHeight:"1.75rem",letterSpacing:"-0.01em",fontWeight:"600"}],"body-xs":["0.75rem",{lineHeight:"1.125rem",fontWeight:"400"}]}}}};</script></head><body class="bg-canvas font-body-sm text-text-primary antialiased min-h-screen"><header class="fixed top-0 left-0 right-0 z-50 bg-surface border-b border-border-subtle"><div class="h-14 px-gutter-md flex items-center justify-between border-b border-border-subtle bg-surface"><div class="flex items-center gap-space-md"><img alt="Intraday Tracker Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UpxruEZGtSh-tmaTQqS_ImCl2wsBpLJQW25bGSPMp5zqQTZIIV0JwKtVaWQgDf3GC689rYl0Mfc4zryQ5zc-BAh_8ZdotYF7UDRXjxnoByFrJY6g9LBwIepPXIGeh6iw5yIapnHGQb1DegyS61aiBNPhKGpCzogoPqOMkIFp29WS_R0Fv_zfQUa_m2nIt8vWRex4hK7TP7B3rBREtdk3zlEknZCtcjPr7YVf1ED2TKfGJM79ywna5fydg"/><div class="flex flex-col"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-headline-sm text-text-primary tracking-tight font-bold">Intraday Stock Tracker</span><span class="px-space-xs py-0.5 rounded bg-surface-container text-primary font-label-code text-label-code font-semibold uppercase border border-border-subtle">SIMULATED DATA (PHASE 1-3)</span></div></div></div><div class="hidden xl:flex items-center gap-space-xs px-space-md py-1 rounded bg-status-delayed-bg border border-border-subtle"><span class="material-symbols-outlined text-[15px] text-text-secondary">verified_user</span><span class="font-body-xs text-body-xs text-text-secondary font-medium">Decision Support Only — Manual Execution in Angel One • No Automated Orders</span></div><div class="flex items-center gap-space-lg"><button class="relative p-1.5 rounded hover:bg-surface-high text-text-secondary hover:text-text-primary transition-colors" title="Notifications" type="button"><span class="material-symbols-outlined text-[20px]">notifications_active</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent-primary ring-2 ring-surface"></span></button><div class="h-4 w-px bg-border-subtle"></div><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden sm:flex flex-col text-left"><span class="font-body-sm text-body-sm font-semibold text-text-primary leading-tight">Trader</span><span class="font-label-code text-label-code text-text-secondary">(Personal)</span></div></div></div></div><div class="h-10 px-gutter-md bg-surface-bright flex items-center justify-between overflow-x-auto text-nowrap gap-gutter-md border-t border-border-subtle/50"><div class="flex items-center gap-gutter-md divide-x divide-border-subtle"><div class="flex items-center gap-space-sm"><span class="w-2 h-2 rounded-full bg-accent-bullish animate-pulse"></span><span class="font-label-code text-label-code uppercase text-text-secondary">SmartAPI Stream:</span><span class="font-metric-sm text-metric-sm font-medium text-status-live-text">CONNECTED</span><span class="font-label-code text-label-code text-text-secondary">(12ms latency, tick: 11:42:04 IST)</span></div><div class="pl-gutter-md flex items-center gap-space-sm"><span class="font-label-code text-label-code uppercase text-text-secondary">Market State:</span><span class="font-label-code text-label-code font-semibold px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text border border-accent-bullish/30">NSE ACTIVE</span><span class="font-label-code text-label-code text-text-secondary">(09:15 - 15:30 IST)</span></div><div class="pl-gutter-md flex items-center gap-space-sm"><span class="font-label-code text-label-code uppercase text-text-secondary">Breadth:</span><span class="font-metric-sm text-metric-sm text-accent-bullish font-semibold">▲ 1,248</span><span class="font-label-code text-label-code text-text-secondary">/</span><span class="font-metric-sm text-metric-sm text-accent-danger font-semibold">▼ 812</span><span class="font-label-code text-label-code px-1.5 py-0.5 rounded bg-surface-container font-medium text-primary">(Regime: Trend Bullish)</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-sm bg-surface px-space-md py-1 rounded border border-border-subtle"><span class="material-symbols-outlined text-[16px] text-accent-bearish">shield_with_heart</span><span class="font-label-code text-label-code uppercase text-text-secondary">Daily Risk:</span><span class="font-metric-sm text-metric-sm font-semibold text-text-primary">₹2,450</span><span class="font-label-code text-label-code text-text-secondary">/ ₹6,000</span><span class="font-label-code text-label-code font-bold text-accent-bearish bg-status-stale-bg px-1 rounded">(40.8%)</span></div></div></div></header><aside class="fixed left-0 top-24 bottom-0 w-64 bg-surface border-r border-border-subtle z-40 flex flex-col justify-between overflow-y-auto"><div class="p-space-md"><div class="px-space-sm pb-space-sm text-label-code font-label-code text-text-secondary uppercase tracking-wider font-semibold">Workspace Navigation</div><nav class="flex flex-col gap-1" data-active-classes="bg-primary text-on-primary font-semibold shadow-sm"><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="dashboard" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">terminal</span><span class="font-body-sm text-body-sm">Dashboard</span></div></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="signal-scanner" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">radar</span><span class="font-body-sm text-body-sm">Signal Scanner</span></div><span class="px-1.5 py-0.5 rounded bg-accent-primary text-on-primary font-label-code text-label-code font-bold">4 New</span></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="signal-analysis" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">analytics</span><span class="font-body-sm text-body-sm">Signal Analysis</span></div></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="market-intelligence" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">candlestick_chart</span><span class="font-body-sm text-body-sm">Market Intelligence</span></div></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="trade-journal" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">history_edu</span><span class="font-body-sm text-body-sm">Trade Journal</span></div><span class="px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text border border-accent-bullish/30 font-label-code text-label-code font-bold">2 Open</span></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="performance-and-validation" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">fact_check</span><span class="font-body-sm text-body-sm">Performance &amp; Validation</span></div></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="alert-history" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">notifications</span><span class="font-body-sm text-body-sm">Alert History</span></div></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="settings-and-risk" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">tune</span><span class="font-body-sm text-body-sm">Settings &amp; Risk</span></div></a></nav></div><div class="p-space-md border-t border-border-subtle bg-surface-bright"><div class="rounded border border-border-subtle bg-surface p-space-sm"><div class="flex items-center justify-between mb-1"><span class="font-label-code text-label-code text-text-secondary uppercase font-semibold">Engine Status</span><span class="font-label-code text-label-code text-status-live-text font-bold">NOMINAL</span></div><div class="flex items-center justify-between text-body-xs font-label-code text-text-secondary"><span>Feed Engine:</span><span class="text-text-primary font-metric-sm">v2.4.1</span></div><div class="flex items-center justify-between text-body-xs font-label-code text-text-secondary"><span>Rule Engine:</span><span class="text-text-primary font-metric-sm">v1.8.9</span></div></div></div></aside><div class="pl-64"><main class="relative pt-24 min-h-screen bg-canvas"><div class="flex flex-col w-full">
+<div class="px-gutter-md py-space-lg flex flex-col gap-space-lg max-w-[1720px] mx-auto w-full">
+<!-- Screen Header Block -->
+<div class="flex flex-col gap-space-md bg-surface p-space-lg rounded border border-border-subtle shadow-sm">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="font-headline-lg text-headline-lg text-text-primary tracking-tight font-bold">Performance &amp; Validation Engine</span>
+<span class="px-space-sm py-0.5 rounded bg-surface-container text-primary font-label-code text-label-code font-bold uppercase border border-border-subtle">
+              PRD FR-17 / FR-18 / FR-20
+            </span>
+<span class="px-space-sm py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-accent-bullish animate-pulse"></span>
+              FROZEN AUDIT ENGINE
+            </span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary max-w-4xl">
+            Rigorous chronological out-of-sample backtesting, walk-forward validation, probability calibration, and live paper tracking. Excludes broker automated execution.
+          </p>
+</div>
+<!-- Strategy Version & Hash Specs -->
+<div class="flex items-center gap-space-sm flex-wrap self-start lg:self-center">
+<div class="flex items-center gap-space-xs px-space-md py-1.5 rounded bg-surface-high border border-border-strong text-text-primary">
+<span class="material-symbols-outlined text-[17px] text-accent-primary">tune</span>
+<div class="flex flex-col text-left">
+<span class="font-label-code text-label-code text-text-secondary leading-none">ACTIVE STRATEGY</span>
+<span class="font-metric-sm text-metric-sm font-semibold text-text-primary leading-tight">v2.4.1 (vwap_breakout_v2 + orb_15m)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs px-space-md py-1.5 rounded bg-surface-container-low border border-border-subtle">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">fingerprint</span>
+<span class="font-label-code text-label-code font-bold text-primary">#git-8f2c3d1</span>
+<span class="text-text-secondary text-body-xs">•</span>
+<span class="font-label-code text-label-code text-text-secondary uppercase">HASH SEALED</span>
+</div>
+</div>
+</div>
+<!-- Environment Navigation Tabs & Benchmark Notice -->
+<div class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-space-md pt-space-xs border-t border-border-subtle">
+<div class="flex items-center gap-space-xs overflow-x-auto w-full xl:w-auto pb-1 xl:pb-0" id="scope-tabs">
+<button class="px-space-md py-1.5 rounded bg-primary text-on-primary font-body-sm text-body-sm font-semibold whitespace-nowrap shadow-sm transition-all" data-tab="combined">
+            All Combined Overview
+          </button>
+<button class="px-space-md py-1.5 rounded bg-surface text-text-secondary hover:bg-surface-high hover:text-text-primary font-body-sm text-body-sm font-medium border border-border-subtle whitespace-nowrap transition-all" data-tab="manual">
+            1. Manual Journal Performance (Actual Trader)
+          </button>
+<button class="px-space-md py-1.5 rounded bg-surface text-text-secondary hover:bg-surface-high hover:text-text-primary font-body-sm text-body-sm font-medium border border-border-subtle whitespace-nowrap transition-all" data-tab="paper">
+            2. Paper Tracking Validation (Frozen Live Rules)
+          </button>
+<button class="px-space-md py-1.5 rounded bg-surface text-text-secondary hover:bg-surface-high hover:text-text-primary font-body-sm text-body-sm font-medium border border-border-subtle whitespace-nowrap transition-all" data-tab="backtest">
+            3. Chronological Backtest &amp; Walk-Forward (OOS)
+          </button>
+<button class="px-space-md py-1.5 rounded bg-surface text-text-secondary hover:bg-surface-high hover:text-text-primary font-body-sm text-body-sm font-medium border border-border-subtle whitespace-nowrap transition-all" data-tab="calibration">
+            4. Probability Calibration &amp; Reliability
+          </button>
+</div>
+<div class="flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container-high border border-border-subtle self-stretch xl:self-auto">
+<span class="material-symbols-outlined text-[15px] text-primary">receipt_long</span>
+<span class="font-label-code text-label-code text-text-secondary leading-tight truncate">
+            Simulated costs: ₹20 flat brokerage/order, STT 0.025% (sell), GST 18%, Stamp Duty 0.003%, 0.05% slippage buffer/leg.
+          </span>
+</div>
+</div>
+</div>
+<!-- Section 2: Primary Performance KPI Summary Cards (Actual vs Paper vs Backtest) -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Card 1: Win Rate & Sample Breakdown -->
+<div class="bg-surface p-space-md rounded border border-border-subtle flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between pb-space-xs border-b border-border-subtle">
+<span class="font-label-code text-label-code text-text-secondary uppercase font-semibold">Directional Win Rate</span>
+<span class="font-label-code text-label-code px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-bold">FR-17 VERIFIED</span>
+</div>
+<div class="py-space-md flex flex-col gap-space-sm">
+<div class="flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg font-bold text-accent-bullish font-metric-lg">62.5%</span>
+<span class="font-label-code text-label-code text-text-secondary">Manual Journal (24 trds)</span>
+</div>
+<!-- Comparative stacked visual -->
+<div class="w-full bg-surface-high h-2 rounded overflow-hidden flex">
+<div class="bg-accent-bullish h-full" style="width: 62.5%"></div>
+<div class="bg-accent-danger h-full" style="width: 37.5%"></div>
+</div>
+<div class="flex flex-col gap-1 pt-1 font-label-code text-label-code text-text-secondary">
+<div class="flex justify-between">
+<span>Paper Out-of-Sample:</span>
+<span class="font-metric-sm text-text-primary font-semibold">58.4% (142 setups)</span>
+</div>
+<div class="flex justify-between">
+<span>Walk-Forward Backtest (6M):</span>
+<span class="font-metric-sm text-text-primary font-semibold">56.1% (840 setups)</span>
+</div>
+</div>
+</div>
+<div class="pt-space-xs border-t border-border-subtle flex items-center justify-between text-body-xs font-label-code text-text-secondary">
+<span>Target-to-Invalidation Ratio</span>
+<span class="text-accent-bullish font-bold">1 : 1.82 (Avg)</span>
+</div>
+</div>
+<!-- Card 2: Net Expectancy per Trade/Setup -->
+<div class="bg-surface p-space-md rounded border border-border-subtle flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between pb-space-xs border-b border-border-subtle">
+<span class="font-label-code text-label-code text-text-secondary uppercase font-semibold">Net Expectancy / Setup</span>
+<span class="font-label-code text-label-code px-1.5 py-0.5 rounded bg-surface-container text-primary font-semibold">POST-TAX / FEES</span>
+</div>
+<div class="py-space-md flex flex-col gap-space-sm">
+<div class="flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg font-bold text-primary font-metric-lg">+₹382.50</span>
+<span class="font-label-code text-label-code text-accent-bullish font-semibold">▲ Manual Edge</span>
+</div>
+<div class="flex flex-col gap-1.5 font-label-code text-label-code text-text-secondary">
+<div class="flex items-center justify-between">
+<span>Paper Tracking Out-of-Sample:</span>
+<span class="font-metric-sm text-status-live-text font-semibold">+₹294.10 / setup</span>
+</div>
+<div class="flex items-center justify-between">
+<span>Walk-Forward Backtest (6M):</span>
+<span class="font-metric-sm text-text-primary font-semibold">+₹218.40 / setup</span>
+</div>
+<div class="flex items-center justify-between text-body-xs">
+<span>Edge Erosion (Paper vs Live):</span>
+<span class="font-metric-sm text-status-stale-text">-23.1% slippage delta</span>
+</div>
+</div>
+</div>
+<div class="pt-space-xs border-t border-border-subtle flex items-center justify-between text-body-xs font-label-code text-text-secondary">
+<span>Capital Allocation Basis</span>
+<span class="font-metric-sm text-text-primary">₹1,00,000 / tranche</span>
+</div>
+</div>
+<!-- Card 3: Realized Profit Factor & Drawdown -->
+<div class="bg-surface p-space-md rounded border border-border-subtle flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between pb-space-xs border-b border-border-subtle">
+<span class="font-label-code text-label-code text-text-secondary uppercase font-semibold">Profit Factor &amp; Max DD</span>
+<span class="font-label-code text-label-code px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-semibold">ROBUST</span>
+</div>
+<div class="py-space-md flex flex-col gap-space-sm">
+<div class="flex items-baseline justify-between">
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg text-headline-lg font-bold text-text-primary font-metric-lg">1.84</span>
+<span class="font-label-code text-label-code text-text-secondary">PF</span>
+</div>
+<span class="font-metric-sm text-accent-danger font-semibold">-4.2% Max DD</span>
+</div>
+<div class="flex flex-col gap-1 font-label-code text-label-code text-text-secondary">
+<div class="flex justify-between">
+<span>Manual vs Paper PF:</span>
+<span class="font-metric-sm text-text-primary font-semibold">1.84 vs 1.62</span>
+</div>
+<div class="flex justify-between">
+<span>Backtest 6-Month PF:</span>
+<span class="font-metric-sm text-text-primary font-semibold">1.48 (OOS Validated)</span>
+</div>
+<div class="flex justify-between">
+<span>Max Historical Peak-to-Trough:</span>
+<span class="font-metric-sm text-accent-danger font-semibold">₹12,400</span>
+</div>
+</div>
+</div>
+<div class="pt-space-xs border-t border-border-subtle flex items-center justify-between text-body-xs font-label-code text-text-secondary">
+<span>Recovery Factor</span>
+<span class="font-metric-sm text-text-primary font-bold">3.24x Net Gain / DD</span>
+</div>
+</div>
+<!-- Card 4: Friction & Realistic Cost Sensitivity -->
+<div class="bg-surface p-space-md rounded border border-border-subtle flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between pb-space-xs border-b border-border-subtle">
+<span class="font-label-code text-label-code text-text-secondary uppercase font-semibold">Friction / Cost Impact</span>
+<span class="font-label-code text-label-code px-1.5 py-0.5 rounded bg-status-stale-bg text-status-stale-text font-bold">FR-20 FRICTION</span>
+</div>
+<div class="py-space-md flex flex-col gap-space-sm">
+<div class="flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg font-bold text-status-stale-text font-metric-lg">-18.4%</span>
+<span class="font-label-code text-label-code text-text-secondary">Gross to Net Drag</span>
+</div>
+<div class="w-full bg-surface-high h-2 rounded overflow-hidden flex">
+<div class="bg-primary h-full" style="width: 81.6%" title="Net Realized"></div>
+<div class="bg-status-stale-text h-full" style="width: 18.4%" title="Friction Drag"></div>
+</div>
+<div class="flex flex-col gap-1 font-label-code text-label-code text-text-secondary">
+<div class="flex justify-between">
+<span>Brokerage + STT (NSE):</span>
+<span class="font-metric-sm text-text-primary font-semibold">₹6,840 (9.2%)</span>
+</div>
+<div class="flex justify-between">
+<span>Simulated Slippage (0.05%):</span>
+<span class="font-metric-sm text-text-primary font-semibold">₹6,838 (9.2%)</span>
+</div>
+</div>
+</div>
+<div class="pt-space-xs border-t border-border-subtle flex items-center justify-between text-body-xs font-label-code text-text-secondary">
+<span>Break-Even Win Rate req.</span>
+<span class="font-metric-sm text-text-primary font-bold">48.2%</span>
+</div>
+</div>
+</div>
+<!-- Section 3 & 4: Calibration Curve & Walk-Forward Regime Stress Matrix (Split Grid) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- Left Column (Cols 1-7): Probability Calibration Panel (FR-18 & Section 8.2) -->
+<div class="lg:col-span-7 bg-surface p-space-md rounded border border-border-subtle shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-xs border-b border-border-subtle">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-primary">straighten</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-text-primary font-bold">Brier Score &amp; Confidence Calibration</span>
+<span class="font-label-code text-label-code text-text-secondary">Out-of-sample probability mapping vs actual hit frequencies</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs self-start sm:self-auto">
+<span class="font-label-code text-label-code text-text-secondary uppercase">Brier Score:</span>
+<span class="font-metric-sm text-metric-sm font-bold text-accent-bullish px-1.5 py-0.5 rounded bg-status-live-bg">0.142 (Optimal &lt; 0.18)</span>
+</div>
+</div>
+<!-- Calibration Visualizer Spark & Table -->
+<div class="flex flex-col gap-space-md">
+<div class="p-space-sm rounded bg-surface-bright border border-border-subtle">
+<div class="flex items-center justify-between text-body-xs font-label-code text-text-secondary mb-2">
+<span class="flex items-center gap-1">
+<span class="w-2.5 h-0.5 bg-primary inline-block"></span> Model Predicted Confidence
+              </span>
+<span class="flex items-center gap-1">
+<span class="w-2.5 h-0.5 bg-accent-bullish inline-block"></span> Observed Win Rate (Out-of-Sample)
+              </span>
+<span class="flex items-center gap-1">
+<span class="w-2.5 h-0.5 bg-border-strong border-dashed border-t inline-block"></span> Perfect Line (45°)
+              </span>
+</div>
+<!-- SVG Calibration Curve (Inline Vector) -->
+<div class="h-32 w-full flex items-center justify-center">
+<svg class="w-full h-full text-border-subtle" preserveaspectratio="none" viewbox="0 0 500 120">
+<!-- Grid Lines -->
+<line stroke="currentColor" stroke-dasharray="2,2" stroke-width="1" x1="50" x2="480" y1="10" y2="10"></line>
+<line stroke="currentColor" stroke-dasharray="2,2" stroke-width="1" x1="50" x2="480" y1="40" y2="40"></line>
+<line stroke="currentColor" stroke-dasharray="2,2" stroke-width="1" x1="50" x2="480" y1="70" y2="70"></line>
+<line stroke="currentColor" stroke-dasharray="2,2" stroke-width="1" x1="50" x2="480" y1="100" y2="100"></line>
+<!-- 45-degree theoretical line -->
+<line stroke="#CBD5E1" stroke-dasharray="4,4" stroke-width="1.5" x1="50" x2="480" y1="100" y2="10"></line>
+<!-- Model calibration curve line -->
+<polyline fill="none" points="50,100 150,85 270,58 390,32 480,18" stroke="#1D4ED8" stroke-width="2"></polyline>
+<!-- Actual Observed points -->
+<polyline fill="none" points="50,98 150,86 270,61 390,35" stroke="#059669" stroke-linecap="round" stroke-width="2.5"></polyline>
+<!-- Nodes -->
+<circle class="fill-accent-bullish stroke-surface" cx="150" cy="86" r="4" stroke-width="2"></circle>
+<circle class="fill-accent-bullish stroke-surface" cx="270" cy="61" r="4" stroke-width="2"></circle>
+<circle class="fill-accent-bullish stroke-surface" cx="390" cy="35" r="4" stroke-width="2"></circle>
+<!-- Axis Labels -->
+<text fill="#5E6C80" font-family="JetBrains Mono" font-size="10" x="15" y="103">40%</text>
+<text fill="#5E6C80" font-family="JetBrains Mono" font-size="10" x="15" y="73">60%</text>
+<text fill="#5E6C80" font-family="JetBrains Mono" font-size="10" x="15" y="43">80%</text>
+<text fill="#5E6C80" font-family="JetBrains Mono" font-size="10" x="15" y="13">100%</text>
+<text fill="#5E6C80" font-family="JetBrains Mono" font-size="9" x="135" y="115">50-60%</text>
+<text fill="#5E6C80" font-family="JetBrains Mono" font-size="9" x="255" y="115">61-75%</text>
+<text fill="#5E6C80" font-family="JetBrains Mono" font-size="9" x="375" y="115">76-90%</text>
+<text fill="#DC2626" font-family="JetBrains Mono" font-size="9" x="440" y="115">&gt;90% (Gated)</text>
+</svg>
+</div>
+</div>
+<!-- Calibration Table -->
+<div class="overflow-x-auto rounded border border-border-subtle">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-high border-b border-border-subtle">
+<th class="p-space-xs font-label-code text-label-code text-text-secondary font-semibold uppercase">Confidence Bucket</th>
+<th class="p-space-xs font-label-code text-label-code text-text-secondary font-semibold uppercase">Model Predicted</th>
+<th class="p-space-xs font-label-code text-label-code text-text-secondary font-semibold uppercase">Observed Hit Rate</th>
+<th class="p-space-xs font-label-code text-label-code text-text-secondary font-semibold uppercase">OOS Sample</th>
+<th class="p-space-xs font-label-code text-label-code text-text-secondary font-semibold uppercase">Calibration State</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle font-body-sm text-body-sm">
+<tr class="hover:bg-surface-bright">
+<td class="p-space-xs font-label-code text-label-code font-bold text-text-primary">Bucket 1 (50% – 60%)</td>
+<td class="p-space-xs font-metric-sm text-metric-sm text-text-secondary">55.0%</td>
+<td class="p-space-xs font-metric-sm text-metric-sm font-semibold text-text-primary">53.8%</td>
+<td class="p-space-xs font-metric-sm text-metric-sm text-text-secondary">210 setups</td>
+<td class="p-space-xs">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-accent-bullish"></span>
+                      WELL CALIBRATED
+                    </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-bright">
+<td class="p-space-xs font-label-code text-label-code font-bold text-text-primary">Bucket 2 (61% – 75%)</td>
+<td class="p-space-xs font-metric-sm text-metric-sm text-text-secondary">68.0%</td>
+<td class="p-space-xs font-metric-sm text-metric-sm font-semibold text-text-primary">65.2%</td>
+<td class="p-space-xs font-metric-sm text-metric-sm text-text-secondary">384 setups</td>
+<td class="p-space-xs">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-accent-bullish"></span>
+                      WELL CALIBRATED
+                    </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-bright">
+<td class="p-space-xs font-label-code text-label-code font-bold text-text-primary">Bucket 3 (76% – 90%)</td>
+<td class="p-space-xs font-metric-sm text-metric-sm text-text-secondary">82.0%</td>
+<td class="p-space-xs font-metric-sm text-metric-sm font-semibold text-text-primary">79.1%</td>
+<td class="p-space-xs font-metric-sm text-metric-sm text-text-secondary">198 setups</td>
+<td class="p-space-xs">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-container text-primary font-label-code text-label-code font-bold border border-border-subtle">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                      RELIABLE HIGH CONF
+                    </span>
+</td>
+</tr>
+<tr class="bg-status-disconnected-bg/40 hover:bg-status-disconnected-bg/60">
+<td class="p-space-xs font-label-code text-label-code font-bold text-accent-danger">Bucket 4 (Dislocation &gt;90%)</td>
+<td class="p-space-xs font-metric-sm text-metric-sm text-text-secondary">91.5%</td>
+<td class="p-space-xs font-metric-sm text-metric-sm font-semibold text-accent-danger">41.6% (Unstable)</td>
+<td class="p-space-xs font-metric-sm text-metric-sm text-accent-danger font-semibold">12 setups (&lt; 30 min)</td>
+<td class="p-space-xs">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-status-disconnected-bg text-status-disconnected-text border border-status-disconnected-text/30 font-label-code text-label-code font-bold">
+<span class="material-symbols-outlined text-[13px]">block</span>
+                      SUPPRESSED (FR-18)
+                    </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-space-sm py-1.5 rounded bg-surface-container-low border border-border-subtle flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-primary mt-0.5">info</span>
+<span class="font-body-xs text-body-xs text-text-secondary leading-tight">
+<strong>PRD FR-18 Safety Mandate:</strong> Sample sizes smaller than 30 setups in any volatility regime automatically trigger epistemic probability suppression, reverting signals to "INSUFFICIENT EVIDENCE" to eliminate overfitting bias.
+            </span>
+</div>
+</div>
+</div>
+<!-- Right Column (Cols 8-12): Walk-Forward Regime Stress Matrix (Section 8.2) -->
+<div class="lg:col-span-5 bg-surface p-space-md rounded border border-border-subtle shadow-sm flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs pb-space-xs border-b border-border-subtle">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-text-primary font-bold">Regime Stress Matrix</span>
+<span class="font-label-code text-label-code px-1.5 py-0.5 rounded bg-surface-high text-text-secondary font-semibold">4 NSE REGIMES</span>
+</div>
+<span class="font-label-code text-label-code text-text-secondary">Walk-forward validation stability across shifting market states</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Regime 1: Bullish Trend -->
+<div class="p-space-sm rounded bg-surface-bright border border-border-subtle flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-accent-bullish">trending_up</span>
+<span class="font-body-sm text-body-sm font-semibold text-text-primary">1. Bullish Trend Regime</span>
+</div>
+<span class="px-1.5 py-0.2 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold">HEALTHY</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs pt-1 border-t border-border-subtle/50 text-left font-label-code text-label-code">
+<div>
+<span class="text-text-secondary block">Win Rate:</span>
+<span class="font-metric-sm text-accent-bullish font-bold">64.2%</span>
+</div>
+<div>
+<span class="text-text-secondary block">Profit Factor:</span>
+<span class="font-metric-sm text-text-primary font-bold">1.95</span>
+</div>
+<div>
+<span class="text-text-secondary block">Sample OOS:</span>
+<span class="font-metric-sm text-text-primary">312 setups</span>
+</div>
+</div>
+</div>
+<!-- Regime 2: Bearish Breakdown -->
+<div class="p-space-sm rounded bg-surface-bright border border-border-subtle flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-accent-bearish">trending_down</span>
+<span class="font-body-sm text-body-sm font-semibold text-text-primary">2. Bearish Breakdown Regime</span>
+</div>
+<span class="px-1.5 py-0.2 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold">HEALTHY</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs pt-1 border-t border-border-subtle/50 text-left font-label-code text-label-code">
+<div>
+<span class="text-text-secondary block">Win Rate:</span>
+<span class="font-metric-sm text-accent-bullish font-bold">57.8%</span>
+</div>
+<div>
+<span class="text-text-secondary block">Profit Factor:</span>
+<span class="font-metric-sm text-text-primary font-bold">1.54</span>
+</div>
+<div>
+<span class="text-text-secondary block">Sample OOS:</span>
+<span class="font-metric-sm text-text-primary">248 setups</span>
+</div>
+</div>
+</div>
+<!-- Regime 3: Range-Bound / Choppy -->
+<div class="p-space-sm rounded bg-surface-bright border border-border-strong flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-status-stale-text">sync_alt</span>
+<span class="font-body-sm text-body-sm font-semibold text-text-primary">3. Range-Bound / Choppy</span>
+</div>
+<span class="px-1.5 py-0.2 rounded bg-status-stale-bg text-status-stale-text font-label-code text-label-code font-bold">SELECTIVE GATED</span>
+</div>
+<div class="grid grid-cols-3 gap-space-xs pt-1 border-t border-border-subtle/50 text-left font-label-code text-label-code">
+<div>
+<span class="text-text-secondary block">Win Rate:</span>
+<span class="font-metric-sm text-accent-danger font-bold">44.1%</span>
+</div>
+<div>
+<span class="text-text-secondary block">Profit Factor:</span>
+<span class="font-metric-sm text-accent-danger font-bold">0.98</span>
+</div>
+<div>
+<span class="text-text-secondary block">Sample OOS:</span>
+<span class="font-metric-sm text-text-primary">192 setups</span>
+</div>
+</div>
+</div>
+<!-- Regime 4: High Volatility Dislocation -->
+<div class="p-space-sm rounded bg-surface-container-high/60 border border-status-disconnected-text/30 flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-accent-danger">warning</span>
+<span class="font-body-sm text-body-sm font-bold text-accent-danger">4. Dislocated / High Volatility</span>
+</div>
+<span class="px-1.5 py-0.2 rounded bg-inverse-surface text-surface font-label-code text-label-code font-bold tracking-wider">NO-TRADE LOCK</span>
+</div>
+<p class="font-body-xs text-body-xs text-text-secondary leading-tight pt-1 border-t border-border-subtle/50">
+              India VIX intraday spike &gt; 18% or unanchored gap openings. Signal creation is automatically suppressed to protect drawdown limits.
+            </p>
+</div>
+</div>
+<div class="p-space-xs rounded bg-surface-high text-label-code font-label-code text-text-secondary flex justify-between items-center">
+<span>Walk-Forward Window:</span>
+<span class="font-semibold text-text-primary">Rolling 30-Day Retrain (Fixed 6M OOS)</span>
+</div>
+</div>
+</div>
+<!-- Section 5: Recent Evaluated Signals & Detailed Audit Log (FR-17 & Section 10) -->
+<div class="bg-surface rounded border border-border-subtle shadow-sm flex flex-col">
+<div class="p-space-md flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm border-b border-border-subtle">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-text-primary">fact_check</span>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-text-primary font-bold">Recent Evaluated Signals &amp; Invalidation Audit Log</span>
+<span class="font-label-code text-label-code text-text-secondary">Chronological forensic evaluation of strategy rules vs subsequent price action</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<div class="relative">
+<input class="h-8 pl-8 pr-3 rounded bg-surface-bright border border-border-subtle font-body-sm text-body-sm text-text-primary focus:outline-none focus:border-accent-primary w-48 lg:w-64" placeholder="Filter symbol / setup..." type="text"/>
+<span class="material-symbols-outlined absolute left-2 top-2 text-[16px] text-text-secondary">search</span>
+</div>
+<button class="h-8 px-space-md rounded bg-surface-high hover:bg-surface-container-high border border-border-subtle font-label-code text-label-code text-text-primary font-semibold flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px]">download</span> Export CSV
+          </button>
+</div>
+</div>
+<!-- Signals Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-bright border-b border-border-subtle font-label-code text-label-code text-text-secondary uppercase">
+<th class="p-space-sm font-semibold">Timestamp (IST)</th>
+<th class="p-space-sm font-semibold">Symbol &amp; Setup Strategy</th>
+<th class="p-space-sm font-semibold">Regime / Rule Hash</th>
+<th class="p-space-sm font-semibold">Predicted Conf.</th>
+<th class="p-space-sm font-semibold">Actual Outcome</th>
+<th class="p-space-sm font-semibold text-right">Plan vs Exec. Slippage</th>
+<th class="p-space-sm font-semibold text-right">Realized Net P&amp;L</th>
+<th class="p-space-sm font-semibold">Validation Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle">
+<!-- Row 1: TATASTEEL (Manual Matched) -->
+<tr class="hover:bg-surface-bright/70 transition-colors">
+<td class="p-space-sm font-label-code text-label-code text-text-secondary">
+                11:15:02 <span class="text-body-xs block">14 Nov 2024</span>
+</td>
+<td class="p-space-sm">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-primary font-label-code">TATASTEEL</span>
+<span class="px-1.5 py-0.2 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold border border-accent-bullish/30">▲ LONG</span>
+</div>
+<span class="font-body-xs text-body-xs text-text-secondary">VWAP Surge + Sector Relative Strength</span>
+</div>
+</td>
+<td class="p-space-sm font-label-code text-label-code">
+<span class="text-text-primary font-medium">Bullish Trend</span>
+<span class="text-text-secondary block">#git-8f2c3d1</span>
+</td>
+<td class="p-space-sm font-metric-sm text-metric-sm font-semibold text-text-primary">
+                74.2%
+              </td>
+<td class="p-space-sm">
+<div class="flex items-center gap-1 font-label-code text-label-code font-bold text-accent-bullish">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+                  Target 2 Reached (+1.85%)
+                </div>
+<span class="font-body-xs text-body-xs text-text-secondary font-label-code">MFE: +2.10% | MAE: -0.15%</span>
+</td>
+<td class="p-space-sm text-right font-metric-sm text-metric-sm text-text-secondary">
+                ₹0.10 / sh <span class="text-body-xs block text-accent-bullish">Minimal (0.02%)</span>
+</td>
+<td class="p-space-sm text-right font-metric-sm text-metric-sm font-bold text-accent-bullish">
+                +₹1,850.00
+              </td>
+<td class="p-space-sm">
+<span class="px-2 py-0.5 rounded bg-primary text-on-primary font-label-code text-label-code font-bold">
+                  Manual Match
+                </span>
+</td>
+</tr>
+<!-- Row 2: COALINDIA (Paper Fill) -->
+<tr class="hover:bg-surface-bright/70 transition-colors">
+<td class="p-space-sm font-label-code text-label-code text-text-secondary">
+                10:30:14 <span class="text-body-xs block">14 Nov 2024</span>
+</td>
+<td class="p-space-sm">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-primary font-label-code">COALINDIA</span>
+<span class="px-1.5 py-0.2 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold border border-accent-bullish/30">▲ LONG</span>
+</div>
+<span class="font-body-xs text-body-xs text-text-secondary">ORB-15m Volume Expansion</span>
+</div>
+</td>
+<td class="p-space-sm font-label-code text-label-code">
+<span class="text-text-primary font-medium">Bullish Trend</span>
+<span class="text-text-secondary block">#git-8f2c3d1</span>
+</td>
+<td class="p-space-sm font-metric-sm text-metric-sm font-semibold text-text-primary">
+                68.5%
+              </td>
+<td class="p-space-sm">
+<div class="flex items-center gap-1 font-label-code text-label-code font-bold text-accent-bullish">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+                  Target 1 Reached (+1.05%)
+                </div>
+<span class="font-body-xs text-body-xs text-text-secondary font-label-code">MFE: +1.20% | MAE: -0.30%</span>
+</td>
+<td class="p-space-sm text-right font-metric-sm text-metric-sm text-text-secondary">
+                ₹0.20 / sh <span class="text-body-xs block text-text-secondary">Standard (0.05%)</span>
+</td>
+<td class="p-space-sm text-right font-metric-sm text-metric-sm font-bold text-accent-bullish">
+                +₹940.50
+              </td>
+<td class="p-space-sm">
+<span class="px-2 py-0.5 rounded bg-surface-container text-primary font-label-code text-label-code font-bold border border-border-subtle">
+                  Paper Fill
+                </span>
+</td>
+</tr>
+<!-- Row 3: DLF (Invalidation Hit - Paper) -->
+<tr class="hover:bg-surface-bright/70 transition-colors">
+<td class="p-space-sm font-label-code text-label-code text-text-secondary">
+                09:45:30 <span class="text-body-xs block">14 Nov 2024</span>
+</td>
+<td class="p-space-sm">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-primary font-label-code">DLF</span>
+<span class="px-1.5 py-0.2 rounded bg-status-stale-bg text-status-stale-text font-label-code text-label-code font-bold border border-status-stale-text/30">▼ SHORT</span>
+</div>
+<span class="font-body-xs text-body-xs text-text-secondary">Sector Breakdown + VWAP Rejection</span>
+</div>
+</td>
+<td class="p-space-sm font-label-code text-label-code">
+<span class="text-text-primary font-medium">Bearish Breakdown</span>
+<span class="text-text-secondary block">#git-8f2c3d1</span>
+</td>
+<td class="p-space-sm font-metric-sm text-metric-sm font-semibold text-text-primary">
+                58.0%
+              </td>
+<td class="p-space-sm">
+<div class="flex items-center gap-1 font-label-code text-label-code font-bold text-accent-danger">
+<span class="material-symbols-outlined text-[15px]">cancel</span>
+                  Invalidation Hit (-0.85%)
+                </div>
+<span class="font-body-xs text-body-xs text-text-secondary font-label-code">Strict Stop Cut at VWAP Retest</span>
+</td>
+<td class="p-space-sm text-right font-metric-sm text-metric-sm text-accent-danger font-semibold">
+                ₹0.45 / sh <span class="text-body-xs block text-accent-danger">High (0.07%)</span>
+</td>
+<td class="p-space-sm text-right font-metric-sm text-metric-sm font-bold text-accent-danger">
+                -₹760.00
+              </td>
+<td class="p-space-sm">
+<span class="px-2 py-0.5 rounded bg-surface-container text-primary font-label-code text-label-code font-bold border border-border-subtle">
+                  Paper Fill
+                </span>
+</td>
+</tr>
+<!-- Row 4: RELIANCE (Risk Gated / Suppressed) -->
+<tr class="bg-status-disconnected-bg/25 hover:bg-status-disconnected-bg/40 transition-colors">
+<td class="p-space-sm font-label-code text-label-code text-text-secondary">
+                09:20:18 <span class="text-body-xs block">14 Nov 2024</span>
+</td>
+<td class="p-space-sm">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-primary font-label-code">RELIANCE</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-high text-text-secondary font-label-code text-label-code font-bold">▲ LONG</span>
+</div>
+<span class="font-body-xs text-body-xs text-text-secondary">Pre-Market Gap Continuation</span>
+</div>
+</td>
+<td class="p-space-sm font-label-code text-label-code">
+<span class="text-accent-danger font-semibold">Dislocated Gap</span>
+<span class="text-text-secondary block">#git-8f2c3d1</span>
+</td>
+<td class="p-space-sm font-metric-sm text-metric-sm text-text-secondary">
+                -- <span class="text-body-xs block text-accent-danger font-label-code">Suppressed</span>
+</td>
+<td class="p-space-sm">
+<div class="flex items-center gap-1 font-label-code text-label-code font-bold text-inverse-surface">
+<span class="material-symbols-outlined text-[15px]">block</span>
+                  NO-TRADE Trigger Enforced
+                </div>
+<span class="font-body-xs text-body-xs text-text-secondary font-label-code">Gap &gt; 1.8% exceeded safe threshold</span>
+</td>
+<td class="p-space-sm text-right font-metric-sm text-metric-sm text-text-secondary">
+                ₹0.00
+              </td>
+<td class="p-space-sm text-right font-metric-sm text-metric-sm font-bold text-text-secondary">
+                ₹0.00
+              </td>
+<td class="p-space-sm">
+<span class="px-2 py-0.5 rounded bg-inverse-surface text-surface font-label-code text-label-code font-bold">
+                  Suppressed (Risk Gate)
+                </span>
+</td>
+</tr>
+<!-- Row 5: INFY (Expired 30m - Validated) -->
+<tr class="hover:bg-surface-bright/70 transition-colors">
+<td class="p-space-sm font-label-code text-label-code text-text-secondary">
+                12:05:44 <span class="text-body-xs block">13 Nov 2024</span>
+</td>
+<td class="p-space-sm">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-text-primary font-label-code">INFY</span>
+<span class="px-1.5 py-0.2 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold border border-accent-bullish/30">▲ LONG</span>
+</div>
+<span class="font-body-xs text-body-xs text-text-secondary">VWAP Dip + Bounce Attempt</span>
+</div>
+</td>
+<td class="p-space-sm font-label-code text-label-code">
+<span class="text-status-stale-text font-medium">Range-Bound</span>
+<span class="text-text-secondary block">#git-8f2c3d1</span>
+</td>
+<td class="p-space-sm font-metric-sm text-metric-sm font-semibold text-text-primary">
+                54.1%
+              </td>
+<td class="p-space-sm">
+<div class="flex items-center gap-1 font-label-code text-label-code font-semibold text-text-secondary">
+<span class="material-symbols-outlined text-[15px]">timer_off</span>
+                  Expired Lifespan (30m Flat)
+                </div>
+<span class="font-body-xs text-body-xs text-text-secondary font-label-code">Exited at +0.08% Breakeven Rule</span>
+</td>
+<td class="p-space-sm text-right font-metric-sm text-metric-sm text-text-secondary">
+                ₹0.15 / sh <span class="text-body-xs block text-text-secondary">Standard (0.05%)</span>
+</td>
+<td class="p-space-sm text-right font-metric-sm text-metric-sm font-semibold text-accent-danger">
+                -₹45.00 <span class="text-body-xs font-normal text-text-secondary">(Net Fees)</span>
+</td>
+<td class="p-space-sm">
+<span class="px-2 py-0.5 rounded bg-surface-high text-text-primary font-label-code text-label-code font-semibold border border-border-subtle">
+                  Validated OOS
+                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / Metadata Footer -->
+<div class="p-space-sm bg-surface-bright border-t border-border-subtle flex flex-col sm:flex-row items-center justify-between gap-space-sm">
+<span class="font-label-code text-label-code text-text-secondary">
+          Displaying 5 of 840 audited chronological setups • Seed: Fixed Random (OOS Sample #4489)
+        </span>
+<div class="flex items-center gap-space-xs font-label-code text-label-code">
+<button class="px-space-sm py-1 rounded bg-surface border border-border-subtle text-text-secondary hover:text-text-primary disabled:opacity-50" disabled="">
+            Previous
+          </button>
+<span class="px-2 py-1 bg-primary text-on-primary rounded font-bold">1</span>
+<button class="px-space-sm py-1 rounded bg-surface border border-border-subtle text-text-secondary hover:text-text-primary">
+            2
+          </button>
+<button class="px-space-sm py-1 rounded bg-surface border border-border-subtle text-text-secondary hover:text-text-primary">
+            3
+          </button>
+<span class="text-text-secondary">...</span>
+<button class="px-space-sm py-1 rounded bg-surface border border-border-subtle text-text-secondary hover:text-text-primary">
+            Next
+          </button>
+</div>
+</div>
+</div>
+<!-- Section 6: Mandatory PRD & Regulatory Legal Caveat (PRD Section 5.4 & Section 10) -->
+<div class="p-space-md rounded bg-surface-bright border border-border-strong flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm max-w-5xl">
+<span class="material-symbols-outlined text-[22px] text-text-secondary mt-0.5 flex-shrink-0">gavel</span>
+<div class="flex flex-col gap-0.5">
+<span class="font-body-sm text-body-sm font-bold text-text-primary">SEBI Non-Advisory Decision Support Engine • Statutory Trading Notice</span>
+<p class="font-body-xs text-body-xs text-text-secondary leading-relaxed">
+            Historical validation is non-predictive. Future market dynamics may diverge significantly from simulated backtests and walk-forward samples. All Angel One trade executions remain strictly manual and under the trader's sole discretion. This platform does not provide automated trade firing, financial advice, or investment guarantees.
+          </p>
+</div>
+</div>
+<div class="flex-shrink-0 flex items-center gap-space-xs px-space-md py-1 rounded bg-status-delayed-bg border border-border-subtle">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">shield</span>
+<span class="font-label-code text-label-code font-bold text-text-secondary uppercase">DECISION SUPPORT ONLY</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Workspace Navigation active state highlighting
+  (function initActiveNav() {
+    const navItems = document.querySelectorAll('aside nav a[data-path]');
+    navItems.forEach(item => {
+      if (item.getAttribute('data-path') === 'performance-and-validation') {
+        item.classList.remove('text-text-secondary', 'hover:bg-surface-high');
+        item.classList.add('bg-primary', 'text-on-primary', 'font-semibold', 'shadow-sm');
+        // change icon color inside
+        const icon = item.querySelector('.material-symbols-outlined');
+        if (icon) icon.classList.add('text-on-primary');
+      }
+    });
+
+    // Simple Tab Switching behavior for the Validation Scope Pills
+    const tabButtons = document.querySelectorAll('#scope-tabs button');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => {
+          b.className = 'px-space-md py-1.5 rounded bg-surface text-text-secondary hover:bg-surface-high hover:text-text-primary font-body-sm text-body-sm font-medium border border-border-subtle whitespace-nowrap transition-all';
+        });
+        btn.className = 'px-space-md py-1.5 rounded bg-primary text-on-primary font-body-sm text-body-sm font-semibold whitespace-nowrap shadow-sm transition-all';
+      });
+    });
+  })();
+</script></main></div></body></html>

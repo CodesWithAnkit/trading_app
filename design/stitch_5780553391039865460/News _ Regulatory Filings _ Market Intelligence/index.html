@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-container-highest":"#d5e3ff","error-container":"#ffdad6","primary":"#0037b0","status-live-bg":"#ECFDF5","primary-fixed-dim":"#b7c4ff","border-subtle":"#D9E1EC","on-primary-container":"#cad3ff","surface-tint":"#2151da","text-primary":"#132238","inverse-surface":"#223148","status-stale-text":"#B45309","surface-container-low":"#f0f3ff","surface-container-lowest":"#ffffff","on-primary-fixed":"#001551","status-live-text":"#047857","outline":"#747686","on-tertiary-container":"#ffcba3","inverse-primary":"#b7c4ff","surface-bright":"#f9f9ff","status-disconnected-text":"#B91C1C","border-strong":"#CBD5E1","on-primary":"#ffffff","primary-container":"#1d4ed8","on-surface":"#0c1c32","on-error-container":"#93000a","secondary-fixed":"#85f8c4","surface-container-high":"#dee8ff","secondary-fixed-dim":"#68dba9","tertiary-fixed-dim":"#ffb77d","tertiary-fixed":"#ffdcc3","canvas":"#F6F8FB","on-secondary":"#ffffff","surface-container":"#e7eeff","on-error":"#ffffff","on-secondary-fixed-variant":"#005137","outline-variant":"#c4c5d7","on-primary-fixed-variant":"#0039b5","accent-bullish":"#059669","secondary-container":"#82f5c1","text-secondary":"#5E6C80","background":"#f9f9ff","primary-fixed":"#dce1ff","on-secondary-fixed":"#002114","on-tertiary":"#ffffff","surface-variant":"#d5e3ff","status-delayed-bg":"#F1F5F9","status-disconnected-bg":"#FEF2F2","accent-danger":"#DC2626","accent-bearish":"#D97706","accent-primary":"#1D4ED8","on-surface-variant":"#434655","inverse-on-surface":"#ecf1ff","on-tertiary-fixed":"#2f1500","secondary":"#006c4a","on-tertiary-fixed-variant":"#6e3900","surface-dim":"#ccdbf8","error":"#ba1a1a","on-background":"#0c1c32","surface-high":"#EDF2F7","on-secondary-container":"#00714e","tertiary-container":"#8d4b00","surface":"#FFFFFF","status-stale-bg":"#FFFBEB","status-delayed-text":"#475569","tertiary":"#6b3700"},borderRadius:{DEFAULT:"0.125rem",lg:"0.25rem",xl:"0.5rem",full:"0.75rem"},spacing:{"space-xs":"0.25rem","space-lg":"0.875rem","gutter-md":"1rem","space-md":"0.625rem",gutter:"0.75rem","margin-lg":"1.5rem","space-sm":"0.375rem",margin:"1rem","space-xl":"1.25rem"},fontFamily:{"body-sm":["Inter"],"headline-lg":["Inter"],"headline-sm":["Inter"],"label-code":["JetBrains Mono"],"metric-sm":["JetBrains Mono"],"metric-md":["JetBrains Mono"],"metric-lg":["JetBrains Mono"],"headline-md":["Inter"],"body-md":["Inter"],"headline-lg-mobile":["Inter"],"body-xs":["Inter"]},fontSize:{"body-sm":["0.8125rem",{lineHeight:"1.25rem",fontWeight:"400"}],"headline-lg":["1.5rem",{lineHeight:"2rem",letterSpacing:"-0.02em",fontWeight:"600"}],"headline-sm":["0.9375rem",{lineHeight:"1.375rem",fontWeight:"600"}],"label-code":["0.6875rem",{lineHeight:"1rem",letterSpacing:"0.02em",fontWeight:"500"}],"metric-sm":["0.8125rem",{lineHeight:"1.125rem",fontWeight:"500"}],"metric-md":["0.9375rem",{lineHeight:"1.25rem",fontWeight:"500"}],"metric-lg":["1.25rem",{lineHeight:"1.5rem",letterSpacing:"-0.02em",fontWeight:"600"}],"headline-md":["1.125rem",{lineHeight:"1.5rem",letterSpacing:"-0.01em",fontWeight:"600"}],"body-md":["0.875rem",{lineHeight:"1.375rem",fontWeight:"400"}],"headline-lg-mobile":["1.25rem",{lineHeight:"1.75rem",letterSpacing:"-0.01em",fontWeight:"600"}],"body-xs":["0.75rem",{lineHeight:"1.125rem",fontWeight:"400"}]}}}};</script></head><body class="bg-canvas font-body-sm text-text-primary antialiased min-h-screen"><header class="fixed top-0 left-0 right-0 z-50 bg-surface border-b border-border-subtle"><div class="h-14 px-gutter-md flex items-center justify-between border-b border-border-subtle bg-surface"><div class="flex items-center gap-space-md"><img alt="Intraday Tracker Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UpxruEZGtSh-tmaTQqS_ImCl2wsBpLJQW25bGSPMp5zqQTZIIV0JwKtVaWQgDf3GC689rYl0Mfc4zryQ5zc-BAh_8ZdotYF7UDRXjxnoByFrJY6g9LBwIepPXIGeh6iw5yIapnHGQb1DegyS61aiBNPhKGpCzogoPqOMkIFp29WS_R0Fv_zfQUa_m2nIt8vWRex4hK7TP7B3rBREtdk3zlEknZCtcjPr7YVf1ED2TKfGJM79ywna5fydg"/><div class="flex flex-col"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-headline-sm text-text-primary tracking-tight font-bold">Intraday Stock Tracker</span><span class="px-space-xs py-0.5 rounded bg-surface-container text-primary font-label-code text-label-code font-semibold uppercase border border-border-subtle">SIMULATED DATA (PHASE 1-3)</span></div></div></div><div class="hidden xl:flex items-center gap-space-xs px-space-md py-1 rounded bg-status-delayed-bg border border-border-subtle"><span class="material-symbols-outlined text-[15px] text-text-secondary">verified_user</span><span class="font-body-xs text-body-xs text-text-secondary font-medium">Decision Support Only — Manual Execution in Angel One • No Automated Orders</span></div><div class="flex items-center gap-space-lg"><button class="relative p-1.5 rounded hover:bg-surface-high text-text-secondary hover:text-text-primary transition-colors" title="Notifications" type="button"><span class="material-symbols-outlined text-[20px]">notifications_active</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent-primary ring-2 ring-surface"></span></button><div class="h-4 w-px bg-border-subtle"></div><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden sm:flex flex-col text-left"><span class="font-body-sm text-body-sm font-semibold text-text-primary leading-tight">Trader</span><span class="font-label-code text-label-code text-text-secondary">(Personal)</span></div></div></div></div><div class="h-10 px-gutter-md bg-surface-bright flex items-center justify-between overflow-x-auto text-nowrap gap-gutter-md border-t border-border-subtle/50"><div class="flex items-center gap-gutter-md divide-x divide-border-subtle"><div class="flex items-center gap-space-sm"><span class="w-2 h-2 rounded-full bg-accent-bullish animate-pulse"></span><span class="font-label-code text-label-code uppercase text-text-secondary">SmartAPI Stream:</span><span class="font-metric-sm text-metric-sm font-medium text-status-live-text">CONNECTED</span><span class="font-label-code text-label-code text-text-secondary">(12ms latency, tick: 11:42:04 IST)</span></div><div class="pl-gutter-md flex items-center gap-space-sm"><span class="font-label-code text-label-code uppercase text-text-secondary">Market State:</span><span class="font-label-code text-label-code font-semibold px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text border border-accent-bullish/30">NSE ACTIVE</span><span class="font-label-code text-label-code text-text-secondary">(09:15 - 15:30 IST)</span></div><div class="pl-gutter-md flex items-center gap-space-sm"><span class="font-label-code text-label-code uppercase text-text-secondary">Breadth:</span><span class="font-metric-sm text-metric-sm text-accent-bullish font-semibold">▲ 1,248</span><span class="font-label-code text-label-code text-text-secondary">/</span><span class="font-metric-sm text-metric-sm text-accent-danger font-semibold">▼ 812</span><span class="font-label-code text-label-code px-1.5 py-0.5 rounded bg-surface-container font-medium text-primary">(Regime: Trend Bullish)</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-sm bg-surface px-space-md py-1 rounded border border-border-subtle"><span class="material-symbols-outlined text-[16px] text-accent-bearish">shield_with_heart</span><span class="font-label-code text-label-code uppercase text-text-secondary">Daily Risk:</span><span class="font-metric-sm text-metric-sm font-semibold text-text-primary">₹2,450</span><span class="font-label-code text-label-code text-text-secondary">/ ₹6,000</span><span class="font-label-code text-label-code font-bold text-accent-bearish bg-status-stale-bg px-1 rounded">(40.8%)</span></div></div></div></header><aside class="fixed left-0 top-24 bottom-0 w-64 bg-surface border-r border-border-subtle z-40 flex flex-col justify-between overflow-y-auto"><div class="p-space-md"><div class="px-space-sm pb-space-sm text-label-code font-label-code text-text-secondary uppercase tracking-wider font-semibold">Workspace Navigation</div><nav class="flex flex-col gap-1" data-active-classes="bg-primary text-on-primary font-semibold shadow-sm"><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="dashboard" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">terminal</span><span class="font-body-sm text-body-sm">Dashboard</span></div></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="signal-scanner" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">radar</span><span class="font-body-sm text-body-sm">Signal Scanner</span></div><span class="px-1.5 py-0.5 rounded bg-accent-primary text-on-primary font-label-code text-label-code font-bold">4 New</span></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="signal-analysis" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">analytics</span><span class="font-body-sm text-body-sm">Signal Analysis</span></div></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="market-intelligence" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">candlestick_chart</span><span class="font-body-sm text-body-sm">Market Intelligence</span></div></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="trade-journal" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">history_edu</span><span class="font-body-sm text-body-sm">Trade Journal</span></div><span class="px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text border border-accent-bullish/30 font-label-code text-label-code font-bold">2 Open</span></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="performance-and-validation" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">fact_check</span><span class="font-body-sm text-body-sm">Performance &amp; Validation</span></div></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="alert-history" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">notifications</span><span class="font-body-sm text-body-sm">Alert History</span></div></a><a class="flex items-center justify-between px-space-md py-2 rounded text-text-secondary hover:bg-surface-high hover:text-text-primary transition-colors" data-path="settings-and-risk" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[19px]">tune</span><span class="font-body-sm text-body-sm">Settings &amp; Risk</span></div></a></nav></div><div class="p-space-md border-t border-border-subtle bg-surface-bright"><div class="rounded border border-border-subtle bg-surface p-space-sm"><div class="flex items-center justify-between mb-1"><span class="font-label-code text-label-code text-text-secondary uppercase font-semibold">Engine Status</span><span class="font-label-code text-label-code text-status-live-text font-bold">NOMINAL</span></div><div class="flex items-center justify-between text-body-xs font-label-code text-text-secondary"><span>Feed Engine:</span><span class="text-text-primary font-metric-sm">v2.4.1</span></div><div class="flex items-center justify-between text-body-xs font-label-code text-text-secondary"><span>Rule Engine:</span><span class="text-text-primary font-metric-sm">v1.8.9</span></div></div></div></aside><div class="pl-64"><main class="relative pt-24 min-h-screen bg-canvas"><div class="flex flex-col w-full pb-16">
+<!-- Dynamic Stale/Disconnected Warning Banners (Controlled via State Toggles) -->
+<div class="hidden px-margin py-space-sm bg-status-stale-bg border-b border-amber-300 flex items-center justify-between transition-all" id="stale-alert-banner">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-[20px] text-status-stale-text animate-pulse">warning</span>
+<div class="flex items-center gap-space-xs font-label-code text-label-code text-status-stale-text">
+<span class="font-bold">STREAM LATENCY ADVISORY:</span>
+<span>NSE NEAPS &amp; Filing Ingestion Feed is stale (&gt;30m since authoritative exchange heartbeat). New setup creation temporarily restricted under Pre-Trade Rule #7.</span>
+</div>
+</div>
+<span class="font-label-code text-label-code font-bold text-status-stale-text px-space-xs bg-amber-100 rounded">DEGRADED CONFIDENCE</span>
+</div>
+<div class="hidden px-margin py-space-sm bg-status-disconnected-bg border-b border-red-300 flex items-center justify-between transition-all" id="disconnected-alert-banner">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-[20px] text-status-disconnected-text animate-bounce">cloud_off</span>
+<div class="flex items-center gap-space-xs font-label-code text-label-code text-status-disconnected-text">
+<span class="font-bold">FEED DISCONNECTED:</span>
+<span>SmartAPI Webhook &amp; Regulatory Ingestion bridge unreachable. Automated news parsing suspended. Manual terminal override required.</span>
+</div>
+</div>
+<span class="font-label-code text-label-code font-bold text-status-disconnected-text px-space-xs bg-red-100 rounded">OFFLINE</span>
+</div>
+<!-- Primary Header & Control Bar -->
+<div class="px-margin pt-space-lg pb-space-md bg-surface border-b border-border-subtle">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-space-xs text-text-secondary font-label-code text-label-code mb-1">
+<span class="hover:text-primary cursor-pointer transition-colors">Market Intelligence</span>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span class="text-text-primary font-semibold">News &amp; Regulatory Filings</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-text-primary tracking-tight font-bold">News &amp; Regulatory Filings</h1>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">Verified disclosures, corporate announcements and market-moving events with segregated machine-learning interpretations.</p>
+</div>
+<!-- Freshness Metadata & Simulator Controls -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-space-md bg-canvas p-space-sm rounded-lg border border-border-subtle">
+<div class="flex flex-col gap-0.5 pl-1">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-accent-bullish animate-pulse" id="feed-status-dot"></span>
+<span class="font-label-code text-label-code font-bold text-status-live-text uppercase" id="feed-status-text">Live Polling</span>
+<span class="text-text-secondary font-label-code text-[10px]">•</span>
+<span class="font-label-code text-label-code text-text-secondary">Next: <span class="font-semibold text-text-primary" id="countdown-timer">38s</span></span>
+</div>
+<span class="font-label-code text-[10px] text-text-secondary">Last Sync: <span class="font-semibold text-text-primary">11:41:30 IST</span> (Hash: <code class="text-primary font-mono text-[10px]">#0x8f22</code>)</span>
+</div>
+<div class="h-8 w-px bg-border-subtle hidden sm:block"></div>
+<div class="flex items-center gap-space-xs">
+<button class="flex items-center gap-1.5 px-space-md h-8 bg-surface border border-border-strong rounded hover:bg-surface-high text-text-primary font-label-code text-label-code font-semibold transition-all shadow-sm active:scale-95" id="fetch-updates-btn" onclick="triggerManualSync()" title="Force authoritative poll">
+<span class="material-symbols-outlined text-[16px] text-primary" id="sync-spinner">sync</span>
+<span>Fetch Updates</span>
+</button>
+</div>
+<!-- UI State Simulator Dropdown/Toggle Pills -->
+<div class="flex items-center gap-1 bg-surface-high p-0.5 rounded border border-border-subtle text-label-code font-label-code">
+<button class="px-2 py-1 rounded bg-surface font-semibold text-text-primary shadow-xs transition-colors" id="state-btn-live" onclick="setSimState('live')">Live Feed</button>
+<button class="px-2 py-1 rounded text-text-secondary hover:text-text-primary transition-colors" id="state-btn-stale" onclick="setSimState('stale')">Stale (&gt;30m)</button>
+<button class="px-2 py-1 rounded text-text-secondary hover:text-text-primary transition-colors" id="state-btn-disconnect" onclick="setSimState('disconnect')">Offline</button>
+<button class="px-2 py-1 rounded text-text-secondary hover:text-text-primary transition-colors" id="state-btn-empty" onclick="setSimState('empty')">Empty</button>
+</div>
+</div>
+</div>
+<!-- Quick Telemetry & Summary Strip (3 Cards) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter-md mt-space-lg">
+<div class="bg-canvas border border-border-subtle rounded-lg p-space-md flex items-center justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 text-text-secondary font-label-code text-label-code uppercase tracking-wider font-semibold">
+<span class="material-symbols-outlined text-[16px] text-primary">inventory_2</span>
+<span>All Events (Today)</span>
+</div>
+<div class="flex items-baseline gap-space-sm mt-1">
+<span class="font-metric-lg text-metric-lg text-text-primary font-bold">14 Ingested</span>
+<span class="font-label-code text-label-code text-accent-bullish font-semibold">▲ +4 since 10:30</span>
+</div>
+<div class="flex items-center gap-2 mt-1 font-label-code text-[11px] text-text-secondary">
+<span><strong class="text-text-primary">9</strong> Filings</span>
+<span>•</span>
+<span><strong class="text-text-primary">3</strong> News Wire</span>
+<span>•</span>
+<span><strong class="text-text-primary">2</strong> Macro Reg</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">feed</span>
+</div>
+</div>
+<div class="bg-canvas border border-border-subtle rounded-lg p-space-md flex items-center justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 text-text-secondary font-label-code text-label-code uppercase tracking-wider font-semibold">
+<span class="material-symbols-outlined text-[16px] text-accent-bullish">verified</span>
+<span>Official Disclosures</span>
+</div>
+<div class="flex items-baseline gap-space-sm mt-1">
+<span class="font-metric-lg text-metric-lg text-text-primary font-bold">9 Verified</span>
+<span class="font-label-code text-label-code text-status-live-text font-semibold bg-status-live-bg px-1 rounded">100% Provenance</span>
+</div>
+<span class="font-label-code text-[11px] text-text-secondary mt-1">NSE NEAPS / BSE Direct Digital Signature</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-status-live-bg text-status-live-text flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">policy</span>
+</div>
+</div>
+<div class="bg-canvas border border-border-subtle rounded-lg p-space-md flex items-center justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 text-text-secondary font-label-code text-label-code uppercase tracking-wider font-semibold">
+<span class="material-symbols-outlined text-[16px] text-accent-danger">crisis_alert</span>
+<span>High-Impact Events</span>
+</div>
+<div class="flex items-baseline gap-space-sm mt-1">
+<span class="font-metric-lg text-metric-lg text-accent-danger font-bold">3 Flagged</span>
+<span class="font-label-code text-label-code text-status-disconnected-text font-semibold bg-status-disconnected-bg px-1 rounded">1 Embargoed</span>
+</div>
+<span class="font-label-code text-[11px] text-text-secondary mt-1">2 Corporate Action/Earnings, 1 RBI Regulatory Norm</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-status-disconnected-bg text-accent-danger flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">bolt</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Filters & Discovery Bar -->
+<div class="px-margin py-space-sm bg-surface border-b border-border-subtle flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<!-- Tab Filter Pills -->
+<div class="flex items-center gap-1 overflow-x-auto text-nowrap">
+<button class="filter-tab px-space-md py-1.5 rounded font-label-code text-label-code font-bold bg-primary text-on-primary transition-all shadow-xs" id="tab-all" onclick="applyTabFilter('all')">
+        All Events (14)
+      </button>
+<button class="filter-tab px-space-md py-1.5 rounded font-label-code text-label-code font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-high transition-all" id="tab-official" onclick="applyTabFilter('official')">
+        Official Disclosures (9)
+      </button>
+<button class="filter-tab px-space-md py-1.5 rounded font-label-code text-label-code font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-high transition-all" id="tab-high-impact" onclick="applyTabFilter('high-impact')">
+        High Impact (3)
+      </button>
+<button class="filter-tab px-space-md py-1.5 rounded font-label-code text-label-code font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-high transition-all flex items-center gap-1" id="tab-linked-setups" onclick="applyTabFilter('linked-setups')">
+<span>Linked Active Setups</span>
+<span class="w-4 h-4 rounded-full bg-accent-primary text-on-primary text-[10px] flex items-center justify-center font-bold">2</span>
+</button>
+</div>
+<!-- Dropdowns & Search Input -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<div class="relative w-full sm:w-64">
+<span class="material-symbols-outlined absolute left-2.5 top-2 text-[18px] text-text-secondary">search</span>
+<input class="w-full h-8 pl-8 pr-8 bg-canvas border border-border-subtle rounded font-body-sm text-body-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary transition-colors" id="news-search-input" onkeyup="filterBySearch(this.value)" placeholder="Search symbol, headline, tag..." type="text"/>
+<span class="absolute right-2 top-1.5 px-1 bg-surface-high border border-border-subtle rounded font-label-code text-[10px] text-text-secondary font-bold">/</span>
+</div>
+<select class="h-8 px-2 bg-canvas border border-border-subtle rounded font-body-sm text-body-sm text-text-primary focus:outline-none focus:border-primary" id="source-filter" onchange="applyDropdownFilter()">
+<option value="all">All Sources (NSE/BSE, RBI, Media)</option>
+<option value="nse">NSE NEAPS Disclosures</option>
+<option value="bse">BSE Corporate Announcements</option>
+<option value="rbi">Reserve Bank of India (RBI)</option>
+<option value="media">Authorized News Partners</option>
+</select>
+<select class="h-8 px-2 bg-canvas border border-border-subtle rounded font-body-sm text-body-sm text-text-primary focus:outline-none focus:border-primary" id="category-filter" onchange="applyDropdownFilter()">
+<option value="all">All Categories</option>
+<option value="earnings">Earnings &amp; Board Meetings</option>
+<option value="contracts">Contracts &amp; PPA Agreements</option>
+<option value="policy">Macro &amp; Prudential Policy</option>
+<option value="market">Commodity &amp; Input Benchmarks</option>
+</select>
+<button class="text-text-secondary hover:text-accent-danger font-label-code text-label-code underline px-1 transition-colors" onclick="resetAllFilters()">Reset</button>
+</div>
+</div>
+<!-- Main View Area: Master Grid + Details Drawer Overlay / Split Layout -->
+<div class="relative px-margin py-space-md grid grid-cols-12 gap-gutter-md">
+<!-- Timeline Stream Container (Cols 1 to 12 or shrinks when drawer is visible) -->
+<div class="col-span-12 xl:col-span-8 flex flex-col gap-space-md transition-all duration-300" id="timeline-container">
+<!-- Event 1: TATASTEEL (High Impact, Confirmed Filing, Linked Setup) -->
+<article class="news-card bg-surface border border-border-subtle rounded-lg p-space-md hover:border-primary/40 hover:shadow-xs transition-all flex flex-col gap-space-sm relative" data-card-type="official high-impact linked-setups" data-category="contracts" data-source="nse" data-symbol="TATASTEEL">
+<div class="flex flex-wrap items-center justify-between gap-space-xs border-b border-border-subtle/60 pb-2">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-surface-container text-primary border border-primary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">verified</span>
+              OFFICIAL NSE FILING
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-status-live-bg text-status-live-text border border-accent-bullish/30">
+              CONFIRMED FACT
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-status-disconnected-bg text-status-disconnected-text border border-accent-danger/20">
+              HIGH IMPACT
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-primary-fixed text-on-primary-fixed-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">hub</span>
+              LINKED SETUP: TATASTEEL
+            </span>
+</div>
+<div class="flex items-center gap-2 font-label-code text-label-code text-text-secondary">
+<span>Pub: <strong class="text-text-primary">10:15:00</strong></span>
+<span>•</span>
+<span>Ingest: <strong class="text-text-primary">10:16:12</strong> <span class="text-status-live-text">(+72s)</span></span>
+<span>•</span>
+<span class="text-text-secondary">1h 26m ago</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between gap-2 mt-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded font-metric-md text-metric-md font-bold bg-surface-high text-text-primary">TATASTEEL</span>
+<span class="font-label-code text-label-code text-text-secondary">NSE Cash Equities</span>
+<span class="font-metric-sm text-metric-sm text-accent-bullish font-semibold">▲ Nifty Metal (+1.82%)</span>
+</div>
+<span class="font-label-code text-[11px] text-text-secondary font-mono">Ref: NSE-CORP-2024-884102</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-text-primary leading-tight font-bold">
+          Tata Steel signs 25-year long-term power purchase agreement for 379 MW clean energy at Kalinganagar facility
+        </h2>
+<p class="font-body-sm text-body-sm text-text-secondary">
+          Long-term arrangement expected to reduce operating cost volatility by ₹140 Cr annually and mitigate steel power tariff escalations starting Q1 FY26.
+        </p>
+<!-- Fact vs AI Interpretation Segregation -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm mt-1">
+<div class="bg-surface-high/60 border-l-2 border-primary/60 p-space-sm rounded-r">
+<div class="flex items-center gap-1 font-label-code text-label-code text-primary uppercase font-bold mb-1">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+              Confirmed Source Facts
+            </div>
+<p class="font-body-xs text-body-xs text-text-primary leading-relaxed">
+              Official filing: Captive green power unit commissioning slated for Q4 FY25. Capex funded via internal accruals. Contract valid till 2049.
+            </p>
+</div>
+<div class="bg-status-stale-bg/40 border-l-2 border-amber-500/80 p-space-sm rounded-r">
+<div class="flex items-center justify-between font-label-code text-label-code text-status-stale-text uppercase font-bold mb-1">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">psychology</span>
+<span>AI Interpretation &amp; Context</span>
+</div>
+<span class="text-[10px] bg-amber-100 text-amber-900 px-1 rounded">Confidence: 82%</span>
+</div>
+<p class="font-body-xs text-body-xs text-text-secondary leading-relaxed">
+<span class="italic text-text-primary">Favorable operational margin buffer.</span> Aligns with current intraday VWAP breakout setup #NSE-TS-48210. (Advisory only — model fallible).
+            </p>
+</div>
+</div>
+<!-- Card Action Footer -->
+<div class="flex items-center justify-between gap-2 pt-space-xs mt-1 border-t border-border-subtle/50 font-label-code text-label-code">
+<div class="flex items-center gap-3">
+<a class="text-primary hover:text-accent-primary font-semibold flex items-center gap-1 underline underline-offset-2" href="#" onclick="openSimulatedPdf('NSE-CORP-2024-884102'); return false;">
+<span>View Original Filing</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</a>
+<span class="text-border-subtle">|</span>
+<a class="text-accent-bullish hover:underline font-semibold flex items-center gap-1" href="#" onclick="alert('Navigating to Signal Analysis workspace for TATASTEEL setup #NSE-TS-48210'); return false;">
+<span class="material-symbols-outlined text-[15px]">query_stats</span>
+<span>Inspect Setup (₹156.40 VWAP)</span>
+</a>
+</div>
+<button class="px-space-md py-1 bg-surface-high hover:bg-surface-container rounded border border-border-strong text-text-primary font-semibold flex items-center gap-1 transition-colors" onclick="openDetailsDrawer('TATASTEEL')">
+<span>View Details &amp; Evidence</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Event 2: RBI / Banking Prudential Norms (Macro Benchmark, High Impact) -->
+<article class="news-card bg-surface border border-border-subtle rounded-lg p-space-md hover:border-primary/40 hover:shadow-xs transition-all flex flex-col gap-space-sm relative" data-card-type="official high-impact macro" data-category="policy" data-source="rbi" data-symbol="NIFTYBANK">
+<div class="flex flex-wrap items-center justify-between gap-space-xs border-b border-border-subtle/60 pb-2">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-surface-container text-primary border border-primary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">account_balance</span>
+              OFFICIAL REGULATORY RELEASE
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-status-live-bg text-status-live-text border border-accent-bullish/30">
+              CONFIRMED FACT
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-status-disconnected-bg text-status-disconnected-text border border-accent-danger/20">
+              HIGH IMPACT
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-semibold bg-surface-high text-text-primary">
+              MACRO REGIME
+            </span>
+</div>
+<div class="flex items-center gap-2 font-label-code text-label-code text-text-secondary">
+<span>Pub: <strong class="text-text-primary">09:00:00</strong></span>
+<span>•</span>
+<span>Ingest: <strong class="text-text-primary">09:02:14</strong> <span class="text-status-live-text">(+134s)</span></span>
+<span>•</span>
+<span class="text-text-secondary">2h 40m ago</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between gap-2 mt-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded font-metric-md text-metric-md font-bold bg-surface-high text-text-primary">NIFTY BANK / FINANCIALS</span>
+<span class="font-label-code text-label-code text-text-secondary">RBI Regulatory Circular</span>
+</div>
+<span class="font-label-code text-[11px] text-text-secondary font-mono">Ref: RBI/2024-25/DOR.STR.REC.44</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-text-primary leading-tight font-bold">
+          RBI Releases Framework for Project Finance Prudential Norms: Phase-in Provisioning Standardized at 2.5%
+        </h2>
+<p class="font-body-sm text-body-sm text-text-secondary">
+          Revised draft guidelines soften provisioning requirements from 5.0% proposed earlier to phased 2.5% over three years for operational infrastructure projects.
+        </p>
+<!-- Fact vs AI Interpretation Segregation -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm mt-1">
+<div class="bg-surface-high/60 border-l-2 border-primary/60 p-space-sm rounded-r">
+<div class="flex items-center gap-1 font-label-code text-label-code text-primary uppercase font-bold mb-1">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+              Confirmed Source Facts
+            </div>
+<p class="font-body-xs text-body-xs text-text-primary leading-relaxed">
+              Phased timeline relaxed by 24 months. Construction phase provisioning capped at 1.0% until commercial ops date. Applicable across commercial banks and NBFCs.
+            </p>
+</div>
+<div class="bg-status-stale-bg/40 border-l-2 border-amber-500/80 p-space-sm rounded-r">
+<div class="flex items-center justify-between font-label-code text-label-code text-status-stale-text uppercase font-bold mb-1">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">psychology</span>
+<span>AI Interpretation &amp; Context</span>
+</div>
+<span class="text-[10px] bg-amber-100 text-amber-900 px-1 rounded">Confidence: 89%</span>
+</div>
+<p class="font-body-xs text-body-xs text-text-secondary leading-relaxed">
+              Substantial near-term capital relief for infrastructure credit leaders (SBI, ICICIBANK, AXISBANK). Lowers expected provisioning drag across H2 earnings.
+            </p>
+</div>
+</div>
+<!-- Card Action Footer -->
+<div class="flex items-center justify-between gap-2 pt-space-xs mt-1 border-t border-border-subtle/50 font-label-code text-label-code">
+<a class="text-primary hover:text-accent-primary font-semibold flex items-center gap-1 underline underline-offset-2" href="#" onclick="openSimulatedPdf('RBI-CIRCULAR-DOR-44'); return false;">
+<span>View RBI Press Release</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</a>
+<button class="px-space-md py-1 bg-surface-high hover:bg-surface-container rounded border border-border-strong text-text-primary font-semibold flex items-center gap-1 transition-colors" onclick="openDetailsDrawer('RBI')">
+<span>View Details &amp; Evidence</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Event 3: ZEEL (BSE Notice, NO-TRADE Gate Embargo) -->
+<article class="news-card bg-surface border-2 border-red-300 rounded-lg p-space-md hover:border-red-400 hover:shadow-xs transition-all flex flex-col gap-space-sm relative" data-card-type="official high-impact embargo" data-category="earnings" data-source="bse" data-symbol="ZEEL">
+<div class="flex flex-wrap items-center justify-between gap-space-xs border-b border-border-subtle/60 pb-2">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-surface-container text-primary border border-primary/20">
+              OFFICIAL BSE NOTICE
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-status-live-bg text-status-live-text border border-accent-bullish/30">
+              CONFIRMED FACT
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-accent-danger text-on-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">block</span>
+              RISK EMBARGO: NO-TRADE
+            </span>
+</div>
+<div class="flex items-center gap-2 font-label-code text-label-code text-text-secondary">
+<span>Pub: <strong class="text-text-primary">11:05:00</strong></span>
+<span>•</span>
+<span>Ingest: <strong class="text-text-primary">11:06:14</strong> <span class="text-status-live-text">(+74s)</span></span>
+<span>•</span>
+<span class="text-text-secondary font-bold text-accent-danger">36m ago</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between gap-2 mt-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded font-metric-md text-metric-md font-bold bg-status-disconnected-bg text-status-disconnected-text">ZEEL</span>
+<span class="font-label-code text-label-code text-text-secondary">BSE Scrip: 505537 • Nifty Media</span>
+</div>
+<span class="font-label-code text-[11px] text-accent-danger font-bold uppercase tracking-wider">Gate #5 Triggered</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-text-primary leading-tight font-bold">
+          Board of Directors Meeting convened today at 12:30 IST to approve Q3 Financial Statements &amp; Statutory Audit
+        </h2>
+<p class="font-body-sm text-body-sm text-text-secondary">
+          Meeting to consider audited standalone and consolidated quarterly earnings and management reconstitutions.
+        </p>
+<!-- Embargo Banner & Explanation -->
+<div class="bg-status-disconnected-bg border border-red-200 rounded p-space-sm flex flex-col gap-1">
+<div class="flex items-center justify-between text-status-disconnected-text font-label-code text-label-code font-bold uppercase">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">gavel</span>
+              Deterministic Rule Engine Embargo
+            </span>
+<span>Active Window: 11:30 - 13:30 IST</span>
+</div>
+<p class="font-body-xs text-body-xs text-status-disconnected-text leading-tight">
+<strong>Mandatory Event Risk Protection:</strong> Cash equity trade setups on ZEEL are strictly locked out 60 minutes prior and post board disclosure. Scanner suppresses buy/short signals.
+          </p>
+</div>
+<!-- Card Action Footer -->
+<div class="flex items-center justify-between gap-2 pt-space-xs mt-1 border-t border-border-subtle/50 font-label-code text-label-code">
+<a class="text-primary hover:text-accent-primary font-semibold flex items-center gap-1 underline underline-offset-2" href="#" onclick="openSimulatedPdf('BSE-ANNOUNCEMENT-ZEEL-505537'); return false;">
+<span>View BSE Announcement</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</a>
+<button class="px-space-md py-1 bg-surface-high hover:bg-surface-container rounded border border-border-strong text-text-primary font-semibold flex items-center gap-1 transition-colors" onclick="openDetailsDrawer('ZEEL')">
+<span>View Details &amp; Evidence</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Event 4: COALINDIA (Financial Media Wire - Non-Official) -->
+<article class="news-card bg-surface border border-border-subtle rounded-lg p-space-md hover:border-primary/40 hover:shadow-xs transition-all flex flex-col gap-space-sm relative" data-card-type="media medium-impact" data-category="market" data-source="media" data-symbol="COALINDIA">
+<div class="flex flex-wrap items-center justify-between gap-space-xs border-b border-border-subtle/60 pb-2">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-surface-high text-text-secondary border border-border-strong">
+              FINANCIAL MEDIA WIRE
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-status-stale-bg text-status-stale-text border border-amber-300">
+              MEDIA-REPORTED (UNVERIFIED)
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-semibold bg-surface-container text-primary">
+              MEDIUM IMPACT
+            </span>
+</div>
+<div class="flex items-center gap-2 font-label-code text-label-code text-text-secondary">
+<span>Pub: <strong class="text-text-primary">11:15:00</strong></span>
+<span>•</span>
+<span>Ingest: <strong class="text-text-primary">11:18:22</strong> <span class="text-status-stale-text">(+202s)</span></span>
+<span>•</span>
+<span class="text-text-secondary">24m ago</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between gap-2 mt-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded font-metric-md text-metric-md font-bold bg-surface-high text-text-primary">COALINDIA</span>
+<span class="font-label-code text-label-code text-text-secondary">Global Commodity Wire • Mining &amp; Energy</span>
+</div>
+<span class="font-label-code text-[11px] text-text-secondary font-mono">Source: Reuters Commodity Desk</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-text-primary leading-tight font-bold">
+          Global coking coal FOB Australia spot benchmark contracts soften 3.2% amid slower overseas billet restocking
+        </h2>
+<p class="font-body-sm text-body-sm text-text-secondary">
+          International benchmark trades lower at $242/t FOB Queensland as buyers defer spot booking pending domestic import tariff clarification.
+        </p>
+<!-- Media Warning & Fact Separation -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm mt-1">
+<div class="bg-surface-high/60 border-l-2 border-border-strong p-space-sm rounded-r">
+<div class="flex items-center gap-1 font-label-code text-label-code text-text-secondary uppercase font-bold mb-1">
+<span class="material-symbols-outlined text-[15px]">newspaper</span>
+              Wire Quote Details
+            </div>
+<p class="font-body-xs text-body-xs text-text-primary leading-relaxed">
+              Financial press quotes from regional shipping desks; not an official exchange regulatory disclosure. High latency variance observed.
+            </p>
+</div>
+<div class="bg-status-stale-bg/40 border-l-2 border-amber-500/80 p-space-sm rounded-r">
+<div class="flex items-center justify-between font-label-code text-label-code text-status-stale-text uppercase font-bold mb-1">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">smart_toy</span>
+<span>AI Interpretation (Fallible)</span>
+</div>
+<span class="text-[10px] bg-amber-100 text-amber-900 px-1 rounded">Confidence: 68%</span>
+</div>
+<p class="font-body-xs text-body-xs text-text-secondary leading-relaxed">
+              Potential marginal raw material cost tailwind for blast furnaces. <span class="font-semibold text-text-primary">Note: Media sentiment alone never triggers execution setups.</span>
+</p>
+</div>
+</div>
+<div class="flex items-center justify-between gap-2 pt-space-xs mt-1 border-t border-border-subtle/50 font-label-code text-label-code">
+<span class="text-text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">link_off</span>
+            Syndicated Terminal Wire
+          </span>
+<button class="px-space-md py-1 bg-surface-high hover:bg-surface-container rounded border border-border-strong text-text-primary font-semibold flex items-center gap-1 transition-colors" onclick="openDetailsDrawer('COALINDIA')">
+<span>View Details &amp; Evidence</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Event 5: HDFCBANK (Routine Investor Meeting, Edge Case: Missing Link) -->
+<article class="news-card bg-surface border border-border-subtle rounded-lg p-space-md hover:border-primary/40 hover:shadow-xs transition-all flex flex-col gap-space-sm relative" data-card-type="official medium-impact" data-category="earnings" data-source="nse" data-symbol="HDFCBANK">
+<div class="flex flex-wrap items-center justify-between gap-space-xs border-b border-border-subtle/60 pb-2">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-surface-container text-primary border border-primary/20">
+              COMPANY INVESTOR RELEASE
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-status-live-bg text-status-live-text border border-accent-bullish/30">
+              CONFIRMED FACT
+            </span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-semibold bg-surface-high text-text-secondary">
+              LOW IMPACT
+            </span>
+</div>
+<div class="flex items-center gap-2 font-label-code text-label-code text-text-secondary">
+<span>Pub: <strong class="text-text-primary">09:45:10</strong></span>
+<span>•</span>
+<span>Ingest: <strong class="text-text-primary">09:47:00</strong> <span class="text-status-live-text">(+110s)</span></span>
+<span>•</span>
+<span class="text-text-secondary">1h 55m ago</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between gap-2 mt-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded font-metric-md text-metric-md font-bold bg-surface-high text-text-primary">HDFCBANK</span>
+<span class="font-label-code text-label-code text-text-secondary">Direct Investor Relations Ingest</span>
+</div>
+<span class="font-label-code text-[11px] text-text-secondary font-mono">Ref: HDFC/SEC/2024-25/112</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-text-primary leading-tight font-bold">
+          Intimation of Schedule of Institutional Investor Meetings in Mumbai and Singapore
+        </h2>
+<p class="font-body-sm text-body-sm text-text-secondary">
+          Routine non-deal investor roadshow meetings scheduled across Nov 18-20, 2024. No unpublished price sensitive information (UPSI) shared.
+        </p>
+<div class="flex items-center justify-between gap-2 pt-space-xs mt-1 border-t border-border-subtle/50 font-label-code text-label-code">
+<!-- Missing Source Link Edge Case Indicator -->
+<span class="text-text-secondary flex items-center gap-1 italic text-[11px]">
+<span class="material-symbols-outlined text-[14px] text-status-stale-text">link_off</span>
+            Source PDF attachment parsing in progress (Pending exchange mirror)
+          </span>
+<button class="px-space-md py-1 bg-surface-high hover:bg-surface-container rounded border border-border-strong text-text-primary font-semibold flex items-center gap-1 transition-colors" onclick="openDetailsDrawer('HDFCBANK')">
+<span>View Details &amp; Evidence</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Empty State Card (Hidden by default, shown when filters match nothing) -->
+<div class="hidden bg-surface border border-dashed border-border-strong rounded-lg p-space-xl flex flex-col items-center justify-center text-center py-16" id="empty-state-view">
+<div class="w-14 h-14 rounded-full bg-surface-high flex items-center justify-center text-text-secondary mb-space-md">
+<span class="material-symbols-outlined text-[32px]">filter_alt_off</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-text-primary font-bold">No Disclosures or Events Matched</h3>
+<p class="font-body-sm text-body-sm text-text-secondary max-w-md mt-1 mb-space-md">
+          Zero events matched your active criteria. Clear your keyword search query or loosen category and source filters.
+        </p>
+<button class="px-space-md py-1.5 bg-primary text-on-primary rounded font-label-code text-label-code font-semibold hover:bg-primary-container transition-colors shadow-xs" onclick="resetAllFilters()">
+          Reset All Filters
+        </button>
+</div>
+</div>
+<!-- Right-Side Details & Evidence Slide-Over Drawer (Open by default on Desktop) -->
+<aside class="col-span-12 xl:col-span-4 bg-surface border border-border-subtle rounded-lg p-space-md flex flex-col gap-space-md self-start sticky top-28 shadow-sm transition-all duration-300" id="details-drawer">
+<!-- Drawer Header -->
+<div class="flex items-center justify-between pb-space-sm border-b border-border-subtle">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded font-metric-md text-metric-md font-bold bg-primary text-on-primary" id="drawer-symbol-badge">TATASTEEL</span>
+<span class="px-1.5 py-0.5 rounded font-label-code text-label-code font-semibold bg-surface-container text-primary" id="drawer-source-type">OFFICIAL NSE FILING</span>
+</div>
+<button class="p-1 rounded text-text-secondary hover:text-text-primary hover:bg-surface-high transition-colors" onclick="closeDetailsDrawer()" title="Close Details Pane">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Provenance Timestamps & Clock Skew Metadata Grid -->
+<div class="bg-surface-high/60 rounded p-space-sm flex flex-col gap-1.5 border border-border-subtle/50">
+<div class="font-label-code text-[11px] text-text-secondary uppercase font-bold tracking-wider mb-0.5">Ingestion &amp; Clock Skew Telemetry</div>
+<div class="grid grid-cols-2 gap-2 text-label-code font-label-code text-[11px]">
+<div>
+<span class="text-text-secondary">Source Pub:</span>
+<div class="font-bold text-text-primary" id="drawer-pub-time">10:15:00 IST</div>
+</div>
+<div>
+<span class="text-text-secondary">System Ingest:</span>
+<div class="font-bold text-text-primary" id="drawer-ingest-time">10:16:12 IST</div>
+</div>
+<div>
+<span class="text-text-secondary">Clock Skew Delay:</span>
+<div class="font-bold text-status-live-text" id="drawer-clock-skew">+72s (Optimal &lt;180s)</div>
+</div>
+<div>
+<span class="text-text-secondary">Exchange Ref ID:</span>
+<div class="font-bold text-primary truncate font-mono" id="drawer-ref-id">#NSE-CORP-2024-884102</div>
+</div>
+</div>
+</div>
+<!-- Full Headline & Excerpt in Drawer -->
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-sm text-headline-sm text-text-primary font-bold leading-tight" id="drawer-headline">
+          Tata Steel signs 25-year long-term power purchase agreement for 379 MW clean energy at Kalinganagar facility
+        </h3>
+<p class="font-body-xs text-body-xs text-text-secondary mt-1 leading-relaxed" id="drawer-excerpt">
+          Long-term arrangement expected to reduce operating cost volatility by ₹140 Cr annually and mitigate steel power tariff escalations starting Q1 FY26.
+        </p>
+</div>
+<!-- Extracted Key Figures & Material Quantitative Terms -->
+<div class="flex flex-col gap-1.5">
+<span class="font-label-code text-[11px] text-text-secondary uppercase font-bold tracking-wider">Extracted Material Terms</span>
+<div class="grid grid-cols-2 gap-space-xs font-label-code text-label-code" id="drawer-key-figures">
+<div class="bg-canvas border border-border-subtle p-2 rounded">
+<span class="text-text-secondary text-[10px] block">Capacity:</span>
+<span class="font-bold text-text-primary font-mono text-body-xs">379 MW Hybrid</span>
+</div>
+<div class="bg-canvas border border-border-subtle p-2 rounded">
+<span class="text-text-secondary text-[10px] block">Annual Savings:</span>
+<span class="font-bold text-accent-bullish font-mono text-body-xs">₹140 Cr / year</span>
+</div>
+<div class="bg-canvas border border-border-subtle p-2 rounded">
+<span class="text-text-secondary text-[10px] block">Commercial COD:</span>
+<span class="font-bold text-text-primary font-mono text-body-xs">Q4 FY25</span>
+</div>
+<div class="bg-canvas border border-border-subtle p-2 rounded">
+<span class="text-text-secondary text-[10px] block">Entity Site:</span>
+<span class="font-bold text-text-primary font-mono text-body-xs truncate block">TSK Kalinganagar</span>
+</div>
+</div>
+</div>
+<!-- AI NLP Model Reasoning & Auditability -->
+<div class="bg-status-stale-bg/50 border border-amber-200/80 rounded p-space-sm flex flex-col gap-1">
+<div class="flex items-center justify-between text-status-stale-text font-label-code text-[11px] font-bold">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">psychology</span>
+            NLP Classification Engine
+          </span>
+<span class="bg-amber-100 text-amber-900 px-1 rounded font-mono">v1.4.2</span>
+</div>
+<div class="text-[11px] font-label-code text-text-secondary mt-1">
+<div>Primary Weight: <strong class="text-text-primary">Energy Cost Efficiency (+0.42)</strong></div>
+<div>Classification: <strong class="text-accent-bullish">Structurally Bullish (Mid-term)</strong></div>
+<div>Model Fallibility: <span class="italic text-text-secondary">Advisory only. Subject to counter-trend market action.</span></div>
+</div>
+</div>
+<!-- Linked Contextual Technical Setup Card (Interactive Link to Signal Analysis) -->
+<div class="bg-canvas border border-primary/30 rounded p-space-sm flex flex-col gap-2" id="drawer-setup-box">
+<div class="flex items-center justify-between font-label-code text-label-code">
+<span class="text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">radar</span>
+            Associated Active Setup
+          </span>
+<span class="px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-bold text-[10px]">ACTIVE</span>
+</div>
+<div class="flex flex-col gap-0.5 font-label-code text-label-code">
+<div class="flex justify-between">
+<span class="text-text-secondary">Setup Ref:</span>
+<span class="font-bold text-text-primary font-mono">#NSE-TS-48210</span>
+</div>
+<div class="flex justify-between">
+<span class="text-text-secondary">Trigger:</span>
+<span class="font-bold text-accent-bullish">5m VWAP Breakout @ ₹156.40</span>
+</div>
+<div class="flex justify-between text-[11px]">
+<span class="text-text-secondary">Target / Invalidation:</span>
+<span class="font-mono text-text-primary">₹157.80 / ₹155.20</span>
+</div>
+</div>
+<button class="w-full mt-1 h-8 bg-primary hover:bg-primary-container text-on-primary font-label-code text-label-code font-bold rounded flex items-center justify-center gap-1.5 transition-colors shadow-xs" onclick="alert('Routing to Signal Analysis for TATASTEEL setup #NSE-TS-48210');">
+<span>Open Signal Analysis</span>
+<span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+</button>
+</div>
+<!-- Statutory Mandate & Zero Automated Orders Disclaimer -->
+<div class="p-space-xs bg-surface-high/40 rounded border border-border-subtle/50 text-[10px] font-label-code text-text-secondary leading-tight flex items-start gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-text-secondary shrink-0 mt-0.5">gavel</span>
+<span>
+<strong>SEBI / Statutory Notice:</strong> Disclosures and algorithmic extractions are for decision support only. Zero automated trade placement. All orders must be evaluated and entered manually in Angel One.
+        </span>
+</div>
+</aside>
+</div>
+</div>
+<!-- Simulated PDF Modal Overlay Placeholder -->
+<div class="hidden fixed inset-0 z-50 bg-inverse-surface/60 backdrop-blur-xs flex items-center justify-center p-4" id="pdf-modal">
+<div class="bg-surface border border-border-strong rounded-lg shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[870px]">
+<div class="px-space-md py-space-sm bg-surface-high border-b border-border-subtle flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">picture_as_pdf</span>
+<span class="font-label-code text-label-code font-bold text-text-primary" id="modal-doc-title">NSE Disclosure Document Viewer</span>
+</div>
+<button class="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-surface transition-colors" onclick="closePdfModal()">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="p-space-lg overflow-y-auto flex flex-col gap-space-md font-body-sm text-body-sm text-text-primary">
+<div class="p-space-sm bg-status-live-bg border border-accent-bullish/30 rounded flex items-center gap-2 font-label-code text-label-code text-status-live-text">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span>Cryptographic Hash: <code class="font-mono text-text-primary font-bold">SHA256: 9b2d84...e311</code> (Authoritative NEAPS Timestamped)</span>
+</div>
+<div class="border border-border-subtle p-space-md rounded bg-canvas flex flex-col gap-2 font-mono text-[11px] leading-relaxed">
+<div class="font-bold border-b border-border-subtle pb-1">NATIONAL STOCK EXCHANGE OF INDIA LIMITED - CORPORATE DISCLOSURE</div>
+<div>Date: 18-NOV-2024 | Time: 10:15:00 IST | Ref: <span class="text-primary font-bold" id="modal-ref-id">NSE-CORP-2024-884102</span></div>
+<div class="mt-2 text-text-secondary">
+          "Sub: Intimation under Regulation 30 of SEBI (LODR) Regulations, 2015 - Execution of Power Purchase and Captive Investment Agreements for 379 MW Renewable Hybrid Project at Kalinganagar.<br/><br/>
+          Dear Sir/Madam, Pursuant to Regulation 30 read with Part A of Schedule III of SEBI (Listing Obligations and Disclosure Requirements) Regulations, 2015, we hereby inform that Tata Steel Limited has finalized long-term arrangement for 379 MW round-the-clock green captive power."
+        </div>
+</div>
+<p class="font-label-code text-[11px] text-text-secondary">Note: Document viewer renders pre-parsed official PDF stream snapshot.</p>
+</div>
+<div class="px-space-md py-space-sm bg-surface-high border-t border-border-subtle flex justify-end">
+<button class="px-space-md py-1 bg-surface border border-border-strong rounded font-label-code text-label-code font-bold hover:bg-surface-high" onclick="closePdfModal()">Close Document</button>
+</div>
+</div>
+</div>
+<script>
+  // Countdown simulation
+  let countdownSec = 38;
+  const timerElem = document.getElementById('countdown-timer');
+  setInterval(() => {
+    if (countdownSec > 1) {
+      countdownSec--;
+      if (timerElem) timerElem.textContent = countdownSec + 's';
+    } else {
+      countdownSec = 45;
+      if (timerElem) timerElem.textContent = countdownSec + 's';
+    }
+  }, 1000);
+
+  // Manual Ingestion Sync Trigger
+  function triggerManualSync() {
+    const spinner = document.getElementById('sync-spinner');
+    if (spinner) spinner.classList.add('animate-spin');
+    setTimeout(() => {
+      if (spinner) spinner.classList.remove('animate-spin');
+      countdownSec = 45;
+      if (timerElem) timerElem.textContent = '45s';
+    }, 900);
+  }
+
+  // Simulator State Switcher
+  function setSimState(state) {
+    const staleBanner = document.getElementById('stale-alert-banner');
+    const discBanner = document.getElementById('disconnected-alert-banner');
+    const emptyState = document.getElementById('empty-state-view');
+    const dot = document.getElementById('feed-status-dot');
+    const text = document.getElementById('feed-status-text');
+    const cards = document.querySelectorAll('.news-card');
+
+    // Reset button styles
+    ['live', 'stale', 'disconnect', 'empty'].forEach(s => {
+      const btn = document.getElementById(`state-btn-${s}`);
+      if (btn) {
+        btn.className = 'px-2 py-1 rounded text-text-secondary hover:text-text-primary transition-colors';
+      }
+    });
+
+    const activeBtn = document.getElementById(`state-btn-${state}`);
+    if (activeBtn) {
+      activeBtn.className = 'px-2 py-1 rounded bg-surface font-semibold text-text-primary shadow-xs transition-colors';
+    }
+
+    // Hide banners by default
+    staleBanner.classList.add('hidden');
+    discBanner.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    cards.forEach(c => c.classList.remove('hidden'));
+
+    if (state === 'live') {
+      dot.className = 'w-2 h-2 rounded-full bg-accent-bullish animate-pulse';
+      text.textContent = 'Live Polling';
+      text.className = 'font-label-code text-label-code font-bold text-status-live-text uppercase';
+    } else if (state === 'stale') {
+      staleBanner.classList.remove('hidden');
+      dot.className = 'w-2 h-2 rounded-full bg-accent-bearish animate-pulse';
+      text.textContent = 'Stale (>30m)';
+      text.className = 'font-label-code text-label-code font-bold text-status-stale-text uppercase';
+    } else if (state === 'disconnect') {
+      discBanner.classList.remove('hidden');
+      dot.className = 'w-2 h-2 rounded-full bg-accent-danger';
+      text.textContent = 'Disconnected';
+      text.className = 'font-label-code text-label-code font-bold text-status-disconnected-text uppercase';
+    } else if (state === 'empty') {
+      cards.forEach(c => c.classList.add('hidden'));
+      emptyState.classList.remove('hidden');
+    }
+  }
+
+  // Tab Filtering
+  function applyTabFilter(tabKey) {
+    const tabs = ['all', 'official', 'high-impact', 'linked-setups'];
+    tabs.forEach(t => {
+      const tabEl = document.getElementById(`tab-${t}`);
+      if (tabEl) {
+        tabEl.className = 'filter-tab px-space-md py-1.5 rounded font-label-code text-label-code font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-high transition-all';
+      }
+    });
+
+    const currentTab = document.getElementById(`tab-${tabKey}`);
+    if (currentTab) {
+      currentTab.className = 'filter-tab px-space-md py-1.5 rounded font-label-code text-label-code font-bold bg-primary text-on-primary transition-all shadow-xs';
+    }
+
+    const cards = document.querySelectorAll('.news-card');
+    const emptyState = document.getElementById('empty-state-view');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const cardType = card.getAttribute('data-card-type') || '';
+      if (tabKey === 'all') {
+        card.classList.remove('hidden');
+        visibleCount++;
+      } else if (cardType.includes(tabKey)) {
+        card.classList.remove('hidden');
+        visibleCount++;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    if (visibleCount === 0) {
+      emptyState.classList.remove('hidden');
+    } else {
+      emptyState.classList.add('hidden');
+    }
+  }
+
+  // Keyword Search
+  function filterBySearch(query) {
+    const q = query.trim().toLowerCase();
+    const cards = document.querySelectorAll('.news-card');
+    const emptyState = document.getElementById('empty-state-view');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      if (text.includes(q)) {
+        card.classList.remove('hidden');
+        visibleCount++;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    if (visibleCount === 0) {
+      emptyState.classList.remove('hidden');
+    } else {
+      emptyState.classList.add('hidden');
+    }
+  }
+
+  // Dropdown Filtering
+  function applyDropdownFilter() {
+    const src = document.getElementById('source-filter').value;
+    const cat = document.getElementById('category-filter').value;
+    const cards = document.querySelectorAll('.news-card');
+    const emptyState = document.getElementById('empty-state-view');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const cardSrc = card.getAttribute('data-source');
+      const cardCat = card.getAttribute('data-category');
+
+      const matchesSrc = (src === 'all' || cardSrc === src);
+      const matchesCat = (cat === 'all' || cardCat === cat);
+
+      if (matchesSrc && matchesCat) {
+        card.classList.remove('hidden');
+        visibleCount++;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    if (visibleCount === 0) {
+      emptyState.classList.remove('hidden');
+    } else {
+      emptyState.classList.add('hidden');
+    }
+  }
+
+  function resetAllFilters() {
+    document.getElementById('news-search-input').value = '';
+    document.getElementById('source-filter').value = 'all';
+    document.getElementById('category-filter').value = 'all';
+    applyTabFilter('all');
+  }
+
+  // Details Drawer Data Hydration & Toggle
+  const eventDetailsData = {
+    'TATASTEEL': {
+      symbol: 'TATASTEEL',
+      sourceType: 'OFFICIAL NSE FILING',
+      sourceClass: 'bg-surface-container text-primary',
+      pubTime: '10:15:00 IST',
+      ingestTime: '10:16:12 IST',
+      skew: '+72s (Optimal <180s)',
+      refId: '#NSE-CORP-2024-884102',
+      headline: 'Tata Steel signs 25-year long-term power purchase agreement for 379 MW clean energy at Kalinganagar facility',
+      excerpt: 'Long-term arrangement expected to reduce operating cost volatility by ₹140 Cr annually and mitigate steel power tariff escalations starting Q1 FY26.',
+      figures: [
+        { label: 'Capacity:', value: '379 MW Hybrid' },
+        { label: 'Annual Savings:', value: '₹140 Cr / year' },
+        { label: 'Commercial COD:', value: 'Q4 FY25' },
+        { label: 'Entity Site:', value: 'TSK Kalinganagar' }
+      ],
+      hasSetup: true,
+      setupRef: '#NSE-TS-48210',
+      trigger: '5m VWAP Breakout @ ₹156.40',
+      target: '₹157.80 / ₹155.20'
+    },
+    'RBI': {
+      symbol: 'NIFTY BANK',
+      sourceType: 'OFFICIAL REGULATORY RELEASE',
+      sourceClass: 'bg-surface-container text-primary',
+      pubTime: '09:00:00 IST',
+      ingestTime: '09:02:14 IST',
+      skew: '+134s (Optimal <180s)',
+      refId: 'RBI/2024-25/DOR.STR.REC.44',
+      headline: 'RBI Releases Framework for Project Finance Prudential Norms: Phase-in Provisioning Standardized at 2.5%',
+      excerpt: 'Revised draft guidelines soften provisioning requirements from 5.0% proposed earlier to phased 2.5% over three years for operational infrastructure projects.',
+      figures: [
+        { label: 'Provision Cap:', value: '2.5% (Phased)' },
+        { label: 'Construction Prov:', value: '1.0% Cap' },
+        { label: 'Extension Window:', value: '24 Months' },
+        { label: 'Scope:', value: 'Commercial Banks & NBFC' }
+      ],
+      hasSetup: false
+    },
+    'ZEEL': {
+      symbol: 'ZEEL',
+      sourceType: 'RISK EMBARGO: NO-TRADE',
+      sourceClass: 'bg-accent-danger text-on-primary',
+      pubTime: '11:05:00 IST',
+      ingestTime: '11:06:14 IST',
+      skew: '+74s (Optimal <180s)',
+      refId: '#BSE-505537-BM-2024',
+      headline: 'Board of Directors Meeting convened today at 12:30 IST to approve Q3 Financial Statements & Statutory Audit',
+      excerpt: 'Meeting to consider audited standalone and consolidated quarterly earnings and management reconstitutions.',
+      figures: [
+        { label: 'Board Time:', value: '12:30 IST Today' },
+        { label: 'Embargo Window:', value: '11:30 - 13:30 IST' },
+        { label: 'Order Execution:', value: 'BLOCKED (Gate #5)' },
+        { label: 'Audit Scope:', value: 'Q3 Standalone & Cons' }
+      ],
+      hasSetup: false
+    },
+    'COALINDIA': {
+      symbol: 'COALINDIA',
+      sourceType: 'FINANCIAL MEDIA WIRE',
+      sourceClass: 'bg-surface-high text-text-secondary',
+      pubTime: '11:15:00 IST',
+      ingestTime: '11:18:22 IST',
+      skew: '+202s (Wire Variance)',
+      refId: 'REUTERS-COMM-QLD-88',
+      headline: 'Global coking coal FOB Australia spot benchmark contracts soften 3.2% amid slower overseas billet restocking',
+      excerpt: 'International benchmark trades lower at $242/t FOB Queensland as buyers defer spot booking pending domestic tariff announcements.',
+      figures: [
+        { label: 'Spot Quote:', value: '$242/tonne FOB' },
+        { label: 'Change:', value: '-3.2% Week-on-Week' },
+        { label: 'Port Benchmark:', value: 'Queensland / Hay Pt' },
+        { label: 'Verification:', value: 'Media Unverified' }
+      ],
+      hasSetup: false
+    },
+    'HDFCBANK': {
+      symbol: 'HDFCBANK',
+      sourceType: 'COMPANY INVESTOR RELEASE',
+      sourceClass: 'bg-surface-container text-primary',
+      pubTime: '09:45:10 IST',
+      ingestTime: '09:47:00 IST',
+      skew: '+110s (Optimal <180s)',
+      refId: 'HDFC/SEC/2024-25/112',
+      headline: 'Intimation of Schedule of Institutional Investor Meetings in Mumbai and Singapore',
+      excerpt: 'Routine non-deal investor roadshow meetings scheduled across Nov 18-20, 2024. No unpublished price sensitive information shared.',
+      figures: [
+        { label: 'Event Type:', value: 'Non-Deal Roadshow' },
+        { label: 'Locations:', value: 'Mumbai & Singapore' },
+        { label: 'Dates:', value: 'Nov 18-20, 2024' },
+        { label: 'UPSI Flag:', value: 'Zero Sensitive Data' }
+      ],
+      hasSetup: false
+    }
+  };
+
+  function openDetailsDrawer(symbolKey) {
+    const data = eventDetailsData[symbolKey];
+    if (!data) return;
+
+    const drawer = document.getElementById('details-drawer');
+    const timeline = document.getElementById('timeline-container');
+
+    // Populate data
+    document.getElementById('drawer-symbol-badge').textContent = data.symbol;
+    document.getElementById('drawer-source-type').textContent = data.sourceType;
+    document.getElementById('drawer-source-type').className = 'px-1.5 py-0.5 rounded font-label-code text-label-code font-semibold ' + data.sourceClass;
+    document.getElementById('drawer-pub-time').textContent = data.pubTime;
+    document.getElementById('drawer-ingest-time').textContent = data.ingestTime;
+    document.getElementById('drawer-clock-skew').textContent = data.skew;
+    document.getElementById('drawer-ref-id').textContent = data.refId;
+    document.getElementById('drawer-headline').textContent = data.headline;
+    document.getElementById('drawer-excerpt').textContent = data.excerpt;
+
+    // Extracted figures
+    const figuresContainer = document.getElementById('drawer-key-figures');
+    figuresContainer.innerHTML = '';
+    data.figures.forEach(fig => {
+      const item = document.createElement('div');
+      item.className = 'bg-canvas border border-border-subtle p-2 rounded';
+      item.innerHTML = `
+        <span class="text-text-secondary text-[10px] block">${fig.label}</span>
+        <span class="font-bold text-text-primary font-mono text-body-xs truncate block">${fig.value}</span>
+      `;
+      figuresContainer.appendChild(item);
+    });
+
+    // Associated setup visibility
+    const setupBox = document.getElementById('drawer-setup-box');
+    if (data.hasSetup) {
+      setupBox.classList.remove('hidden');
+    } else {
+      setupBox.classList.add('hidden');
+    }
+
+    // Ensure visible
+    drawer.classList.remove('hidden');
+    timeline.classList.remove('xl:col-span-12');
+    timeline.classList.add('xl:col-span-8');
+  }
+
+  function closeDetailsDrawer() {
+    const drawer = document.getElementById('details-drawer');
+    const timeline = document.getElementById('timeline-container');
+    drawer.classList.add('hidden');
+    timeline.classList.remove('xl:col-span-8');
+    timeline.classList.add('xl:col-span-12');
+  }
+
+  // Simulated PDF modal
+  function openSimulatedPdf(refId) {
+    document.getElementById('modal-ref-id').textContent = refId;
+    document.getElementById('pdf-modal').classList.remove('hidden');
+  }
+
+  function closePdfModal() {
+    document.getElementById('pdf-modal').classList.add('hidden');
+  }
+
+  // Keyboard shortcut listener for [/] search
+  window.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      const input = document.getElementById('news-search-input');
+      if (input) input.focus();
+    }
+  });
+</script></main></div></body></html>

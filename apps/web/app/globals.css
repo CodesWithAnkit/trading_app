@@ -1,118 +1,177 @@
 @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --color-surface-bright: #f8f9ff;
-  --color-surface-tint: #2151da;
-  --color-on-tertiary-container: #ffcaae;
-  --color-surface: #f8f9ff;
-  --color-surface-container-highest: #d5e3fb;
-  --color-on-error: #ffffff;
-  --color-surface-container-low: #eff4ff;
-  --color-surface-container: #e5eeff;
-  --color-on-primary-fixed: #001551;
-  --color-primary-container: #1d4ed8;
-  --color-on-tertiary-fixed: #331200;
-  --color-on-primary-fixed-variant: #0039b5;
-  --color-on-error-container: #93000a;
-  --color-inverse-on-surface: #eaf1ff;
-  --color-on-primary-container: #cad3ff;
-  --color-surface-container-high: #dce9ff;
-  --color-on-secondary-fixed-variant: #00513a;
-  --color-surface-container-lowest: #ffffff;
-  --color-on-primary: #ffffff;
-  --color-primary: #0037b0;
-  --color-secondary-fixed: #97f5cc;
-  --color-on-tertiary-fixed-variant: #763300;
-  --color-primary-fixed-dim: #b7c4ff;
-  --color-inverse-primary: #b7c4ff;
+  /* Stitch 5780553391039865460 Tactical Precision Terminal Tokens */
+  --color-canvas: #F6F8FB;
+  --color-surface: #FFFFFF;
+  --color-surface-bright: #F9F9FF;
+  --color-surface-dim: #CCDBF8;
+  --color-surface-high: #EDF2F7;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-low: #F0F3FF;
+  --color-surface-container: #E7EEFF;
+  --color-surface-container-high: #DEE8FF;
+  --color-surface-container-highest: #D5E3FF;
+  --color-surface-variant: #D5E3FF;
+  --color-surface-tint: #2151DA;
+
+  --color-border-subtle: #D9E1EC;
+  --color-border-strong: #CBD5E1;
   --color-outline: #747686;
-  --color-tertiary-container: #984300;
-  --color-secondary-fixed-dim: #7bd8b1;
-  --color-secondary-container: #97f5cc;
-  --color-surface-dim: #cddbf2;
-  --color-inverse-surface: #233143;
-  --color-on-background: #0e1c2d;
-  --color-outline-variant: #c4c5d7;
-  --color-tertiary-fixed-dim: #ffb68e;
-  --color-error: #ba1a1a;
-  --color-tertiary-fixed: #ffdbca;
-  --color-primary-fixed: #dce1ff;
-  --color-tertiary: #733100;
-  --color-background: #f8f9ff;
-  --color-on-tertiary: #ffffff;
-  --color-on-secondary-fixed: #002115;
-  --color-on-surface: #0e1c2d;
-  --color-surface-variant: #d5e3fb;
-  --color-on-secondary-container: #007353;
-  --color-error-container: #ffdad6;
-  --color-on-secondary: #ffffff;
-  --color-secondary: #006c4e;
+  --color-outline-variant: #C4C5D7;
+
+  --color-text-primary: #132238;
+  --color-text-secondary: #5E6C80;
+  --color-on-surface: #0C1C32;
   --color-on-surface-variant: #434655;
+  --color-background: #F9F9FF;
+  --color-on-background: #0C1C32;
 
-  --spacing-space-md: 0.75rem;
-  --spacing-space-sm: 0.5rem;
-  --spacing-margin: 1rem;
+  --color-primary: #0037B0;
+  --color-primary-container: #1D4ED8;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #CAD3FF;
+  --color-primary-fixed: #DCE1FF;
+  --color-primary-fixed-dim: #B7C4FF;
+  --color-on-primary-fixed: #001551;
+  --color-on-primary-fixed-variant: #0039B5;
+  --color-inverse-primary: #B7C4FF;
+
+  --color-secondary: #006C4A;
+  --color-secondary-container: #82F5C1;
+  --color-on-secondary: #FFFFFF;
+  --color-on-secondary-container: #00714E;
+  --color-secondary-fixed: #85F8C4;
+  --color-secondary-fixed-dim: #68DBA9;
+  --color-on-secondary-fixed: #002114;
+  --color-on-secondary-fixed-variant: #005137;
+
+  --color-tertiary: #6B3700;
+  --color-tertiary-container: #8D4B00;
+  --color-on-tertiary: #FFFFFF;
+  --color-on-tertiary-container: #FFCBA3;
+  --color-tertiary-fixed: #FFDCC3;
+  --color-tertiary-fixed-dim: #FFB77D;
+  --color-on-tertiary-fixed: #2F1500;
+  --color-on-tertiary-fixed-variant: #6E3900;
+
+  --color-error: #BA1A1A;
+  --color-error-container: #FFDAD6;
+  --color-on-error: #FFFFFF;
+  --color-on-error-container: #93000A;
+
+  --color-accent-bullish: #059669;
+  --color-accent-bearish: #D97706;
+  --color-accent-danger: #DC2626;
+  --color-accent-primary: #1D4ED8;
+
+  --color-status-live-bg: #ECFDF5;
+  --color-status-live-text: #047857;
+  --color-status-stale-bg: #FFFBEB;
+  --color-status-stale-text: #B45309;
+  --color-status-disconnected-bg: #FEF2F2;
+  --color-status-disconnected-text: #B91C1C;
+  --color-status-delayed-bg: #F1F5F9;
+  --color-status-delayed-text: #475569;
+
+  /* Spacing */
   --spacing-gutter: 0.75rem;
-  --spacing-space-lg: 1rem;
-  --spacing-space-xl: 1.5rem;
+  --spacing-gutter-md: 1rem;
+  --spacing-margin: 1rem;
+  --spacing-margin-lg: 1.5rem;
   --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.375rem;
+  --spacing-space-md: 0.625rem;
+  --spacing-space-lg: 0.875rem;
+  --spacing-space-xl: 1.25rem;
 
-  --font-label-numeric-md: "JetBrains Mono";
+  /* Fonts */
   --font-headline-lg: "Inter";
-  --font-body-lg: "Inter";
-  --font-display-lg: "Inter";
+  --font-headline-md: "Inter";
   --font-headline-sm: "Inter";
-  --font-label-numeric-sm: "JetBrains Mono";
-  --font-body-sm: "Inter";
-  --font-label-numeric-lg: "JetBrains Mono";
-  --font-label-caps: "Inter";
+  --font-body-lg: "Inter";
   --font-body-md: "Inter";
+  --font-body-sm: "Inter";
+  --font-body-xs: "Inter";
+  --font-label-caps: "Inter";
+  --font-label-code: "JetBrains Mono";
+  --font-metric-lg: "JetBrains Mono";
+  --font-metric-md: "JetBrains Mono";
+  --font-metric-sm: "JetBrains Mono";
+  --font-label-numeric-lg: "JetBrains Mono";
+  --font-label-numeric-md: "JetBrains Mono";
+  --font-label-numeric-sm: "JetBrains Mono";
 
-  --text-label-numeric-md: 0.875rem;
-  --text-label-numeric-md--line-height: 1.25rem;
-  --text-label-numeric-md--letter-spacing: -0.01em;
-  --text-label-numeric-md--font-weight: 500;
-
+  /* Typography Scales */
   --text-headline-lg: 1.5rem;
   --text-headline-lg--line-height: 2rem;
+  --text-headline-lg--letter-spacing: -0.02em;
   --text-headline-lg--font-weight: 600;
+
+  --text-headline-md: 1.125rem;
+  --text-headline-md--line-height: 1.5rem;
+  --text-headline-md--letter-spacing: -0.01em;
+  --text-headline-md--font-weight: 600;
+
+  --text-headline-sm: 0.9375rem;
+  --text-headline-sm--line-height: 1.375rem;
+  --text-headline-sm--font-weight: 600;
 
   --text-body-lg: 0.9375rem;
   --text-body-lg--line-height: 1.375rem;
   --text-body-lg--font-weight: 500;
 
-  --text-display-lg: 2rem;
-  --text-display-lg--line-height: 2.5rem;
-  --text-display-lg--font-weight: 700;
-
-  --text-headline-sm: 1.125rem;
-  --text-headline-sm--line-height: 1.5rem;
-  --text-headline-sm--font-weight: 600;
-
-  --text-label-numeric-sm: 0.75rem;
-  --text-label-numeric-sm--line-height: 1rem;
-  --text-label-numeric-sm--letter-spacing: 0em;
-  --text-label-numeric-sm--font-weight: 500;
+  --text-body-md: 0.875rem;
+  --text-body-md--line-height: 1.375rem;
+  --text-body-md--font-weight: 400;
 
   --text-body-sm: 0.8125rem;
-  --text-body-sm--line-height: 1.125rem;
+  --text-body-sm--line-height: 1.25rem;
   --text-body-sm--font-weight: 400;
 
-  --text-label-numeric-lg: 1.25rem;
-  --text-label-numeric-lg--line-height: 1.5rem;
-  --text-label-numeric-lg--letter-spacing: -0.02em;
-  --text-label-numeric-lg--font-weight: 600;
+  --text-body-xs: 0.75rem;
+  --text-body-xs--line-height: 1.125rem;
+  --text-body-xs--font-weight: 400;
 
   --text-label-caps: 0.6875rem;
   --text-label-caps--line-height: 0.875rem;
   --text-label-caps--letter-spacing: 0.06em;
   --text-label-caps--font-weight: 700;
 
-  --text-body-md: 0.875rem;
-  --text-body-md--line-height: 1.25rem;
-  --text-body-md--font-weight: 400;
+  --text-label-code: 0.6875rem;
+  --text-label-code--line-height: 1rem;
+  --text-label-code--letter-spacing: 0.02em;
+  --text-label-code--font-weight: 500;
+
+  --text-metric-lg: 1.25rem;
+  --text-metric-lg--line-height: 1.5rem;
+  --text-metric-lg--letter-spacing: -0.02em;
+  --text-metric-lg--font-weight: 600;
+
+  --text-metric-md: 0.9375rem;
+  --text-metric-md--line-height: 1.25rem;
+  --text-metric-md--font-weight: 500;
+
+  --text-metric-sm: 0.8125rem;
+  --text-metric-sm--line-height: 1.125rem;
+  --text-metric-sm--font-weight: 500;
+
+  --text-label-numeric-lg: 1.25rem;
+  --text-label-numeric-lg--line-height: 1.5rem;
+  --text-label-numeric-lg--letter-spacing: -0.02em;
+  --text-label-numeric-lg--font-weight: 600;
+
+  --text-label-numeric-md: 0.875rem;
+  --text-label-numeric-md--line-height: 1.25rem;
+  --text-label-numeric-md--letter-spacing: -0.01em;
+  --text-label-numeric-md--font-weight: 500;
+
+  --text-label-numeric-sm: 0.75rem;
+  --text-label-numeric-sm--line-height: 1rem;
+  --text-label-numeric-sm--letter-spacing: 0em;
+  --text-label-numeric-sm--font-weight: 500;
 }
 
 .material-symbols-outlined {
@@ -125,9 +184,9 @@
 
 @layer base {
   * {
-    @apply border-outline-variant;
+    @apply border-border-subtle;
   }
   body {
-    @apply bg-background text-on-surface font-body-md antialiased;
+    @apply bg-canvas text-text-primary font-body-sm antialiased;
   }
 }
