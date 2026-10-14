@@ -17,7 +17,7 @@
 | Analysis Page Chart | done |
 | Add bulk actions to manage multiple trades | in-progress |
 | Deploy Monorepo Web and Backend on Free Tier | in-progress |
-| Market Intelligence and Explainable Analysis | in-progress |
+| Market Intelligence and Explainable Analysis | done |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -241,7 +241,7 @@
 
 ---
 
-## Market Intelligence and Explainable Analysis `in-progress`
+## Market Intelligence and Explainable Analysis `done`
 
 **Intent**: Introduce broad market and sector context, official company announcements and news ingestion, derived investor sentiment, and delayed institutional activity reporting into an explainable analysis card and drawer that contrasts positive factors against contradictory factors and runs deterministic safety gates.
 **Done when**: The dashboard shows live market breadth and regime, official news and filings are ingested and deduplicated, institutional disclosures are clearly marked as delayed context, and the stock analysis page renders the complete Explainable Analysis Card with deterministic risk gates and evidence breakdown.
@@ -254,6 +254,6 @@
   - [x] Reusable React hooks with SWR and latency safety gating (0018 AC-5, AC-7)
   - [x] Pure presentation UI components with loading and error boundaries (0017 AC-11, 0018 AC-4, AC-6, AC-8..10)
 - [x] Verify it: /check verify Market Intelligence and Explainable Analysis
-- [ ] Test it: /test Market Intelligence and Explainable Analysis
+- [x] Test it: /test Market Intelligence and Explainable Analysis
 
 

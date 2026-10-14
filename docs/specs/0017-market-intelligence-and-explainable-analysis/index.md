@@ -1,12 +1,12 @@
 ---
-status: In Progress
+status: Accepted
 date: 2026-10-15
 ---
 
 # 0017. Market Intelligence and Explainable Analysis
 
 **Date**: 2026-10-15  
-**Status**: In Progress  
+**Status**: Accepted  
 
 ## Summary
 
@@ -252,5 +252,6 @@ The build is sliced using the Tracer Bullet approach, focusing on delivering the
 
 ## Follow-up
 
+- Connect external production financial news APIs and live exchange announcement scrapers; current implementation utilizes verified exchange seed datasets with Supabase persistence and surveillance fallback notices.
 - Monitor exchange RSS and news endpoint latency to calibrate polling intervals.
 - Calibrate the minimum sample size threshold (currently thirty occurrences) once sufficient historical setup data accumulates.

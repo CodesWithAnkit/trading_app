@@ -22,3 +22,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - [apps/web/lib/strategy/AGENTS.md](apps/web/lib/strategy/AGENTS.md): Strategy Engine Implementation pipeline and conventions
 - [apps/backend/src/scanner/strategy/AGENTS.md](apps/backend/src/scanner/strategy/AGENTS.md): backend port of the strategy engine, including the live multi strategy engine
 - [apps/backend/src/scanner/market-data/AGENTS.md](apps/backend/src/scanner/market-data/AGENTS.md): Angel One feed provider, tick normalization, and 1m/5m candle aggregation
+- [apps/backend/src/intelligence/AGENTS.md](apps/backend/src/intelligence/AGENTS.md): Market breadth, official disclosures, delayed institutional flow, and explainable evidence engine
