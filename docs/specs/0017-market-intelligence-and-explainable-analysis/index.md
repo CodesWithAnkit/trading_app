@@ -219,29 +219,29 @@ The user interface components have already been implemented to the Tactical Prec
 
 The build is sliced using the Tracer Bullet approach, focusing on delivering the backend intelligence services to feed the completed UI:
 
-- **Slice 1: Database Schemas and Supabase Migration**
-  - Create Supabase migration with the 5 intelligence tables (`market_context_snapshots`, `news_and_events`, `institutional_flows`, `bulk_block_deals`, `evidence_snapshots`) (AC-14).
-  - Add row level security policies and indexes on timestamps and symbol columns.
-- **Slice 2: Market Breadth and Sector Relative Strength Service**
-  - Implement `MarketBreadthService` in `apps/backend/src/intelligence/` (AC-1, AC-2).
-  - Aggregate advance to decline ratio and VWAP participation from streaming quote ticks in memory.
-  - Compute sector relative alpha versus Nifty 50 benchmark.
-- **Slice 3: Corporate Filings and Financial News Ingestion Service**
-  - Implement `OfficialFilingsAndNewsService` in `apps/backend/src/intelligence/` (AC-3, AC-4).
-  - Ingest NSE and BSE corporate announcement RSS feeds with publication and ingestion timestamp tracking.
-  - Implement deduplication and classify sentiment and impact direction.
-- **Slice 4: Institutional Activity and Bulk Deals Service**
-  - Implement `InstitutionalContextService` in `apps/backend/src/intelligence/` (AC-6, AC-7).
-  - Ingest daily FII and DII cash turnover reports and bulk deal disclosures with explicit delayed EOD flags.
-- **Slice 5: Explainable Analysis Engine & Deterministic Safety Gates**
-  - Implement `ExplainableAnalysisService` in `apps/backend/src/intelligence/` (AC-8, AC-9, AC-10, AC-12).
-  - Evaluate the 6 deterministic safety gates and generate structured positive versus contradictory evidence snapshots.
-- **Slice 6: IntelligenceController and SSE Event Dispatching**
-  - Implement `IntelligenceController` exposing `/context`, `/news`, `/institutional`, and `/analysis/:symbol` (AC-15).
-  - Connect live intelligence events (`intelligence:regime`, `intelligence:news`, `signal:evidence`) to the `/api/v1/scanner/stream` SSE stream.
-- **Slice 7: Frontend Hook Integration and Verification**
-  - Wire custom hooks (`useMarketIntelligence`, `useNewsFilings`, `useExplainableAnalysis`) into the completed UI pages.
-  - Verify with unit tests in backend and frontend.
+- [x] **Slice 1: Database Schemas and Supabase Migration**
+  - [x] Create Supabase migration with the 5 intelligence tables (`market_context_snapshots`, `news_and_events`, `institutional_flows`, `bulk_block_deals`, `evidence_snapshots`) (AC-14).
+  - [x] Add row level security policies and indexes on timestamps and symbol columns.
+- [x] **Slice 2: Market Breadth and Sector Relative Strength Service**
+  - [x] Implement `MarketBreadthService` in `apps/backend/src/intelligence/` (AC-1, AC-2).
+  - [x] Aggregate advance to decline ratio and VWAP participation from streaming quote ticks in memory.
+  - [x] Compute sector relative alpha versus Nifty 50 benchmark.
+- [x] **Slice 3: Corporate Filings and Financial News Ingestion Service**
+  - [x] Implement `OfficialFilingsAndNewsService` in `apps/backend/src/intelligence/` (AC-3, AC-4).
+  - [x] Ingest NSE and BSE corporate announcement RSS feeds with publication and ingestion timestamp tracking.
+  - [x] Implement deduplication and classify sentiment and impact direction.
+- [x] **Slice 4: Institutional Activity and Bulk Deals Service**
+  - [x] Implement `InstitutionalContextService` in `apps/backend/src/intelligence/` (AC-6, AC-7).
+  - [x] Ingest daily FII and DII cash turnover reports and bulk deal disclosures with explicit delayed EOD flags.
+- [x] **Slice 5: Explainable Analysis Engine & Deterministic Safety Gates**
+  - [x] Implement `ExplainableAnalysisService` in `apps/backend/src/intelligence/` (AC-8, AC-9, AC-10, AC-12).
+  - [x] Evaluate the 6 deterministic safety gates and generate structured positive versus contradictory evidence snapshots.
+- [x] **Slice 6: IntelligenceController and SSE Event Dispatching**
+  - [x] Implement `IntelligenceController` exposing `/context`, `/news`, `/institutional`, and `/analysis/:symbol` (AC-15).
+  - [x] Connect live intelligence events (`intelligence:regime`, `intelligence:news`, `signal:evidence`) to the `/api/v1/scanner/stream` SSE stream.
+- [x] **Slice 7: Frontend Hook Integration and Verification**
+  - [x] Wire custom hooks (`useMarketIntelligence`, `useNewsFilings`, `useExplainableAnalysis`) into the completed UI pages.
+  - [x] Verify with unit tests in backend and frontend.
 
 ## Consequences
 

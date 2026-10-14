@@ -41,7 +41,10 @@ export type ScannerEvent =
   | { type: 'signal:new'; data: ReturnType<typeof toApiSignal> }
   | { type: 'approaching:update'; data: ApproachingSetup[] }
   | { type: 'momentum:update'; data: { watching: number; stocks: MomentumStock[] } }
-  | { type: 'signal:exit'; data: SignalExit };
+  | { type: 'signal:exit'; data: SignalExit }
+  | { type: 'intelligence:regime'; data: any }
+  | { type: 'intelligence:news'; data: any }
+  | { type: 'signal:evidence'; data: any };
 
 export type SignalExit = {
   id: string;

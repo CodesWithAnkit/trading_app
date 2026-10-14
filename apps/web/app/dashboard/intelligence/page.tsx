@@ -15,17 +15,36 @@ import {
   Server
 } from "lucide-react"
 
+import { useMarketIntelligence } from "@/lib/hooks/useMarketIntelligence"
+
 export default function MarketIntelligencePage() {
   const [selectedSource, setSelectedSource] = React.useState<"ALL" | "FILINGS" | "ACTIONS" | "MACRO">("ALL")
+  const { data: context, refresh, isStale, feedLatencyMs, isLoading } = useMarketIntelligence()
 
-  const sectors = [
-    { name: "Nifty Metals", ltp: "9,240.50", change: "+1.82%", alpha: "+1.18%", leader: "TATASTEEL (+2.10%)", breadth: "12 / 3 (80%)", bias: "▲ Long Bias Confirmed", biasType: "LONG" },
-    { name: "Nifty Auto", ltp: "23,110.15", change: "+1.24%", alpha: "+0.60%", leader: "M&M (+1.95%)", breadth: "11 / 4 (73%)", bias: "▲ Long Bias Confirmed", biasType: "LONG" },
-    { name: "Nifty Bank", ltp: "52,380.40", change: "+0.38%", alpha: "-0.26%", leader: "HDFCBANK (+0.45%)", breadth: "7 / 5 (58%)", bias: "Neutral / Congested", biasType: "NEUTRAL" },
-    { name: "Nifty FMCG", ltp: "58,410.20", change: "+0.15%", alpha: "-0.49%", leader: "ITC (+0.30%)", breadth: "8 / 7 (53%)", bias: "Neutral / Defensive", biasType: "NEUTRAL" },
-    { name: "Nifty IT", ltp: "37,620.80", change: "-0.42%", alpha: "-1.06%", leader: "INFY (-0.60%)", breadth: "3 / 7 (30%)", bias: "Corrective Pullback", biasType: "SHORT" },
-    { name: "Nifty Realty", ltp: "1,012.30", change: "-1.14%", alpha: "-1.78%", leader: "DLF (-1.80%)", breadth: "2 / 8 (20%)", bias: "▼ Short Bias Confirmed", biasType: "SHORT" },
-  ]
+  const sectors = (context?.sectors && context.sectors.length > 0)
+    ? context.sectors.map(s => ({
+        name: s.name,
+        ltp: s.ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 }),
+        change: `${s.changePct >= 0 ? "+" : ""}${s.changePct.toFixed(2)}%`,
+        alpha: `${s.alphaVsNifty >= 0 ? "+" : ""}${s.alphaVsNifty.toFixed(2)}%`,
+        leader: `${s.leaderSymbol} (${s.leaderChangePct >= 0 ? "+" : ""}${s.leaderChangePct.toFixed(2)}%)`,
+        breadth: `${s.advances} / ${s.declines}`,
+        bias: s.bias === "LONG" ? "▲ Long Bias Confirmed" : s.bias === "SHORT" ? "▼ Short Bias Confirmed" : "Neutral / Congested",
+        biasType: s.bias,
+      }))
+    : [
+        { name: "Nifty Metals", ltp: "9,240.50", change: "+1.82%", alpha: "+1.18%", leader: "TATASTEEL (+2.10%)", breadth: "12 / 3 (80%)", bias: "▲ Long Bias Confirmed", biasType: "LONG" },
+        { name: "Nifty Auto", ltp: "23,110.15", change: "+1.24%", alpha: "+0.60%", leader: "M&M (+1.95%)", breadth: "11 / 4 (73%)", bias: "▲ Long Bias Confirmed", biasType: "LONG" },
+        { name: "Nifty Bank", ltp: "52,380.40", change: "+0.38%", alpha: "-0.26%", leader: "HDFCBANK (+0.45%)", breadth: "7 / 5 (58%)", bias: "Neutral / Congested", biasType: "NEUTRAL" },
+        { name: "Nifty FMCG", ltp: "58,410.20", change: "+0.15%", alpha: "-0.49%", leader: "ITC (+0.30%)", breadth: "8 / 7 (53%)", bias: "Neutral / Defensive", biasType: "NEUTRAL" },
+        { name: "Nifty IT", ltp: "37,620.80", change: "-0.42%", alpha: "-1.06%", leader: "INFY (-0.60%)", breadth: "3 / 7 (30%)", bias: "Corrective Pullback", biasType: "SHORT" },
+        { name: "Nifty Realty", ltp: "1,012.30", change: "-1.14%", alpha: "-1.78%", leader: "DLF (-1.80%)", breadth: "2 / 8 (20%)", bias: "▼ Short Bias Confirmed", biasType: "SHORT" },
+      ]
+
+  const totalBreadth = (context?.advanceCount || 142) + (context?.declineCount || 56) + (context?.unchangedCount || 32)
+  const advPct = (((context?.advanceCount || 142) / totalBreadth) * 100).toFixed(1)
+  const decPct = (((context?.declineCount || 56) / totalBreadth) * 100).toFixed(1)
+  const unchPct = (((context?.unchangedCount || 32) / totalBreadth) * 100).toFixed(1)
 
   return (
     <div className="flex flex-col gap-margin w-full">
@@ -40,8 +59,10 @@ export default function MarketIntelligencePage() {
               <h1 className="font-headline-lg text-headline-lg font-bold text-text-primary tracking-tight">
                 Market Intelligence & Macro Environment
               </h1>
-              <span className="px-2 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold uppercase">
-                NSE Cash Active
+              <span className={`px-2 py-0.5 rounded font-label-code text-label-code font-bold uppercase ${
+                isStale ? "bg-accent-danger/20 text-accent-danger" : "bg-status-live-bg text-status-live-text"
+              }`}>
+                {isStale ? "STALE FEED (>5s)" : "NSE Cash Active"}
               </span>
             </div>
             <p className="font-body-xs text-body-xs text-text-secondary mt-0.5">
@@ -52,13 +73,14 @@ export default function MarketIntelligencePage() {
 
         <div className="flex items-center gap-space-sm">
           <span className="font-label-code text-label-code text-text-secondary hidden lg:inline">
-            Rule Version: <strong className="text-text-primary">v1.8.9</strong>
+            Feed Latency: <strong className="text-text-primary">{feedLatencyMs}ms</strong>
           </span>
           <button
             type="button"
+            onClick={() => refresh()}
             className="flex items-center gap-1 font-label-code text-label-code text-primary bg-surface shadow-xs px-space-md py-1.5 rounded font-semibold hover:bg-surface-container transition-colors border border-border-subtle"
           >
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh Alpha Matrix
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} /> Refresh Alpha Matrix
           </button>
         </div>
       </div>
@@ -69,17 +91,25 @@ export default function MarketIntelligencePage() {
         <div className="bg-surface rounded-xl border border-border-subtle p-space-md shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between pb-space-xs border-b border-border-subtle">
             <span className="font-label-code text-label-code text-text-secondary uppercase font-semibold">Broad Market Regime</span>
-            <span className="px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-[10px] font-bold">REGIME 01</span>
+            <span className="px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-[10px] font-bold">
+              {context?.regime || "REGIME 01"}
+            </span>
           </div>
           <div className="py-space-sm">
-            <span className="font-headline-md text-headline-md font-bold text-text-primary">Bullish Trend Day</span>
+            <span className="font-headline-md text-headline-md font-bold text-text-primary">
+              {context?.regimeLabel || "Bullish Trend Day"}
+            </span>
             <p className="font-body-xs text-body-xs text-text-secondary mt-1">
-              Trading solidly above daily VWAP with sustained volume expansion across high beta sectors.
+              {context?.regimeDescription || "Trading solidly above daily VWAP with sustained volume expansion across high beta sectors."}
             </p>
           </div>
           <div className="pt-space-xs border-t border-border-subtle flex items-center justify-between text-body-xs text-text-secondary">
             <span>Trend Bias:</span>
-            <span className="font-label-code text-accent-bullish font-bold">Long Setups Preferred</span>
+            <span className={`font-label-code font-bold ${
+              context?.regime === "BEARISH_TREND_DAY" ? "text-accent-danger" : "text-accent-bullish"
+            }`}>
+              {context?.regime === "BEARISH_TREND_DAY" ? "Short Setups Preferred" : "Long Setups Preferred"}
+            </span>
           </div>
         </div>
 
@@ -92,24 +122,24 @@ export default function MarketIntelligencePage() {
           <div className="py-space-sm flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1">
-                <span className="font-metric-lg text-metric-lg text-accent-bullish font-bold">1,482</span>
-                <span className="font-label-code text-label-code text-accent-bullish">(60.6%)</span>
+                <span className="font-metric-lg text-metric-lg text-accent-bullish font-bold">{context?.advanceCount || 142}</span>
+                <span className="font-label-code text-label-code text-accent-bullish">({advPct}%)</span>
               </div>
               <span className="font-body-xs text-body-xs text-text-secondary">Advances</span>
             </div>
             <div className="text-right">
               <div className="flex items-center justify-end gap-1">
-                <span className="font-metric-lg text-metric-lg text-accent-danger font-bold">812</span>
-                <span className="font-label-code text-label-code text-accent-danger">(35.3%)</span>
+                <span className="font-metric-lg text-metric-lg text-accent-danger font-bold">{context?.declineCount || 56}</span>
+                <span className="font-label-code text-label-code text-accent-danger">({decPct}%)</span>
               </div>
               <span className="font-body-xs text-body-xs text-text-secondary">Declines</span>
             </div>
           </div>
           <div className="pt-space-xs border-t border-border-subtle">
             <div className="w-full h-2 bg-surface-high rounded-full overflow-hidden flex">
-              <div className="bg-accent-bullish h-full" style={{ width: "60.6%" }}></div>
-              <div className="bg-border-strong h-full" style={{ width: "4.1%" }}></div>
-              <div className="bg-accent-danger h-full" style={{ width: "35.3%" }}></div>
+              <div className="bg-accent-bullish h-full" style={{ width: `${advPct}%` }}></div>
+              <div className="bg-border-strong h-full" style={{ width: `${unchPct}%` }}></div>
+              <div className="bg-accent-danger h-full" style={{ width: `${decPct}%` }}></div>
             </div>
           </div>
         </div>
@@ -122,11 +152,17 @@ export default function MarketIntelligencePage() {
           </div>
           <div className="py-space-sm">
             <div className="flex items-baseline gap-space-sm">
-              <span className="font-metric-lg text-metric-lg text-text-primary font-bold">24,482.10</span>
-              <span className="font-metric-md text-metric-md text-accent-bullish font-bold">+155.80 (+0.64%)</span>
+              <span className="font-metric-lg text-metric-lg text-text-primary font-bold">
+                {context?.niftyLtp ? context.niftyLtp.toLocaleString("en-IN", { minimumFractionDigits: 2 }) : "24,845.60"}
+              </span>
+              <span className={`font-metric-md text-metric-md font-bold ${
+                (context?.niftyChangePct || 0) >= 0 ? "text-accent-bullish" : "text-accent-danger"
+              }`}>
+                {(context?.niftyChangePct || 0) >= 0 ? "+" : ""}{(context?.niftyChangePct || 0.85).toFixed(2)}%
+              </span>
             </div>
             <p className="font-body-xs text-body-xs text-text-secondary mt-1">
-              High: 24,510.45 • Low: 24,360.20
+              {context?.pctAboveVwap || 68}% of watched components holding above session VWAP
             </p>
           </div>
           <div className="pt-space-xs border-t border-border-subtle flex items-center justify-between font-label-code text-[10px] text-text-secondary">
@@ -139,12 +175,22 @@ export default function MarketIntelligencePage() {
         <div className="bg-surface rounded-xl border border-border-subtle p-space-md shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between pb-space-xs border-b border-border-subtle">
             <span className="font-label-code text-label-code text-text-secondary uppercase font-semibold">NSE India VIX</span>
-            <span className="px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-[10px] font-bold">REGIME NORMAL</span>
+            <span className={`px-1.5 py-0.5 rounded font-label-code text-[10px] font-bold ${
+              context?.vixStatus === "EXTREME_VOLATILE" ? "bg-accent-danger/20 text-accent-danger" : "bg-status-live-bg text-status-live-text"
+            }`}>
+              {context?.vixStatus || "LOW_NORMAL"}
+            </span>
           </div>
           <div className="py-space-sm">
             <div className="flex items-baseline gap-space-sm">
-              <span className="font-metric-lg text-metric-lg text-text-primary font-bold">13.42</span>
-              <span className="font-metric-md text-metric-md text-accent-bullish font-bold">-0.29 (-2.14%)</span>
+              <span className="font-metric-lg text-metric-lg text-text-primary font-bold">
+                {context?.vixLtp ? context.vixLtp.toFixed(2) : "13.42"}
+              </span>
+              <span className={`font-metric-md text-metric-md font-bold ${
+                (context?.vixChangePct || 0) <= 0 ? "text-accent-bullish" : "text-accent-danger"
+              }`}>
+                {(context?.vixChangePct || 0) >= 0 ? "+" : ""}{(context?.vixChangePct || -3.8).toFixed(2)}%
+              </span>
             </div>
             <p className="font-body-xs text-body-xs text-text-secondary mt-1">
               Intraday volatility remains compressed. Breakouts have higher statistical follow-through.

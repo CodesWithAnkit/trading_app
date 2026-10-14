@@ -11,6 +11,8 @@ import { ExplainableEvidenceCard } from "@/components/domain/ExplainableEvidence
 import { RiskGatesChecklist } from "@/components/domain/RiskGatesChecklist"
 import { ContradictoryFactorsCard } from "@/components/domain/ContradictoryFactorsCard"
 
+import { useExplainableAnalysis } from "@/lib/hooks/useExplainableAnalysis"
+
 type AnalysisPayload = { signal?: Signal; approaching?: ApproachingSetup }
 
 export default function StockAnalysisPage() {
@@ -21,6 +23,8 @@ export default function StockAnalysisPage() {
   const [isSaving, setIsSaving] = React.useState(false)
   const [remote, setRemote] = React.useState<AnalysisPayload | null>(null)
   const [loadState, setLoadState] = React.useState<"loading" | "done">("loading")
+
+  const { analysis, exportAuditJson } = useExplainableAnalysis(symbol)
 
   const contextSignal = activeSignals.find(s => s.symbol === symbol)
 
@@ -116,7 +120,32 @@ export default function StockAnalysisPage() {
     }
   }
 
+  const mappedGates = React.useMemo(() => {
+    if (!analysis?.riskGates) return undefined
+    return analysis.riskGates.map(g => ({
+      id: g.id,
+      name: g.title,
+      detail: `${g.description} • ${g.measuredValue || ""}`,
+      status: (g.status === "PASS" ? "PASS" : g.status === "FAIL" ? "REJECT" : "NO_TRADE") as "PASS" | "REJECT" | "NO_TRADE",
+    }))
+  }, [analysis])
+
+  const mappedFactors = React.useMemo(() => {
+    if (!analysis?.contradictoryFactors) return undefined
+    return analysis.contradictoryFactors.map(f => ({
+      id: f.id,
+      title: f.title,
+      description: f.friction,
+      icon: f.severity === "HIGH" ? "report_problem" : "warning",
+    }))
+  }, [analysis])
+
   const handleDownloadAuditJson = () => {
+    if (analysis) {
+      exportAuditJson()
+      return
+    }
+
     const auditRecord = {
       symbol: signal.symbol,
       exchange: signal.exchange,
@@ -130,12 +159,12 @@ export default function StockAnalysisPage() {
         referenceEntry: signal.referenceEntry,
         stopLoss: signal.stop,
         targets: signal.targets,
-        riskReward: signal.metrics?.riskReward
+        riskReward: signal.metrics?.riskReward,
       },
       evaluationMetrics: signal.metrics,
       confidenceScore: signal.confidence,
       deterministicRationale: signal.rationale,
-      disclaimer: "Decision support record for manual execution in Angel One SmartAPI terminal only. No automated order placed."
+      disclaimer: "Decision support record for manual execution in Angel One SmartAPI terminal only. No automated order placed.",
     }
 
     const blob = new Blob([JSON.stringify(auditRecord, null, 2)], { type: "application/json" })
@@ -143,7 +172,9 @@ export default function StockAnalysisPage() {
     const a = document.createElement("a")
     a.href = url
     a.download = `audit_${signal.symbol}_${new Date().toISOString().split("T")[0]}.json`
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
 
@@ -312,10 +343,10 @@ export default function StockAnalysisPage() {
           </div>
 
           {/* Deterministic 6-Risk-Gate Matrix */}
-          <RiskGatesChecklist />
+          <RiskGatesChecklist gates={mappedGates} />
 
           {/* Contradictory Evidence & Invalidation Factors */}
-          <ContradictoryFactorsCard />
+          <ContradictoryFactorsCard factors={mappedFactors} />
         </div>
       </div>
     </div>
