@@ -7,7 +7,7 @@ import { BottomNav } from "./BottomNav"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-background font-body-md text-on-surface antialiased min-h-screen w-full">
+    <div className="bg-background font-body-md text-on-surface antialiased min-h-screen w-full overflow-x-hidden">
       <Sidebar />
       <div className="lg:pl-[248px]">
         <Topbar />

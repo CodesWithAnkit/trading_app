@@ -1,0 +1,14 @@
+.git
+.github
+.agents
+.claude
+node_modules
+apps/*/node_modules
+dist
+apps/*/dist
+.next
+apps/*/.next
+coverage
+docs
+error.log
+*.log

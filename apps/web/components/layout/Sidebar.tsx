@@ -12,6 +12,7 @@ export function Sidebar() {
 
   const links = [
     { href: "/dashboard", label: "Dashboard", icon: "grid_view" },
+    { href: "/dashboard/markets", label: "Markets", icon: "monitoring" },
     { href: "/dashboard/signals", label: "Signals", icon: "bolt", badge: activeSignals.length > 0 ? `${activeSignals.length} active` : undefined, badgeClass: "bg-secondary-container text-on-secondary-container" },
     { href: "/dashboard/trades", label: "Trades", icon: "stacked_line_chart", badge: openTrades.length > 0 ? `${openTrades.length} open` : undefined, badgeClass: "bg-primary-fixed text-on-primary-fixed" },
     { href: "/dashboard/journal", label: "Journal", icon: "menu_book" },

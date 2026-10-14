@@ -4,20 +4,43 @@ import { SignalCard } from "@/components/domain/SignalCard"
 import { useSignals } from "@/lib/contexts/SignalContext"
 import { useTrades } from "@/lib/contexts/TradeContext"
 import { useDashboardState } from "@/lib/contexts/DashboardContext"
-import { ShieldCheck, Radar, TrendingUp, History, AlertTriangle, Inbox, Edit, ArrowUpRight, ArrowDownRight, BadgeInfo, Signal, CheckCircle2, ChevronRight } from "lucide-react"
+import { ShieldCheck, Radar, TrendingUp, History, AlertTriangle, Inbox, Edit, ArrowUpRight, ArrowDownRight, BadgeInfo, Signal, CheckCircle2, ChevronRight, Crosshair, Flame } from "lucide-react"
+import { MarketWatch } from "@/components/domain/MarketWatch"
+import { ScannerPipelineSummary } from "@/components/domain/ScannerPipelineSummary"
+import { ApproachingCard } from "@/components/domain/ApproachingCard"
+import { MomentumLeaders } from "@/components/domain/MomentumLeaders"
+import { OutcomesComparison } from "@/components/domain/OutcomesComparison"
+import { isAfterMarketHours, isBeforeMarketOpen } from "@/lib/scanner-types"
+import { ClosedPlans } from "@/components/domain/ClosedPlans"
 
 export default function DashboardPage() {
-  const { activeSignals } = useSignals()
+  const { activeSignals, closedSignals, approachingSignals, momentum, watchingCount, streamStatus, hydrated } = useSignals()
   const { openTrades } = useTrades()
-  const { marketState, setMarketState } = useDashboardState()
+  const { marketState, marketStatus, setMarketState, sessionElapsedMinutes, instruments } = useDashboardState()
+  const elapsedHours = Math.floor(sessionElapsedMinutes / 60)
+  const elapsedMins = sessionElapsedMinutes % 60
+  const watching = watchingCount || instruments.length
+
+  // Client clock only, so server and first client render agree.
+  const [afterHours, setAfterHours] = React.useState(false)
+  const [beforeOpen, setBeforeOpen] = React.useState(false)
+  React.useEffect(() => {
+    const check = () => {
+      setAfterHours(isAfterMarketHours())
+      setBeforeOpen(isBeforeMarketOpen())
+    }
+    check()
+    const id = setInterval(check, 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   const longSignalsCount = activeSignals.filter(s => s.direction === "LONG").length
   const shortSignalsCount = activeSignals.filter(s => s.direction === "SHORT").length
 
   return (
-    <div className="flex flex-col gap-6 w-full">
+    <div className="px-space-md sm:px-space-xl py-space-md sm:py-space-lg flex flex-col gap-space-lg max-w-[1720px] mx-auto w-full">
       {/* Top Greeting & State Switcher */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-xs">
         <div className="flex flex-col">
           <h1 className="text-2xl font-bold text-text flex items-center gap-2 tracking-tight">
             Good morning, Ankit
@@ -26,75 +49,70 @@ export default function DashboardPage() {
             </span>
           </h1>
           <p className="text-sm text-text-muted flex items-center gap-2 mt-1">
-            <span>Tuesday, 24 Oct 2023</span>
+            <span>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}</span>
             <span className="w-1 h-1 rounded-full bg-border"></span>
             <span>IST Market Session 09:15 – 15:30</span>
             <span className="w-1 h-1 rounded-full bg-border"></span>
-            <span className="font-mono text-xs font-semibold text-primary">Session Elapsed: 2h 09m</span>
+            <span className="font-mono text-xs font-semibold text-primary">Session Elapsed: {elapsedHours}h {elapsedMins.toString().padStart(2, '0')}m</span>
           </p>
-        </div>
-
-        {/* Demo Switcher for Dashboard States */}
-        <div className="flex items-center gap-3 bg-surface p-2 rounded-lg border border-border shadow-sm">
-          <div className="flex items-center gap-1 bg-surface-muted p-1 rounded-md text-xs">
-            <button 
-              onClick={() => setMarketState('LIVE')}
-              className={`px-3 py-1 rounded font-semibold transition-all ${marketState === 'LIVE' ? 'bg-surface text-primary border border-border' : 'text-text-muted hover:text-text'}`}>
-              Live
-            </button>
-            <button 
-              onClick={() => setMarketState('DELAYED')}
-              className={`px-3 py-1 rounded font-semibold transition-all ${marketState === 'DELAYED' ? 'bg-surface text-warning border border-warning/30' : 'text-text-muted hover:text-text'}`}>
-              Delayed
-            </button>
-            <button 
-              onClick={() => setMarketState('DISCONNECTED')}
-              className={`px-3 py-1 rounded font-semibold transition-all ${marketState === 'DISCONNECTED' ? 'bg-surface text-risk border border-risk/30' : 'text-text-muted hover:text-text'}`}>
-              Disconnected
-            </button>
-            <button 
-              onClick={() => setMarketState('SIMULATED')}
-              className={`px-3 py-1 rounded font-semibold transition-all ${marketState === 'SIMULATED' ? 'bg-surface text-info border border-info/30' : 'text-text-muted hover:text-text'}`}>
-              Simulated
-            </button>
-          </div>
         </div>
       </div>
 
       {/* Disconnected / Delayed States Warning Banner */}
       {(marketState === 'DELAYED' || marketState === 'DISCONNECTED') && (
         <div className={`p-4 rounded-lg flex items-start gap-3 border ${marketState === 'DELAYED' ? 'bg-warning-soft border-warning/30' : 'bg-risk-soft border-risk/30'}`}>
-          <AlertTriangle className={`w-5 h-5 shrink-0 ${marketState === 'DELAYED' ? 'text-warning' : 'text-risk'}`} />
-          <div className="flex flex-col">
-            <span className={`text-sm font-bold ${marketState === 'DELAYED' ? 'text-warning' : 'text-risk'}`}>
-              {marketState === 'DELAYED' ? 'Market Data Feed is Delayed' : 'Data Feed Disconnected'}
-            </span>
-            <span className="text-sm text-text-muted mt-0.5">
-              {marketState === 'DELAYED' 
-                ? 'Quotes are running 15 minutes behind. Scanner is paused. Do not use for live trading decisions until feed catches up.' 
-                : 'Connection to the quotes server has dropped. The scanner is halted. Attempting to reconnect...'}
-            </span>
+            <AlertTriangle className={`w-5 h-5 shrink-0 ${marketState === 'DELAYED' ? 'text-warning' : 'text-risk'}`} />
+            <div className="flex flex-col">
+              <span className={`text-sm font-bold ${marketState === 'DELAYED' ? 'text-warning' : 'text-risk'}`}>
+                {marketState === 'DELAYED' ? 'Market Data Feed is Delayed' : 'Data Feed Disconnected'}
+              </span>
+              <span className="text-sm text-text-muted mt-0.5">
+                {marketState === 'DELAYED'
+                  ? 'Quotes are running 15 minutes behind. Scanner is paused. Do not use for live trading decisions until feed catches up.'
+                  : 'Connection to the quotes server has dropped. The scanner is halted. Attempting to reconnect...'}
+              </span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {/* Metric 1 */}
+        {/* Metric 1: Market Feed Status */}
         <div className="bg-surface p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
           <div className="flex flex-col">
-            <span className="text-xs uppercase text-text-muted font-bold tracking-wider">Today's Net P&L</span>
-            <span className="text-xs text-text-muted mt-1 truncate">Calculated from manual journal</span>
+            <span className="text-xs uppercase text-text-muted font-bold tracking-wider">Market Feed Status</span>
+            <span className="text-xs text-text-muted mt-1 truncate">{marketStatus?.providerType === 'angelone' ? 'Angel One SmartAPI' : 'Mock Data Provider'}</span>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
-            <span className="font-mono text-2xl font-bold text-long tracking-tight">₹+18,450.00</span>
-            <span className="text-[10px] uppercase font-bold text-long bg-long-soft px-1.5 py-0.5 rounded">
-              3 closed
+            <span className={`font-mono text-2xl font-bold tracking-tight ${
+              marketState === 'LIVE' ? 'text-primary' : 
+              marketState === 'DELAYED' ? 'text-warning' : 
+              marketState === 'DISCONNECTED' ? 'text-risk' : 
+              'text-text'
+            }`}>
+              {marketStatus?.sessionState === 'CLOSED' && marketState !== 'SIMULATED' ? 'CLOSED' : marketState}
+            </span>
+            <span className="text-[10px] uppercase font-bold text-text-muted bg-surface-muted px-1.5 py-0.5 rounded border border-border">
+              {marketStatus?.sessionState || 'UNKNOWN'}
             </span>
           </div>
         </div>
 
-        {/* Metric 2 */}
+        {/* Metric 2: Stocks Monitored */}
+        <div className="bg-surface p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
+          <div className="flex flex-col">
+            <span className="text-xs uppercase text-text-muted font-bold tracking-wider">Stocks Monitored</span>
+            <span className="text-xs text-text-muted mt-1 truncate">Filtered Universe</span>
+          </div>
+          <div className="mt-4 flex items-baseline justify-between">
+            <span className="font-mono text-2xl font-bold text-text tracking-tight">{instruments.length}</span>
+            <span className="text-[10px] uppercase font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+              {instruments.filter(i => i.status !== 'UNAVAILABLE').length} Eligible
+            </span>
+          </div>
+        </div>
+
+        {/* Metric 3: Active Signals */}
         <div className="bg-surface p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
           <div className="flex flex-col">
             <span className="text-xs uppercase text-text-muted font-bold tracking-wider">Active Signals</span>
@@ -109,34 +127,38 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Metric 3 */}
+        {/* Metric 4: Scanner Health */}
         <div className="bg-surface p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
           <div className="flex flex-col">
-            <span className="text-xs uppercase text-text-muted font-bold tracking-wider">Open Trades</span>
-            <span className="text-xs text-primary font-medium mt-1 truncate">Risk safely placed</span>
-          </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <span className="font-mono text-2xl font-bold text-long tracking-tight">₹+6,820.00</span>
-            <span className="text-[10px] uppercase font-bold text-text-muted">
-              Unrealized
+            <span className="text-xs uppercase text-text-muted font-bold tracking-wider">Scanner Health</span>
+            <span className="text-xs text-text-muted mt-1 truncate">
+              {marketStatus?.lastTickAt 
+                ? `Last update: ${new Date(marketStatus.lastTickAt).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+                : 'No updates yet'}
             </span>
           </div>
-        </div>
-
-        {/* Metric 4 */}
-        <div className="bg-surface p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
-          <div className="flex flex-col">
-            <span className="text-xs uppercase text-text-muted font-bold tracking-wider">Session Win Rate</span>
-            <span className="text-xs text-text-muted mt-1 truncate">5 Wins / 2 Losses</span>
-          </div>
           <div className="mt-4 flex items-baseline justify-between">
-            <span className="font-mono text-2xl font-bold text-text tracking-tight">71.4%</span>
+            <span className={`font-mono text-2xl font-bold tracking-tight ${
+              (marketState === 'LIVE' || marketState === 'SIMULATED') ? 'text-primary' : 
+              (marketState === 'DELAYED' || marketState === 'STALE') ? 'text-warning' : 
+              'text-risk'
+            }`}>
+              {(marketState === 'LIVE' || marketState === 'SIMULATED') ? 'Healthy' : 
+               (marketState === 'DELAYED' || marketState === 'STALE') ? 'Degraded' : 
+               'Failed'}
+            </span>
             <span className="text-[10px] uppercase font-bold text-primary bg-surface-muted px-1.5 py-0.5 rounded border border-border">
-              Avg R:R 1:2.4
+              {marketStatus?.lastTickAt ? 'ONLINE' : 'WAITING'}
             </span>
           </div>
         </div>
       </div>
+
+      {/* Scanner Pipeline Summary */}
+      <ScannerPipelineSummary />
+
+      {/* After hours: prediction vs actual */}
+      {afterHours && <OutcomesComparison />}
 
       {/* Active Signals Section */}
       <div className="flex flex-col gap-4 bg-surface p-6 rounded-xl border border-border shadow-sm">
@@ -160,9 +182,15 @@ export default function DashboardPage() {
             <div className="w-16 h-16 rounded-full bg-surface-muted flex items-center justify-center mb-4 border border-border">
               <Inbox className="w-8 h-8 text-text-muted" />
             </div>
-            <h3 className="text-lg font-semibold text-text">No active signals</h3>
+            <h3 className="text-lg font-semibold text-text">
+              {!hydrated ? "Connecting to scanner…" : afterHours ? "Market is closed" : beforeOpen ? "Waiting for the market to open" : watching === 0 ? "Scanner is connecting" : "No active signals"}
+            </h3>
             <p className="text-sm text-text-muted max-w-md mt-1">
-              The scanner is monitoring the market but no setups have met your criteria yet. Wait for the next scan cycle or adjust your parameters.
+              {afterHours
+                ? "The session ended at 15:30 IST. See how today's calls played out above; the scanner resumes at 09:15."
+                : watching === 0
+                ? "The scanner streams every F&O stock from 09:15 IST and only lets the top 20 gainers raise signals. Signals appear here as soon as a strategy triggers."
+                : `Scanner is watching ${watching} stocks. No strategy has triggered yet${approachingSignals.length > 0 ? `, but ${approachingSignals.length} ${approachingSignals.length === 1 ? "is" : "are"} approaching a trigger below` : ""}.`}
             </p>
           </div>
         ) : (
@@ -172,6 +200,49 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+        <ClosedPlans signals={closedSignals} />
+      </div>
+
+      {/* Approaching setups + momentum leaders */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+        <section className="xl:col-span-2 flex flex-col gap-4 bg-surface-container-low p-6 rounded-xl border border-outline-variant/40 shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-outline-variant/40 pb-4">
+            <div className="flex items-center gap-3">
+              <Crosshair className="text-primary w-6 h-6" />
+              <h2 className="text-lg font-bold text-on-surface tracking-tight">Approaching Setups ({approachingSignals.length})</h2>
+            </div>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant flex items-center gap-1.5" data-testid="stream-status">
+              <span className={`w-2 h-2 rounded-full ${streamStatus === "live" ? "bg-secondary animate-pulse" : "bg-outline"}`} />
+              {streamStatus === "live" ? "Live stream" : streamStatus === "reconnecting" ? "Reconnecting" : "Connecting"}
+            </span>
+          </div>
+          {approachingSignals.length === 0 ? (
+            <p className="text-sm text-on-surface-variant py-8 text-center">
+              No stock is within 1% of a strategy trigger right now. Checked on every 5-minute candle close.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {approachingSignals.map(setup => <ApproachingCard key={setup.symbol} setup={setup} />)}
+            </div>
+          )}
+        </section>
+
+        <section className="flex flex-col gap-2 bg-surface-container-low p-6 rounded-xl border border-outline-variant/40 shadow-sm">
+          <div className="flex flex-col gap-1 border-b border-outline-variant/40 pb-4 mb-1">
+            <div className="flex items-center gap-3">
+              <Flame className="text-primary w-6 h-6" />
+              <h2 className="text-lg font-bold text-on-surface tracking-tight">Momentum Leaders</h2>
+            </div>
+            <span className="text-xs text-on-surface-variant">% change × relative volume × 5m trend</span>
+          </div>
+          {momentum.length === 0 ? (
+            <p className="text-sm text-on-surface-variant py-8 text-center">
+              {watching === 0 ? (beforeOpen ? "Rankings start when the market opens at 09:15 IST." : "Waiting for the first ticks from the feed.") : `Watching ${watching} stocks. Rankings update on each 5-minute close.`}
+            </p>
+          ) : (
+            <MomentumLeaders stocks={momentum} />
+          )}
+        </section>
       </div>
 
       {/* Trades & Journal Grid */}
@@ -230,7 +301,7 @@ export default function DashboardPage() {
                             const linkedSignal = activeSignals.find(s => s.id === trade.signalId)
                             const stopPrice = linkedSignal ? linkedSignal.stop : (trade.direction === 'LONG' ? trade.entryPrice * 0.99 : trade.entryPrice * 1.01)
                             const t1Price = linkedSignal ? linkedSignal.targets.t1 : (trade.direction === 'LONG' ? trade.entryPrice * 1.02 : trade.entryPrice * 0.98)
-                            
+
                             return (
                               <>
                                 <span className="text-risk font-medium">SL: ₹{stopPrice.toFixed(2)}</span>
@@ -260,43 +331,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Timeline Widget */}
-        <div className="bg-surface p-6 rounded-xl border border-border shadow-sm flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-border pb-4">
-            <div className="flex items-center gap-2">
-              <History className="text-primary w-5 h-5" />
-              <h3 className="text-base font-bold text-text tracking-tight">Today's Trade Log</h3>
-            </div>
-            <a className="text-[10px] uppercase text-primary font-bold hover:underline" href="/dashboard/journal">Full Journal</a>
-          </div>
-          
-          <div className="relative pl-5 space-y-5 before:absolute before:left-1.75 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
-            <div className="relative">
-              <div className="absolute left-[-1.25rem] top-1.5 w-2 h-2 rounded-full bg-primary ring-4 ring-surface"></div>
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-text-muted mb-0.5">10:42 AM IST</span>
-                <span className="text-sm font-semibold text-text">Entered HDFCBANK @ ₹1,520.00</span>
-                <p className="text-xs text-text-muted mt-0.5">300 Shares · 5-min ORB setup</p>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="absolute left-[-1.25rem] top-1.5 w-2 h-2 rounded-full bg-primary ring-4 ring-surface"></div>
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-text-muted mb-0.5">10:15 AM IST</span>
-                <span className="text-sm font-semibold text-text">Entered ICICIBANK @ ₹942.00</span>
-                <p className="text-xs text-text-muted mt-0.5">250 Shares · Pullback to VWAP</p>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="absolute left-[-1.25rem] top-1.5 w-2 h-2 rounded-full bg-long ring-4 ring-surface"></div>
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-text-muted mb-0.5">09:55 AM IST</span>
-                <span className="text-sm font-semibold text-text">Exited SBIN Target 2 @ ₹582.40</span>
-                <p className="text-xs text-text-muted mt-0.5">100 Shares · +₹1,240.00 P&L Locked</p>
-              </div>
-            </div>
-          </div>
+        <div className="bg-surface p-0 rounded-xl border border-transparent shadow-none flex flex-col gap-4">
+          <MarketWatch />
         </div>
       </div>
     </div>
-  )
+      )
 }

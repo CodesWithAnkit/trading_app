@@ -2,9 +2,17 @@
 import * as React from "react"
 import { Clock, AlertCircle } from "lucide-react"
 
+import type { SignalStatus } from "@/mock/signals"
+
 interface ExpiryTimerProps {
-  status: "ACTIVE" | "EXPIRING" | "EXPIRED" | "INVALIDATED" | "SKIPPED" | "ENTERED"
+  status: SignalStatus
   expiresAt: string
+}
+
+const CLOSED_LABEL: Partial<Record<SignalStatus, string>> = {
+  TARGET_HIT: "Target hit",
+  STOP_HIT: "Stop hit",
+  TIME_EXIT: "Time exit",
 }
 
 export function ExpiryTimer({ status, expiresAt }: ExpiryTimerProps) {
@@ -29,6 +37,16 @@ export function ExpiryTimer({ status, expiresAt }: ExpiryTimerProps) {
   }, [expiresAt, status])
 
   const baseClasses = "px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border"
+
+  // A plan closed by live exit tracking shows how it ended, not an entry countdown (spec 0010).
+  const closed = CLOSED_LABEL[status]
+  if (closed) {
+    return (
+      <div className={`${baseClasses} bg-surface-muted border-border text-text-muted`}>
+        {closed}
+      </div>
+    )
+  }
 
   if (status === "EXPIRED" || timeLeft <= 0 && (status === "ACTIVE" || status === "EXPIRING")) {
     return (

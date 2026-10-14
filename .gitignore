@@ -48,3 +48,6 @@ playwright-report/
 blob-report/
 playwright/.cache/
 playwright/.auth/
+
+# Angel One SmartAPI SDK error log: holds login request details (password, TOTP, API key)
+error.log

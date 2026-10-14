@@ -8,8 +8,15 @@
 | Intraday Stock Tracker Dashboard UI | done |
 | Remaining Intraday Dashboard Pages | done |
 | Real API Implementation (Phase 3) | done |
-| Angel One Market Data Integration (Phase 4) | planned |
-
+| Angel One Market Data Integration (Phase 4) | done |
+| Live Dashboard Integration (Phase 4B) | done |
+| Live Market and Scanner UI (Phase 4C) | done |
+| Dynamic Stock Analysis & Strategy Engine (Phase 5) | done |
+| Real Stock Analysis and Outcome Tracking (Phase 6) | in-progress |
+| Top Bar Symbol Search | done |
+| Analysis Page Chart | done |
+| Add bulk actions to manage multiple trades | in-progress |
+| Deploy Monorepo Web and Backend on Free Tier | in-progress |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -77,18 +84,158 @@
 
 ---
 
-## Angel One Market Data Integration (Phase 4) `planned`
+## Angel One Market Data Integration (Phase 4) `done`
 
 **Intent**: Integrate Angel One's SmartAPI as the real market data source for the Scanner Worker, discarding mock data.
 **Done when**: The worker maintains a stable WebSocket connection to Angel One, normalizes ticks into 1m/5m candles, and the strategy engine acts on this verified real market data.
 
-- [ ] Design it (spec): [0005](../specs/0005-angel-one-market-data.md)
-- [ ] Build it: /develop Angel One Market Data Integration
-  - [ ] Define Provider interface and canonical domain types (AC-3, AC-4)
-  - [ ] Implement TickNormalizer and CandleAggregator (AC-3, AC-4)
-  - [ ] Create AngelOneMarketDataProvider with SmartAPI SDK (AC-1, AC-2)
-  - [ ] Implement reconnect state machine (AC-5)
-  - [ ] Wire provider into Scanner, flush FeedHealth to Supabase (AC-1, AC-4, AC-6, AC-8)
-  - [ ] Implement live smoke-test CLI script (AC-7)
+- [x] Design it (spec): [0005](../specs/0005-angel-one-market-data/index.md)
+- [x] Build it: /develop Angel One Market Data Integration
+  - [x] Define Provider interface and canonical domain types (AC-3, AC-4)
+  - [x] Implement TickNormalizer and CandleAggregator (AC-3, AC-4)
+  - [x] Create AngelOneMarketDataProvider with SmartAPI SDK (AC-1, AC-2)
+  - [x] Implement reconnect state machine (AC-5)
+  - [x] Wire provider into Scanner, flush FeedHealth to Supabase (AC-1, AC-4, AC-6, AC-8)
+  - [x] Implement live smoke-test CLI script (AC-7)
+- [x] Verify it: /check verify
+- [x] Test it: /test
+
+---
+
+## Live Dashboard Integration (Phase 4B) `done`
+
+**Intent**: Connect the real Angel One market data pipeline end to end through the dashboard, replacing all mock/hardcoded data with live scanner output.
+**Done when**: The dashboard shows real stock prices, real market status, real candles, and real signals (or an honest empty state) sourced from the live Angel One feed, with scanner diagnostics visible in development.
+
+- [x] Design it (spec): [0006](../specs/0006-live-dashboard-integration/index.md)
+- [x] Build it: /develop Live Dashboard Integration
+  - [x] Instruments table, token resolution, and session clock (AC-1, AC-6)
+  - [x] Market status and market watch APIs with in memory tick storage (AC-2, AC-4, AC-9)
+  - [x] Dashboard context rewrite and MarketWatch component (AC-2, AC-3, AC-4)
+  - [x] Strategy engine port to backend and candles API (AC-5, AC-8)
+  - [x] Scanner diagnostics and mock path validation (AC-7, AC-10)
+- [x] Verify it: /check verify
+- [x] Test it: /test
+
+---
+
+## Live Market and Scanner UI (Phase 4C) `done`
+
+**Intent**: Implement the approved Stitch design for live market data and scanner visualization UI, adding Markets and Stock Detail pages and updating the dashboard to consume real data.
+**Done when**: The dashboard, Markets page, and Stock Detail page show real market data from the backend APIs with proper loading, error, and market closed states, and all existing routes continue working.
+
+- [x] Design it (spec): [0007](../specs/0007-live-market-ui/index.md)
+- [x] Build it: /develop Live Market and Scanner UI
+  - [x] MarketDataContext, MarketStatusBadge, and sidebar update (AC-1, AC-9)
+  - [x] Dashboard cards, scanner summary, market watch, and signals sections (AC-2, AC-3, AC-4, AC-5)
+  - [x] Markets page with pipeline, feed health, and candle engine (AC-6, AC-7)
+  - [x] Stock Detail page with chart, metrics, scanner evaluation, and setup (AC-8)
+  - [x] Loading, error, responsive, accessibility, and mock mode (AC-10, AC-11, AC-15, AC-16, AC-17)
+- [x] Verify it: /check verify
+- [x] Test it: /test
+
+---
+
+## Dynamic Stock Analysis & Strategy Engine (Phase 5) `done`
+
+**Intent**: Implement a dynamic market scanner that fetches the Nifty 50 or Top Gainers and evaluates them against 4 quantitative trading strategies (VWAP, Momentum, Mean-Reversion, Scalping) to automatically surface the top bullish stocks and generate trade plans.
+**Done when**: The dashboard dynamically selects stocks, evaluates them using the new multi-strategy engine, displays the active or approaching setups on the UI, and allows saving generated trade plans to a manual journal.
+
+- [x] Design it (spec): [0008](../specs/0008-dynamic-stock-analysis/index.md)
+- [x] Build it: /develop Dynamic Stock Analysis
+  - [x] Database migration for journal_entries (AC-7)
+  - [x] Dynamic instrument discovery on backend startup (AC-1, AC-2)
+  - [x] Implement Vwap, Momentum, MeanReversion, Scalping strategy evaluators (AC-3, AC-4, AC-5)
+  - [x] API endpoints for /top-setups and /journal (AC-6)
+  - [x] UI Integration: Top Bullish dashboard, Analysis page, Trade Plan component, and Journal UI (AC-6, AC-7, AC-8, AC-9, AC-10)
+- [x] Verify it: /check verify
+- [x] Test it: /test
+
+---
+
+## Real Stock Analysis and Outcome Tracking (Phase 6) `in-progress`
+
+**Intent**: Eliminate mock data entirely during market hours by using real-time Angel One data for daily momentum scoring and "approaching" strategy setups. Adds Server Sent Events (SSE) for real-time updates and an end-of-day reconciliation task to track predicted vs actual outcomes.
+**Done when**: The dashboard shows real stocks ranked by momentum score without mock fallbacks, approaching setups stream via SSE, and the system reconciles prediction outcomes at the end of the day to show accuracy summaries after hours.
+
+- [x] Design it (spec): [0009](../specs/0009-real-stock-analysis/index.md), [0010](../specs/0010-live-exit-tracking/index.md) · assumed decision ([spec 0011](../specs/0011-live-eligibility-thresholds.md), owes /architect ratification) · code in `apps/backend/src/scanner/` (universe in `universe/`) and `apps/web/app/dashboard/`
+- [x] Build it: /develop Real Stock Analysis and Outcome Tracking
+  - [x] Database migration: `actual_high/low/close` and outcome columns (AC-6)
+  - [x] Daily momentum score & Approaching setup detection (AC-1, AC-2)
+  - [x] SSE `/stream` and analysis API endpoints (AC-3, AC-4, AC-5)
+  - [x] EOD reconciliation cron and CLI task (AC-7, AC-8)
+  - [x] Frontend: Remove mock fallback, integrate SSE for SignalContext (AC-1, AC-4, AC-11)
+  - [x] Frontend: Approaching setup cards and after-hours outcome UI (AC-2, AC-9, AC-10)
+  - [x] Gainers only universe: token cache, merged subscriptions, candle upsert, and the 15 minute F&O gainers refresh (AC-1, AC-12, AC-13)
+  - [x] Quote mode feed with day change from the previous close (AC-1, AC-14)
+  - [x] Backfill, restart recovery, daily reset, and universe status (AC-1, AC-12, AC-15)
+  - [x] Stream all F&O stocks from the public instrument file, chunked subscriptions, REST paths removed (0009 AC-12, AC-13)
+  - [x] Restart reload from saved candles, batched candle writes, top 20 gate, replay from saved candles (0009 AC-15, AC-16, AC-17)
+  - [x] Live exit tracking: tick exits, 15:15 time exit, one open plan per stock and strategy, atomic writes, restart catch up (0010 AC-1 to AC-5, AC-7)
+  - [x] Exit alerts, Closed today list, and live vs candle check results on the dashboard (0010 AC-6, AC-8, AC-9)
 - [ ] Verify it: /check verify
-- [ ] Test it: /test
+- [x] Test it: /test
+
+---
+
+## Top Bar Symbol Search `done`
+
+**Intent**: Make the top bar search box a quick jump to any of today's watched F&O stocks, with live price, change and plan status, reachable from the keyboard.
+**Done when**: Typing part of a symbol lists up to 8 stocks, watched F&O ones first with live context and any other NSE stock tagged "Not watched"; Enter or click opens the stock's analysis page (open plan) or market page; ⌘K / Ctrl+K, arrows and Esc work; it works before the open and falls back to live stocks if the list can't load.
+
+- [x] Design it (spec): [0012](../specs/0012-topbar-symbol-search.md) · code in `apps/web/components/domain/SymbolSearch.tsx`, `apps/web/lib/symbolSearch.ts`, `GET /api/v1/scanner/universe`
+- [x] Build it: /develop Top Bar Symbol Search
+  - [x] Universe endpoint and search core (matching, 8 cap, route choice) (AC-1, AC-2, AC-5)
+  - [x] SymbolSearch combobox in the top bar with live rows, tags, empty, loading and fallback states (AC-1, AC-3, AC-4, AC-5, AC-8)
+  - [x] Keyboard (⌘K / Ctrl+K, arrows, Enter, two step Esc) and accessible combobox roles, with tests (AC-6, AC-7)
+  - [x] Every NSE stock findable: NSE list on the backend, F&O first ranking, "Not watched" rows, F&O only fallback note (AC-1 to AC-5, AC-10)
+  - [x] Not streamed banner on the market page for non F&O stocks, with tests (AC-9)
+- [x] Verify it: /check verify Top Bar Symbol Search
+- [x] Test it: /test Top Bar Symbol Search
+
+---
+
+## Analysis Page Chart `done`
+
+**Intent**: Implement an interactive candlestick chart on the dynamic stock analysis page to give traders visual confirmation of the strategy setup.
+**Done when**: The chart renders historical candles, live price updates, volume bars, and horizontal setup lines (Entry, Stop Loss, Target) using TradingView Lightweight Charts.
+
+- [x] Design it (spec): [0013](../specs/0013-analysis-page-chart.md)
+- [x] Build it: /develop Analysis Page Chart
+  - [x] Install library and create component skeleton (AC-1, AC-6)
+  - [x] Wire SignalContext and render candles with volume (AC-2, AC-5, AC-7)
+  - [x] Implement setup price lines and real-time tick updates (AC-3, AC-4)
+  - [x] Replace placeholder in UI
+- [x] Verify it: /check verify Analysis Page Chart
+- [x] Test it: /test Analysis Page Chart
+
+---
+
+## Add bulk actions to manage multiple trades `in-progress`
+
+**Intent**: Add bulk actions to the Trades page so users can manage multiple positions at once without repetitive clicking.
+**Done when**: The Trades table has checkboxes, a floating action bar appears on selection, and the bulk close action successfully iterates and executes the close logic for all selected trades.
+
+- [x] Design it (spec): [0014](../specs/0014-bulk-trade-actions/index.md)
+- [x] Build it: /develop Add bulk actions to manage multiple trades
+  - [x] Checkboxes and floating action bar (AC-1, AC-2)
+  - [x] Client side loop and notification (AC-3, AC-4)
+- [ ] Verify it: /check verify Add bulk actions to manage multiple trades
+- [ ] Test it: /test Add bulk actions to manage multiple trades
+
+---
+
+## Deploy Monorepo Web and Backend on Free Tier `in-progress`
+
+**Intent**: Deploy the Next.js frontend to Vercel and the NestJS backend scanner to Render free web service via Docker, with automated market hours pings for continuous trading hours uptime.
+**Done when**: The web app runs live on Vercel, the backend scanner runs on Render connected to Angel One and Supabase, Next.js rewrites proxy API and SSE traffic, and a scheduled pinger maintains backend wakefulness during trading hours.
+
+- [x] Design it (spec): [0016](../specs/0016-deployment-strategy/index.md) · code in `apps/backend/Dockerfile`, `render.yaml`, `apps/web/next.config.ts`, `docs/deployment/free_tier_setup_guide.md`
+- [x] Build it: /develop Deploy Monorepo Web and Backend on Free Tier
+  - [x] Production multi stage Dockerfile for backend in monorepo
+  - [x] Render blueprint configuration (render.yaml)
+  - [x] Vercel deployment and Next.js dynamic rewrites in next.config.ts
+  - [x] Market hours heartbeat schedule setup on cron job org
+- [ ] Verify it: /check verify Deploy Monorepo Web and Backend on Free Tier
+
+
