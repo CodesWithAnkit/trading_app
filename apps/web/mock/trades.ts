@@ -17,6 +17,8 @@ export type Trade = {
   status: TradeStatus
   quantity: number
   entryPrice: number
+  stopLoss?: number
+  target1?: number
   exitPrice?: number
   netPnl?: number
   grossPnl?: number

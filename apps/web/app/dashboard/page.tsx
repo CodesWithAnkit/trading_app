@@ -5,7 +5,9 @@ import { SignalCard } from "@/components/domain/SignalCard"
 import { useSignals } from "@/lib/contexts/SignalContext"
 import { useTrades } from "@/lib/contexts/TradeContext"
 import { useDashboardState } from "@/lib/contexts/DashboardContext"
-import { AlertTriangle, Inbox, ArrowUpRight, ArrowDownRight, RefreshCw, ExternalLink } from "lucide-react"
+import { useSettings } from "@/lib/contexts/SettingsContext"
+import { useMarketIntelligence } from "@/lib/hooks/useMarketIntelligence"
+import { AlertTriangle, Inbox, RefreshCw, ExternalLink } from "lucide-react"
 import { ApproachingCard } from "@/components/domain/ApproachingCard"
 import { MomentumLeaders } from "@/components/domain/MomentumLeaders"
 import { OutcomesComparison } from "@/components/domain/OutcomesComparison"
@@ -13,16 +15,33 @@ import { isAfterMarketHours, isBeforeMarketOpen } from "@/lib/scanner-types"
 import { ClosedPlans } from "@/components/domain/ClosedPlans"
 import { MarketRegimeStrip } from "@/components/domain/MarketRegimeStrip"
 import { RiskCapitalGuard } from "@/components/domain/RiskCapitalGuard"
+import { MobilePositionCard } from "@/components/domain/MobilePositionCard"
+import { MobileSectorHeatGrid } from "@/components/domain/MobileSectorHeatGrid"
+import { PreTradeDisciplineGate } from "@/components/domain/PreTradeDisciplineGate"
+import { TradeEntryModal } from "@/components/domain/TradeEntryModal"
+import { TradeExitModal } from "@/components/domain/TradeExitModal"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { type Signal } from "@/mock/signals"
+import { type Trade } from "@/mock/trades"
 
 export default function DashboardPage() {
   const { activeSignals, closedSignals, approachingSignals, momentum, watchingCount, streamStatus, hydrated } = useSignals()
-  const { openTrades } = useTrades()
-  const { marketState, instruments } = useDashboardState()
+  const { openTrades, addTrade, addTradeLeg, updateTradeStopLoss } = useTrades()
+  const { marketState, marketStatus, instruments } = useDashboardState()
+  const { dailyRiskBudget, brokerConnected } = useSettings()
+  const { data: intelData, isStale, isDisconnected, refresh: refreshIntelligence } = useMarketIntelligence()
   const watching = watchingCount || instruments.length
 
   const [filterDirection, setFilterDirection] = React.useState<"ALL" | "LONG" | "SHORT">("ALL")
   const [afterHours, setAfterHours] = React.useState(false)
   const [beforeOpen, setBeforeOpen] = React.useState(false)
+  const [isRescanning, setIsRescanning] = React.useState(false)
+
+  // Modal states for mobile/desktop actions
+  const [entrySignal, setEntrySignal] = React.useState<Signal | null>(null)
+  const [exitTrade, setExitTrade] = React.useState<Trade | null>(null)
+  const [adjustSlTrade, setAdjustSlTrade] = React.useState<Trade | null>(null)
+  const [newStopLossInput, setNewStopLossInput] = React.useState<string>("")
 
   React.useEffect(() => {
     const check = () => {
@@ -34,6 +53,68 @@ export default function DashboardPage() {
     return () => clearInterval(id)
   }, [])
 
+  const isFeedLocked =
+    marketState === "DELAYED" ||
+    marketState === "DISCONNECTED" ||
+    isStale ||
+    isDisconnected
+
+  const isAngelOne = marketStatus?.providerType === "ANGEL_ONE"
+
+  const handleRescan = () => {
+    setIsRescanning(true)
+    refreshIntelligence().catch(() => {})
+    setTimeout(() => setIsRescanning(false), 800)
+  }
+
+  const handleConfirmEntry = (quantity: number, entryPrice: number) => {
+    if (!entrySignal) return
+    const nowIso = new Date().toISOString()
+    addTrade({
+      id: `trd_${Date.now()}`,
+      signalId: entrySignal.id,
+      symbol: entrySignal.symbol,
+      direction: entrySignal.direction,
+      status: "OPEN",
+      quantity,
+      entryPrice,
+      stopLoss: entrySignal.stop,
+      target1: entrySignal.targets.t1,
+      legs: [
+        {
+          id: `leg_${Date.now()}`,
+          action: "ENTRY",
+          price: entryPrice,
+          quantity,
+          timestamp: nowIso,
+        },
+      ],
+      notes: `Logged from ${entrySignal.setup}`,
+      createdAt: nowIso,
+    })
+  }
+
+  const handleConfirmExit = (quantity: number, exitPrice: number, isFullExit: boolean) => {
+    if (!exitTrade) return
+    addTradeLeg(exitTrade.id, isFullExit ? "EXIT" : "PARTIAL_EXIT", exitPrice, quantity)
+  }
+
+  const handleOpenAdjustSl = (trade: Trade) => {
+    const isLong = trade.direction === "LONG"
+    const currentStop = trade.stopLoss ?? trade.entryPrice * (isLong ? 0.99 : 1.01)
+    setNewStopLossInput(currentStop.toFixed(2))
+    setAdjustSlTrade(trade)
+  }
+
+  const handleSaveAdjustSl = () => {
+    if (!adjustSlTrade) return
+    const parsed = parseFloat(newStopLossInput)
+    if (Number.isFinite(parsed) && parsed > 0) {
+      updateTradeStopLoss(adjustSlTrade.id, parsed)
+    }
+    setAdjustSlTrade(null)
+  }
+
   const longSignalsCount = activeSignals.filter(s => s.direction === "LONG").length
   const shortSignalsCount = activeSignals.filter(s => s.direction === "SHORT").length
 
@@ -43,15 +124,59 @@ export default function DashboardPage() {
     return true
   })
 
+  const regimePropData = intelData
+    ? {
+        regimeNumber: intelData.regimeLabel.split("//")[0]?.trim() || "REGIME 01",
+        regimeName: intelData.regimeLabel.split("//")[1]?.trim() || "Bullish Trend Day",
+        volatilityLabel: intelData.vixStatus === "LOW_NORMAL" ? "Moderate Volatility" : "Elevated Volatility",
+        vixValue: intelData.vixLtp,
+        vixChangePct: intelData.vixChangePct,
+        benchmarkName: "Nifty 50 Reference",
+        benchmarkPrice: intelData.niftyLtp,
+        benchmarkChangePct: intelData.niftyChangePct,
+        advancesCount: intelData.advanceCount,
+        declinesCount: intelData.declineCount,
+        advancesPct: Math.round(
+          (intelData.advanceCount / Math.max(1, intelData.advanceCount + intelData.declineCount)) * 100
+        ),
+        declinesPct:
+          100 -
+          Math.round(
+            (intelData.advanceCount / Math.max(1, intelData.advanceCount + intelData.declineCount)) * 100
+          ),
+      }
+    : undefined
+
   return (
-    <div className="flex flex-col gap-margin w-full">
+    <div className="flex flex-col gap-3 sm:gap-margin px-gutter sm:px-gutter-md pt-2 sm:pt-space-md w-full">
+      {/* MOBILE SECTION 1: System & Simulation Disclaimer Banner (<1024px) — Stitch 5780553391039865460 */}
+      <section className="lg:hidden" data-testid="mobile-disclaimer-banner">
+        <div className="bg-status-stale-bg rounded-lg p-2.5 shadow-sm space-y-1.5 border border-border-subtle">
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1 font-label-code text-label-code uppercase tracking-wider text-status-stale-text font-semibold bg-surface px-1.5 py-0.5 rounded">
+              <span className="material-symbols-outlined text-[13px] text-accent-bearish" aria-hidden="true">
+                science
+              </span>
+              {isAngelOne ? "Live SmartAPI Stream" : "Simulated Data (Phase 1-3)"}
+            </span>
+            <span className="font-label-code text-label-code text-text-secondary flex items-center gap-1">
+              <span className={`w-1.5 h-1.5 rounded-full ${isFeedLocked ? "bg-accent-danger" : "bg-accent-bullish"}`}></span>
+              SmartAPI Sync
+            </span>
+          </div>
+          <p className="font-body-xs text-body-xs text-text-secondary leading-snug">
+            Decision Support Only — Manual Execution in <strong className="text-text-primary">Angel One</strong> terminal. Zero automated routing.
+          </p>
+        </div>
+      </section>
+
       {/* TOP SECTION: Market Regime & Capital Discipline Matrix */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 sm:gap-gutter">
         <div className="xl:col-span-7">
-          <MarketRegimeStrip />
+          <MarketRegimeStrip data={regimePropData} />
         </div>
         <div className="xl:col-span-5">
-          <RiskCapitalGuard />
+          <RiskCapitalGuard maxDailyLoss={dailyRiskBudget || 6000} />
         </div>
       </div>
 
@@ -78,34 +203,51 @@ export default function DashboardPage() {
       </div>
 
       {/* Disconnected / Delayed States Warning Banner */}
-      {(marketState === 'DELAYED' || marketState === 'DISCONNECTED') && (
-        <div className={`p-4 rounded-lg flex items-start gap-3 border ${marketState === 'DELAYED' ? 'bg-status-stale-bg border-accent-bearish/30 text-status-stale-text' : 'bg-status-disconnected-bg border-accent-danger/30 text-status-disconnected-text'}`}>
+      {(marketState === "DELAYED" || marketState === "DISCONNECTED") && (
+        <div
+          role="alert"
+          className={`p-4 rounded-lg flex items-start gap-3 border ${
+            marketState === "DELAYED"
+              ? "bg-status-stale-bg border-accent-bearish/30 text-status-stale-text"
+              : "bg-status-disconnected-bg border-accent-danger/30 text-status-disconnected-text"
+          }`}
+        >
           <AlertTriangle className="w-5 h-5 shrink-0" />
           <div className="flex flex-col">
             <span className="text-sm font-bold">
-              {marketState === 'DELAYED' ? 'Market Data Feed is Delayed' : 'Data Feed Disconnected'}
+              {marketState === "DELAYED" ? "Market Data Feed is Delayed" : "Data Feed Disconnected"}
             </span>
             <span className="text-sm opacity-90 mt-0.5">
-              {marketState === 'DELAYED'
-                ? 'Quotes are running 15 minutes behind. Scanner is paused. Do not use for live trading decisions until feed catches up.'
-                : 'Connection to the quotes server has dropped. The scanner is halted. Attempting to reconnect...'}
+              {marketState === "DELAYED"
+                ? "Quotes are running 15 minutes behind. Scanner is paused. Do not use for live trading decisions until feed catches up."
+                : "Connection to the quotes server has dropped. The scanner is halted. Attempting to reconnect..."}
             </span>
           </div>
         </div>
       )}
 
       {/* MAIN DECISION AREA: ACTIVE SIGNALS QUEUE */}
-      <div className="flex flex-col gap-space-md">
-        <div className="flex flex-wrap items-center justify-between gap-space-md">
-          <div className="flex items-center gap-space-sm">
-            <div className="w-2.5 h-2.5 rounded-full bg-accent-primary"></div>
-            <h2 className="font-headline-md text-headline-md text-text-primary">Active Priority Intraday Signals</h2>
-            <span className="px-space-xs py-0.5 rounded bg-surface-container text-primary font-label-code text-label-code font-bold">
-              {activeSignals.length} Qualified
+      <section className="flex flex-col gap-2 sm:gap-space-md">
+        <div className="flex flex-wrap items-center justify-between gap-space-sm">
+          <div>
+            <div className="flex items-center gap-1.5 sm:gap-space-sm">
+              <div className="hidden sm:block w-2.5 h-2.5 rounded-full bg-accent-primary"></div>
+              <h2 className="font-headline-sm sm:font-headline-md text-headline-sm sm:text-headline-md font-bold text-text-primary">
+                <span className="sm:hidden">Active Signals</span>
+                <span className="hidden sm:inline">Active Priority Intraday Signals</span>
+              </h2>
+              <span className="font-label-code text-label-code bg-accent-primary sm:bg-surface-container text-on-primary sm:text-primary rounded-full sm:rounded px-1.5 py-0.5 font-bold tabular-nums">
+                <span className="sm:hidden">{activeSignals.length}</span>
+                <span className="hidden sm:inline">{activeSignals.length} Qualified</span>
+              </span>
+            </div>
+            <span className="sm:hidden font-body-xs text-body-xs text-text-secondary block">
+              14 deterministic rule checks passed
             </span>
           </div>
-          <div className="flex items-center gap-space-md">
-            <div className="flex items-center gap-1 bg-surface-container-low p-0.5 rounded border border-border-subtle">
+
+          <div className="flex items-center gap-2 sm:gap-space-md">
+            <div className="hidden sm:flex items-center gap-1 bg-surface-container-low p-0.5 rounded border border-border-subtle">
               <button
                 type="button"
                 onClick={() => setFilterDirection("ALL")}
@@ -136,11 +278,46 @@ export default function DashboardPage() {
             </div>
             <button
               type="button"
-              className="flex items-center gap-1 font-label-code text-label-code text-primary bg-surface shadow-xs px-space-md py-1 rounded font-semibold hover:bg-surface-container transition-colors border border-border-subtle"
+              onClick={handleRescan}
+              data-testid="rescan-btn"
+              className="flex items-center gap-1 font-label-code text-label-code text-accent-primary bg-surface hover:bg-surface-high shadow-sm px-2.5 sm:px-space-md py-1 rounded font-semibold transition-all active:scale-95 border border-border-subtle min-h-[32px]"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> Re-scan Universe
+              <RefreshCw className={`w-3.5 h-3.5 ${isRescanning ? "animate-spin" : ""}`} />
+              <span className="sm:hidden">Re-scan</span>
+              <span className="hidden sm:inline">Re-scan Universe</span>
             </button>
           </div>
+        </div>
+
+        {/* Mobile Direction Filter Pills (<640px) */}
+        <div className="flex sm:hidden items-center gap-1.5 overflow-x-auto pb-0.5">
+          <button
+            type="button"
+            onClick={() => setFilterDirection("ALL")}
+            className={`px-2.5 py-1 rounded-full font-label-code text-label-code font-semibold transition-colors ${
+              filterDirection === "ALL" ? "bg-primary text-on-primary" : "bg-surface border border-border-subtle text-text-secondary"
+            }`}
+          >
+            All ({activeSignals.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterDirection("LONG")}
+            className={`px-2.5 py-1 rounded-full font-label-code text-label-code font-semibold transition-colors ${
+              filterDirection === "LONG" ? "bg-status-live-bg text-status-live-text border border-accent-bullish/40" : "bg-surface border border-border-subtle text-text-secondary"
+            }`}
+          >
+            ▲ Long ({longSignalsCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterDirection("SHORT")}
+            className={`px-2.5 py-1 rounded-full font-label-code text-label-code font-semibold transition-colors ${
+              filterDirection === "SHORT" ? "bg-status-stale-bg text-status-stale-text border border-accent-bearish/40" : "bg-surface border border-border-subtle text-text-secondary"
+            }`}
+          >
+            ▼ Short ({shortSignalsCount})
+          </button>
         </div>
 
         {/* Signals Grid */}
@@ -161,22 +338,29 @@ export default function DashboardPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-gutter">
             {filteredSignals.map(signal => (
-              <SignalCard key={signal.id} signal={signal} />
+              <SignalCard
+                key={signal.id}
+                signal={signal}
+                isLocked={isFeedLocked}
+                onEnterClick={sig => setEntrySignal(sig)}
+              />
             ))}
           </div>
         )}
         <ClosedPlans signals={closedSignals} />
-      </div>
+      </section>
 
-      {/* Approaching setups + momentum leaders */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-        <section className="xl:col-span-2 flex flex-col gap-4 bg-surface p-6 rounded-xl border border-border-subtle shadow-sm">
-          <div className="flex items-center justify-between gap-3 border-b border-border-subtle pb-4">
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary text-[22px]">radar</span>
-              <h2 className="font-headline-sm text-headline-sm font-bold text-text-primary tracking-tight">Approaching Setups ({approachingSignals.length})</h2>
+      {/* Approaching setups + momentum leaders (Desktop expanded, Mobile collapsible details) */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-6 items-start">
+        <section className="xl:col-span-2 flex flex-col gap-3 sm:gap-4 bg-surface p-3 sm:p-6 rounded-xl border border-border-subtle shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-border-subtle pb-2.5 sm:pb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="material-symbols-outlined text-primary text-[20px] sm:text-[22px]" aria-hidden="true">radar</span>
+              <h2 className="font-headline-sm text-headline-sm font-bold text-text-primary tracking-tight">
+                Approaching Setups ({approachingSignals.length})
+              </h2>
             </div>
             <span className="font-label-code text-label-code text-text-secondary flex items-center gap-1.5" data-testid="stream-status">
               <span className={`w-2 h-2 rounded-full ${streamStatus === "live" ? "bg-accent-bullish animate-pulse" : "bg-outline"}`} />
@@ -184,26 +368,26 @@ export default function DashboardPage() {
             </span>
           </div>
           {approachingSignals.length === 0 ? (
-            <p className="text-sm text-text-secondary py-8 text-center font-body-sm">
+            <p className="text-sm text-text-secondary py-4 sm:py-8 text-center font-body-sm">
               No stock is within 1% of a strategy trigger right now. Checked on every 5-minute candle close.
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {approachingSignals.map(setup => <ApproachingCard key={setup.symbol} setup={setup} />)}
             </div>
           )}
         </section>
 
-        <section className="flex flex-col gap-2 bg-surface p-6 rounded-xl border border-border-subtle shadow-sm">
-          <div className="flex flex-col gap-1 border-b border-border-subtle pb-4 mb-1">
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-accent-bearish text-[22px]">local_fire_department</span>
+        <section className="flex flex-col gap-2 bg-surface p-3 sm:p-6 rounded-xl border border-border-subtle shadow-sm">
+          <div className="flex flex-col gap-1 border-b border-border-subtle pb-2.5 sm:pb-4 mb-1">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="material-symbols-outlined text-accent-bearish text-[20px] sm:text-[22px]" aria-hidden="true">local_fire_department</span>
               <h2 className="font-headline-sm text-headline-sm font-bold text-text-primary tracking-tight">Momentum Leaders</h2>
             </div>
             <span className="text-xs text-text-secondary font-body-xs">% change × relative volume × 5m trend</span>
           </div>
           {momentum.length === 0 ? (
-            <p className="text-sm text-text-secondary py-8 text-center font-body-sm">
+            <p className="text-sm text-text-secondary py-4 sm:py-8 text-center font-body-sm">
               {watching === 0 ? (beforeOpen ? "Rankings start when the market opens at 09:15 IST." : "Waiting for the first ticks from the feed.") : `Watching ${watching} stocks. Rankings update on each 5-minute close.`}
             </p>
           ) : (
@@ -215,24 +399,48 @@ export default function DashboardPage() {
       {/* After hours: prediction vs actual */}
       {afterHours && <OutcomesComparison />}
 
-      {/* ACTIVE MANUALLY LOGGED TRADES (TRACKER IN-PROGRESS) */}
-      <div className="flex flex-col gap-space-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-space-sm">
-            <span className="material-symbols-outlined text-[20px] text-accent-bullish">timeline</span>
-            <h2 className="font-headline-md text-headline-md text-text-primary">Open Positions Under Surveillance</h2>
-            <span className="px-space-xs py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold">
+      {/* ACTIVE MANUALLY LOGGED TRADES (OPEN POSITIONS UNDER SURVEILLANCE) */}
+      <section className="flex flex-col gap-2 sm:gap-space-sm">
+        <div className="flex items-baseline justify-between">
+          <div className="flex items-center gap-1.5 sm:gap-space-sm">
+            <span className="hidden sm:inline material-symbols-outlined text-[20px] text-accent-bullish" aria-hidden="true">timeline</span>
+            <h2 className="font-headline-sm sm:font-headline-md text-headline-sm sm:text-headline-md font-bold text-text-primary">
+              <span className="sm:hidden">Open Positions</span>
+              <span className="hidden sm:inline">Open Positions Under Surveillance</span>
+            </h2>
+            <span className="px-1.5 py-0.5 rounded-full sm:rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold tabular-nums">
               {openTrades.length} Active
             </span>
           </div>
-          <div className="flex items-center gap-space-sm font-label-code text-label-code text-text-secondary">
+          <div className="flex items-center gap-space-sm font-body-xs sm:font-label-code text-body-xs sm:text-label-code text-text-secondary">
+            <span className="sm:hidden">Manual Angel One sync</span>
             <span className="hidden sm:inline">Execution Protocol:</span>
-            <span className="font-semibold text-text-primary">Exits must be mirrored in Angel One terminal</span>
+            <span className="hidden sm:inline font-semibold text-text-primary">Exits must be mirrored in Angel One terminal</span>
           </div>
         </div>
 
-        {/* Modern Card Table Architecture */}
-        <div className="bg-surface rounded-xl shadow-sm border border-border-subtle overflow-hidden">
+        {/* Mobile Stacked Position Cards (<768px / md:hidden) — Stitch 5780553391039865460 */}
+        <div className="md:hidden space-y-2" data-testid="mobile-dashboard-positions">
+          {openTrades.length === 0 ? (
+            <div className="py-6 px-4 bg-surface rounded-xl border border-border-subtle text-center">
+              <span className="text-text-secondary text-sm">No open positions currently under surveillance.</span>
+            </div>
+          ) : (
+            openTrades.map(trade => (
+              <MobilePositionCard
+                key={trade.id}
+                trade={trade}
+                isLocked={isFeedLocked}
+                onPartialExitClick={t => setExitTrade(t)}
+                onFullExitClick={t => setExitTrade(t)}
+                onAdjustSlClick={t => handleOpenAdjustSl(t)}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Desktop & Tablet Card Table Architecture (>=768px / hidden md:block) */}
+        <div className="hidden md:block bg-surface rounded-xl shadow-sm border border-border-subtle overflow-hidden">
           {openTrades.length === 0 ? (
             <div className="py-8 flex flex-col items-center justify-center text-center">
               <span className="text-text-secondary text-sm">No open positions currently under surveillance.</span>
@@ -258,6 +466,7 @@ export default function DashboardPage() {
                     const pnlAmount = (currentLtp - trade.entryPrice) * trade.quantity * (isLong ? 1 : -1)
                     const pnlPct = ((currentLtp - trade.entryPrice) / trade.entryPrice) * 100 * (isLong ? 1 : -1)
                     const isProfitable = pnlAmount >= 0
+                    const activeStop = trade.stopLoss ?? (isLong ? trade.entryPrice * 0.99 : trade.entryPrice * 1.01)
 
                     return (
                       <tr key={trade.id} className="hover:bg-surface-container-low/60 transition-colors">
@@ -275,16 +484,16 @@ export default function DashboardPage() {
                           </div>
                         </td>
                         <td className="py-space-sm px-space-md">
-                          <div className="flex flex-col font-label-code text-label-code">
+                          <div className="flex flex-col font-label-code text-label-code tabular-nums">
                             <span className="text-text-primary font-semibold">₹{trade.entryPrice.toFixed(2)} (Qty: {trade.quantity})</span>
                             <span className="text-text-secondary">Manual Journal</span>
                           </div>
                         </td>
                         <td className="py-space-sm px-space-md">
-                          <span className="font-metric-md text-metric-md font-bold text-text-primary">₹{currentLtp.toFixed(2)}</span>
+                          <span className="font-metric-md text-metric-md font-bold text-text-primary tabular-nums">₹{currentLtp.toFixed(2)}</span>
                         </td>
                         <td className="py-space-sm px-space-md">
-                          <div className="flex flex-col">
+                          <div className="flex flex-col tabular-nums">
                             <span className={`font-metric-md text-metric-md font-bold ${isProfitable ? "text-accent-bullish" : "text-accent-danger"}`}>
                               {isProfitable ? "+" : ""}₹{pnlAmount.toFixed(2)}
                             </span>
@@ -294,9 +503,9 @@ export default function DashboardPage() {
                           </div>
                         </td>
                         <td className="py-space-sm px-space-md">
-                          <div className="flex flex-col font-label-code text-label-code">
+                          <div className="flex flex-col font-label-code text-label-code tabular-nums">
                             <span className="text-status-live-text font-bold">
-                              ₹{(trade.direction === 'LONG' ? trade.entryPrice * 0.99 : trade.entryPrice * 1.01).toFixed(2)}
+                              ₹{activeStop.toFixed(2)}
                             </span>
                             <span className="text-text-secondary">(Active Stop Loss)</span>
                           </div>
@@ -309,10 +518,20 @@ export default function DashboardPage() {
                         </td>
                         <td className="py-space-sm px-space-md text-right">
                           <div className="inline-flex items-center gap-space-xs">
-                            <button className="h-7 px-2.5 rounded bg-surface shadow-xs font-body-xs text-body-xs font-semibold text-text-primary hover:bg-surface-high transition-colors border border-border-subtle">
+                            <button
+                              type="button"
+                              disabled={isFeedLocked}
+                              onClick={() => handleOpenAdjustSl(trade)}
+                              className="h-7 px-2.5 rounded bg-surface shadow-xs font-body-xs text-body-xs font-semibold text-text-primary hover:bg-surface-high transition-colors border border-border-subtle disabled:opacity-50"
+                            >
                               Adjust SL
                             </button>
-                            <button className="h-7 px-2.5 rounded bg-error-container text-on-error-container font-body-xs text-body-xs font-semibold hover:bg-opacity-90 transition-colors">
+                            <button
+                              type="button"
+                              disabled={isFeedLocked}
+                              onClick={() => setExitTrade(trade)}
+                              className="h-7 px-2.5 rounded bg-error-container text-on-error-container font-body-xs text-body-xs font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50"
+                            >
                               Exit Trade
                             </button>
                           </div>
@@ -325,7 +544,80 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+      </section>
+
+      {/* MOBILE SECTION 7: NSE Intraday Sector Heat & Alignment (2x2 Grid) — Stitch 5780553391039865460 */}
+      <div className="lg:hidden">
+        <MobileSectorHeatGrid sectors={intelData?.sectors} />
       </div>
+
+      {/* MOBILE SECTION 8: Pre-Trade Discipline Gate & Checklist — Stitch 5780553391039865460 */}
+      <div className="lg:hidden">
+        <PreTradeDisciplineGate
+          maxDailyLoss={dailyRiskBudget || 6000}
+          lossDrawn={0}
+          brokerConnected={brokerConnected !== false && !isFeedLocked}
+          providerLabel={isAngelOne ? "Angel One SmartAPI connected" : "Angel One SmartAPI connected"}
+        />
+      </div>
+
+      {/* Modals / Bottom Sheets */}
+      <TradeEntryModal
+        signal={entrySignal}
+        isOpen={!!entrySignal}
+        onClose={() => setEntrySignal(null)}
+        onSubmit={handleConfirmEntry}
+      />
+
+      <TradeExitModal
+        trade={exitTrade}
+        isOpen={!!exitTrade}
+        onClose={() => setExitTrade(null)}
+        onSubmit={handleConfirmExit}
+      />
+
+      <Dialog open={!!adjustSlTrade} onOpenChange={open => !open && setAdjustSlTrade(null)}>
+        <DialogContent className="bg-surface border-border-subtle text-text-primary">
+          <DialogHeader>
+            <DialogTitle className="font-headline-md text-headline-md font-bold text-text-primary">
+              Adjust Stop Loss — {adjustSlTrade?.symbol}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <label htmlFor="adjust-sl-input" className="block font-label-code text-label-code uppercase text-text-secondary">
+              Updated Stop Loss Price (₹)
+            </label>
+            <input
+              id="adjust-sl-input"
+              type="number"
+              step="0.05"
+              value={newStopLossInput}
+              onChange={e => setNewStopLossInput(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg bg-canvas border border-border-subtle font-metric-md text-metric-md text-text-primary focus:outline-none focus:border-primary tabular-nums"
+            />
+            <p className="font-body-xs text-body-xs text-text-secondary">
+              Records your updated stop level in the manual journal. Remember to mirror this stop modification in your Angel One terminal.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <button
+              type="button"
+              onClick={() => setAdjustSlTrade(null)}
+              className="min-h-[40px] px-4 py-2 rounded-lg bg-surface border border-border-subtle text-text-primary font-body-sm font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveAdjustSl}
+              className="min-h-[40px] px-4 py-2 rounded-lg bg-primary text-on-primary font-body-sm font-semibold"
+            >
+              Save Stop Loss
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
+

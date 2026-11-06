@@ -33,16 +33,16 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-margin w-full">
+    <div className="flex flex-col gap-3 sm:gap-margin px-gutter sm:px-gutter-md py-2 sm:py-space-md w-full">
       {/* Top Banner / Hero */}
-      <div className="bg-surface border border-border-subtle rounded-xl p-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
-        <div className="flex items-center gap-space-md">
-          <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-            <span className="material-symbols-outlined text-[24px]">tune</span>
+      <div className="bg-surface border border-border-subtle rounded-xl p-3 sm:p-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-space-md">
+        <div className="flex items-center gap-3 sm:gap-space-md">
+          <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
+            <span className="material-symbols-outlined text-[24px]" aria-hidden="true">tune</span>
           </div>
-          <div>
-            <div className="flex items-center gap-space-sm">
-              <h1 className="font-headline-lg text-headline-lg font-bold text-text-primary tracking-tight">
+          <div className="min-w-0">
+            <div className="flex items-center gap-space-sm flex-wrap">
+              <h1 className="font-headline-md sm:font-headline-lg text-headline-md sm:text-headline-lg font-bold text-text-primary tracking-tight">
                 Settings & Risk Governance Registry
               </h1>
               <span className="px-2 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold uppercase">
@@ -56,8 +56,9 @@ export default function SettingsPage() {
         </div>
 
         <button
+          type="button"
           onClick={handleSave}
-          className="flex items-center gap-1.5 px-space-md py-1.5 bg-primary hover:bg-primary-container text-on-primary font-body-sm font-semibold rounded shadow-sm transition-colors"
+          className="min-h-[40px] w-full md:w-auto flex items-center justify-center gap-1.5 px-space-md py-2 bg-primary hover:bg-primary-container text-on-primary font-body-sm font-semibold rounded-lg shadow-sm transition-colors"
         >
           {isSaved ? <CheckCircle2 className="w-4 h-4 text-accent-bullish" /> : <Save className="w-4 h-4" />}
           <span>{isSaved ? "Saved Successfully!" : "Save Configuration"}</span>

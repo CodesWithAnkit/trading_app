@@ -1,30 +1,33 @@
 "use client"
 import * as React from "react"
 import { TradeTable } from "@/components/domain/TradeTable"
+import { MobilePositionCard } from "@/components/domain/MobilePositionCard"
+import { TradeExitModal } from "@/components/domain/TradeExitModal"
 import { type Trade } from "@/mock/trades"
 import { TradeJournalAuditDrawer } from "@/components/domain/TradeJournalAuditDrawer"
 import { useTrades } from "@/lib/contexts/TradeContext"
 import { useSignals } from "@/lib/contexts/SignalContext"
+import { useDashboardState } from "@/lib/contexts/DashboardContext"
+import { useMarketIntelligence } from "@/lib/hooks/useMarketIntelligence"
 import { 
   Download, 
-  PlusCircle, 
-  ShieldCheck, 
-  TrendingUp, 
-  Clock, 
-  ArrowUpRight, 
-  ArrowDownRight,
   Calculator,
   Copy,
   Check
 } from "lucide-react"
 
 export default function JournalPage() {
-  const { trades, openTrades } = useTrades()
+  const { trades, openTrades, addTradeLeg } = useTrades()
   const { signals } = useSignals()
+  const { marketState } = useDashboardState()
+  const { isStale, isDisconnected } = useMarketIntelligence()
   const [selectedTrade, setSelectedTrade] = React.useState<Trade | null>(null)
+  const [exitTrade, setExitTrade] = React.useState<Trade | null>(null)
   const [statusFilter, setStatusFilter] = React.useState<"ALL" | "OPEN" | "CLOSED">("ALL")
   const [dateFilter, setDateFilter] = React.useState<"ALL" | "TODAY" | "WEEK">("ALL")
   const [copiedText, setCopiedText] = React.useState(false)
+
+  const isFeedLocked = marketState === "DELAYED" || marketState === "DISCONNECTED" || isStale || isDisconnected
 
   // Quick Risk Calculator State
   const [calcSymbol, setCalcSymbol] = React.useState("TATASTEEL")
@@ -83,19 +86,19 @@ export default function JournalPage() {
   }
 
   return (
-    <div className="flex flex-col gap-margin w-full">
+    <div className="flex flex-col gap-3 sm:gap-margin px-gutter sm:px-gutter-md py-2 sm:py-space-md w-full">
       {/* Top Banner / Hero */}
-      <div className="bg-surface border border-border-subtle rounded-xl p-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
-        <div className="flex items-center gap-space-md">
-          <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-            <span className="material-symbols-outlined text-[24px]">history_edu</span>
+      <div className="bg-surface border border-border-subtle rounded-xl p-3 sm:p-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-space-md">
+        <div className="flex items-center gap-3 sm:gap-space-md">
+          <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
+            <span className="material-symbols-outlined text-[24px]" aria-hidden="true">history_edu</span>
           </div>
-          <div>
-            <div className="flex items-center gap-space-sm">
-              <h1 className="font-headline-lg text-headline-lg font-bold text-text-primary tracking-tight">
+          <div className="min-w-0">
+            <div className="flex items-center gap-space-sm flex-wrap">
+              <h1 className="font-headline-md sm:font-headline-lg text-headline-md sm:text-headline-lg font-bold text-text-primary tracking-tight">
                 Trade Journal & Position Surveillance
               </h1>
-              <span className="px-2 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold uppercase">
+              <span className="px-2 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold uppercase tabular-nums">
                 {openTrades.length} Active Positions
               </span>
             </div>
@@ -107,8 +110,9 @@ export default function JournalPage() {
 
         <div className="flex items-center gap-space-sm">
           <button
+            type="button"
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-space-md py-1.5 bg-surface border border-border-subtle rounded font-body-sm text-body-sm font-semibold text-text-primary hover:bg-surface-high transition-colors shadow-xs"
+            className="min-h-[36px] flex items-center gap-1.5 px-space-md py-1.5 bg-surface border border-border-subtle rounded font-body-sm text-body-sm font-semibold text-text-primary hover:bg-surface-high transition-colors shadow-xs"
           >
             <Download className="w-4 h-4 text-text-secondary" />
             <span>Export CSV</span>
@@ -117,7 +121,7 @@ export default function JournalPage() {
       </div>
 
       {/* 5 Top Telemetry Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-gutter">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5 sm:gap-gutter">
         <div className="bg-surface border border-border-subtle rounded-xl p-space-md shadow-sm flex flex-col justify-between">
           <span className="font-label-code text-label-code text-text-secondary uppercase font-semibold">Realized P&L</span>
           <span className={`font-metric-lg text-metric-lg font-bold ${totalNet >= 0 ? "text-accent-bullish" : "text-accent-danger"}`}>
@@ -173,81 +177,33 @@ export default function JournalPage() {
             {openTrades.length === 0 ? (
               <p className="text-sm text-text-secondary py-6 text-center">No open positions currently under surveillance.</p>
             ) : (
-              openTrades.map(trade => {
-                const isLong = trade.direction === "LONG"
-                const currentLtp = trade.entryPrice * (isLong ? 1.011 : 0.989)
-                const pnl = (currentLtp - trade.entryPrice) * trade.quantity * (isLong ? 1 : -1)
-
-                return (
-                  <div key={trade.id} className="rounded-lg p-space-md bg-surface-container-low border border-border-subtle flex flex-col gap-space-sm relative overflow-hidden">
-                    <div className="flex flex-wrap items-center justify-between gap-space-sm">
-                      <div className="flex items-center gap-space-sm">
-                        <span className="font-headline-sm text-headline-sm font-bold text-text-primary">{trade.symbol}</span>
-                        <span className={`px-1.5 py-0.5 rounded font-label-code text-label-code font-semibold ${
-                          isLong ? "bg-status-live-bg text-status-live-text" : "bg-status-stale-bg text-status-stale-text"
-                        }`}>
-                          {isLong ? "▲ LONG" : "▼ SHORT"}
-                        </span>
-                        <span className="font-label-code text-label-code text-text-secondary">Qty: {trade.quantity}</span>
-                      </div>
-                      <span className="px-2 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold">
-                        Trailing Stop Active
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-space-sm py-space-xs px-space-sm rounded bg-surface border border-border-subtle font-label-code text-label-code">
-                      <div>
-                        <span className="text-text-secondary uppercase block">Entry</span>
-                        <span className="font-bold text-text-primary">₹{trade.entryPrice.toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <span className="text-text-secondary uppercase block">LTP</span>
-                        <span className="font-bold text-accent-bullish">₹{currentLtp.toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <span className="text-text-secondary uppercase block">Stop Loss</span>
-                        <span className="font-bold text-status-live-text">
-                          ₹{(isLong ? trade.entryPrice * 0.995 : trade.entryPrice * 1.005).toFixed(2)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-text-secondary uppercase block">Unrealized</span>
-                        <span className="font-bold text-accent-bullish">+₹{pnl.toFixed(2)}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="font-label-code text-[11px] text-text-secondary">
-                        Exits must be executed manually in Angel One
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <button className="h-7 px-2.5 rounded bg-surface shadow-xs font-body-xs font-semibold text-text-primary hover:bg-surface-high transition-colors border border-border-subtle">
-                          Partial Exit (50%)
-                        </button>
-                        <button className="h-7 px-2.5 rounded bg-error-container text-on-error-container font-body-xs font-semibold hover:bg-opacity-90 transition-colors">
-                          Full Exit
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })
+              openTrades.map(trade => (
+                <MobilePositionCard
+                  key={trade.id}
+                  trade={trade}
+                  isLocked={isFeedLocked}
+                  onPartialExitClick={t => setExitTrade(t)}
+                  onFullExitClick={t => setExitTrade(t)}
+                  onAuditClick={handleAuditClick}
+                />
+              ))
             )}
           </div>
 
           {/* Historical Closed Ledger */}
-          <div className="bg-surface border border-border-subtle rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-subtle pb-space-xs">
+          <div className="bg-surface border border-border-subtle rounded-xl p-3 sm:p-space-md shadow-sm flex flex-col gap-space-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 border-b border-border-subtle pb-space-xs">
               <div className="flex items-center gap-space-xs">
-                <span className="material-symbols-outlined text-primary text-[20px]">receipt_long</span>
+                <span className="material-symbols-outlined text-primary text-[20px]" aria-hidden="true">receipt_long</span>
                 <h2 className="font-headline-sm text-headline-sm text-text-primary font-bold">Execution Ledger</h2>
               </div>
 
               <div className="flex items-center gap-2">
                 <select
+                  aria-label="Filter by trade status"
                   value={statusFilter}
                   onChange={e => setStatusFilter(e.target.value as any)}
-                  className="bg-surface border border-border-subtle rounded px-2.5 py-1 text-label-code font-label-code text-text-primary focus:outline-none focus:border-primary"
+                  className="min-h-[36px] bg-surface border border-border-subtle rounded px-2.5 py-1 text-label-code font-label-code text-text-primary focus:outline-none focus:border-primary"
                 >
                   <option value="ALL">All Statuses</option>
                   <option value="OPEN">Open</option>
@@ -255,9 +211,10 @@ export default function JournalPage() {
                 </select>
 
                 <select
+                  aria-label="Filter by date range"
                   value={dateFilter}
                   onChange={e => setDateFilter(e.target.value as any)}
-                  className="bg-surface border border-border-subtle rounded px-2.5 py-1 text-label-code font-label-code text-text-primary focus:outline-none focus:border-primary"
+                  className="min-h-[36px] bg-surface border border-border-subtle rounded px-2.5 py-1 text-label-code font-label-code text-text-primary focus:outline-none focus:border-primary"
                 >
                   <option value="ALL">All Time</option>
                   <option value="TODAY">Today</option>
@@ -266,7 +223,7 @@ export default function JournalPage() {
               </div>
             </div>
 
-            <TradeTable trades={filteredTrades} onAuditClick={handleAuditClick} />
+            <TradeTable trades={filteredTrades} onAuditClick={handleAuditClick} isLocked={isFeedLocked} />
           </div>
         </div>
 
@@ -362,6 +319,16 @@ export default function JournalPage() {
         signal={selectedTrade ? signals.find(s => s.id === selectedTrade.signalId) || null : null}
         isOpen={!!selectedTrade}
         onClose={() => setSelectedTrade(null)}
+      />
+
+      <TradeExitModal
+        trade={exitTrade}
+        isOpen={!!exitTrade}
+        onClose={() => setExitTrade(null)}
+        onSubmit={(qty, exitPrice, isFullExit) => {
+          if (!exitTrade) return
+          addTradeLeg(exitTrade.id, isFullExit ? "EXIT" : "PARTIAL_EXIT", exitPrice, qty)
+        }}
       />
     </div>
   )

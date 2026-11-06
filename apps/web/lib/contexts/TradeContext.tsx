@@ -8,6 +8,7 @@ type TradeContextType = {
   closedTrades: Trade[]
   addTrade: (trade: Trade) => void
   addTradeLeg: (tradeId: string, action: TradeAction, price: number, quantity: number) => void
+  updateTradeStopLoss: (tradeId: string, newStopLoss: number) => void
 }
 
 const TradeContext = createContext<TradeContextType | undefined>(undefined)
@@ -73,8 +74,12 @@ export function TradeProvider({ children }: { children: React.ReactNode }) {
     }))
   }
 
+  const updateTradeStopLoss = (tradeId: string, newStopLoss: number) => {
+    setTrades(prev => prev.map(t => (t.id === tradeId ? { ...t, stopLoss: newStopLoss } : t)))
+  }
+
   return (
-    <TradeContext.Provider value={{ trades, openTrades, closedTrades, addTrade, addTradeLeg }}>
+    <TradeContext.Provider value={{ trades, openTrades, closedTrades, addTrade, addTradeLeg, updateTradeStopLoss }}>
       {children}
     </TradeContext.Provider>
   )

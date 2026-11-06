@@ -18,6 +18,7 @@
 | Add bulk actions to manage multiple trades | in-progress |
 | Deploy Monorepo Web and Backend on Free Tier | in-progress |
 | Market Intelligence and Explainable Analysis | done |
+| Stitch Mobile View and Responsive Tab Views | in-progress |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -255,5 +256,22 @@
   - [x] Pure presentation UI components with loading and error boundaries (0017 AC-11, 0018 AC-4, AC-6, AC-8..10)
 - [x] Verify it: /check verify Market Intelligence and Explainable Analysis
 - [x] Test it: /test Market Intelligence and Explainable Analysis
+
+---
+
+## Stitch Mobile View and Responsive Tab Views `in-progress`
+
+**Intent**: Implement the Stitch project `5780553391039865460` (`Mobile Dashboard - Market & Active Signals`) mobile experience across the application shell and all five primary bottom navigation tabs (`Dashboard`, `Signals`, `Trades`, `Journal`, and `Settings`) using responsive Tailwind breakpoints, mobile position surveillance cards, a two by two sector regime heat grid, a pre trade discipline gate, and touch friendly bottom sheets.
+**Done when**: On mobile viewports (`<768px` and `<1024px`), `Topbar` and `BottomNav` render the compact mobile chrome with secondary route menu sheet and expandable search, `/dashboard` renders the full Stitch mobile section sequence wired to live contexts and intelligence hooks, wide tables across `Dashboard`, `Trades`, and `Journal` switch to stacked `MobilePositionCard` components, modals and the audit drawer anchor as bottom sheets, and stale or disconnected feeds lock execution buttons across all mobile views.
+
+- [x] Design it (spec): [0019](../specs/0019-stitch-mobile-view/index.md) · code in `apps/web/components/layout/`, `apps/web/components/domain/`, `apps/web/app/dashboard/`, `apps/web/app/settings/`
+- [x] Build it: /develop Stitch Mobile View and Responsive Tab Views
+  - [x] Mobile AppShell, compact Topbar with menu sheet and expandable search, and BottomNav touch targets (AC-1, AC-2)
+  - [x] Mobile Dashboard sections: Disclaimer Banner, Regime & Breadth Bar, 2 col Capital Guard, 3 col SignalCard with evidence chips, 2x2 Sector Heat Grid, and Pre-Trade Discipline Gate (AC-3, AC-4, AC-6, AC-9)
+  - [x] MobilePositionCard and responsive tab views across Dashboard, Trades, Journal, Signals, and Settings (AC-5, AC-7, AC-9)
+  - [x] Mobile bottom sheet adaptation for TradeJournalAuditDrawer, TradeEntryModal, TradeExitModal, and Adjust SL sheet with component tests (AC-8, AC-9)
+- [ ] Verify it: /check verify Stitch Mobile View and Responsive Tab Views
+- [ ] Test it: /test Stitch Mobile View and Responsive Tab Views
+
 
 

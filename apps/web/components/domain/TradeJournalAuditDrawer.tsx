@@ -19,7 +19,7 @@ export function TradeJournalAuditDrawer({ trade, signal, isOpen, onClose }: Trad
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="!fixed !right-0 !top-0 !bottom-0 !left-auto !mt-0 !mb-0 !h-screen w-full !max-w-md !rounded-none !translate-x-0 !translate-y-0 data-[state=closed]:!translate-x-full data-[state=open]:!slide-in-from-right-full data-[state=closed]:!slide-out-to-right-full !zoom-in-100 !zoom-out-100 duration-300 transition-transform overflow-y-auto sm:!rounded-none sm:!max-w-md bg-surface border-l border-border text-text shadow-2xl">
+      <DialogContent className="!fixed !inset-x-0 !bottom-0 !top-auto sm:!right-0 sm:!top-0 sm:!bottom-0 sm:!left-auto !mt-0 !mb-0 max-h-[90dvh] sm:!h-screen sm:!max-h-screen w-full sm:!max-w-md !rounded-t-2xl sm:!rounded-none !translate-x-0 !translate-y-0 duration-300 transition-transform overflow-y-auto bg-surface border-t sm:border-t-0 sm:border-l border-border-subtle text-text-primary shadow-2xl pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6">
         <DialogHeader className="mb-6 border-b border-border pb-4">
           <div className="flex items-center space-x-3">
             <DialogTitle className="text-2xl font-bold tracking-tight leading-none text-text">{trade.symbol}</DialogTitle>

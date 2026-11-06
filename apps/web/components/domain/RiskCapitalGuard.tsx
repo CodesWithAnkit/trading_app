@@ -45,63 +45,70 @@ export function RiskCapitalGuard({
       {/* Header */}
       <div className="flex items-center justify-between pb-space-xs">
         <div className="flex items-center gap-space-xs">
-          <span className="material-symbols-outlined text-accent-primary text-[20px]">
+          <span className="material-symbols-outlined text-accent-primary text-[20px]" aria-hidden="true">
             security
           </span>
           <span className="font-headline-sm text-headline-sm text-text-primary font-bold">
             Daily Risk &amp; Capital Guard
           </span>
         </div>
-        <span className="px-space-xs py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold uppercase">
+        <span className="px-2 py-0.5 rounded-full bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold uppercase">
           LIMIT HEALTHY
         </span>
       </div>
 
-      {/* 3 Metrics Grid */}
-      <div className="grid grid-cols-3 gap-space-sm py-space-sm bg-surface-container-low rounded-lg p-space-sm my-space-xs">
-        <div className="flex flex-col">
+      {/* Metrics Grid: 2 columns on mobile (Realized + Unrealized), 3 columns on sm+ */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-space-sm py-space-sm my-space-xs">
+        <div className="flex flex-col bg-surface-high sm:bg-surface-container-low p-2.5 rounded-lg">
           <span className="font-label-code text-label-code uppercase text-text-secondary">
             Realized P&amp;L
           </span>
-          <span className={`font-metric-md text-metric-md font-bold ${isRealizedPositive ? "text-accent-bullish" : "text-accent-danger"}`}>
-            {isRealizedPositive ? "+" : ""}₹{Math.abs(computedRealized).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+          <span className={`font-metric-lg sm:font-metric-md text-metric-lg sm:text-metric-md font-bold tabular-nums ${isRealizedPositive ? "text-accent-bullish" : "text-accent-danger"}`}>
+            {isRealizedPositive ? "+" : "-"}₹{Math.abs(computedRealized).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </span>
-          <span className="font-body-xs text-body-xs text-text-secondary">
+          <span className="font-label-code sm:font-body-xs text-label-code sm:text-body-xs text-text-secondary">
             Booked ({finalClosedCount} trades)
           </span>
         </div>
 
-        <div className="flex flex-col">
+        <div className="flex flex-col bg-surface-high sm:bg-surface-container-low p-2.5 rounded-lg">
           <span className="font-label-code text-label-code uppercase text-text-secondary">
             Unrealized P&amp;L
           </span>
-          <span className={`font-metric-md text-metric-md font-bold ${isUnrealizedPositive ? "text-accent-bullish" : "text-accent-danger"}`}>
-            {isUnrealizedPositive ? "+" : ""}₹{Math.abs(computedUnrealized).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+          <span className={`font-metric-lg sm:font-metric-md text-metric-lg sm:text-metric-md font-bold tabular-nums ${isUnrealizedPositive ? "text-accent-bullish" : "text-accent-danger"}`}>
+            {isUnrealizedPositive ? "+" : "-"}₹{Math.abs(computedUnrealized).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </span>
-          <span className="font-body-xs text-body-xs text-text-secondary">
-            {finalOpenCount} Open positions
+          <span className="font-label-code sm:font-body-xs text-label-code sm:text-body-xs text-text-secondary">
+            {finalOpenCount} Live positions
           </span>
         </div>
 
-        <div className="flex flex-col">
+        <div className="hidden sm:flex flex-col bg-surface-container-low p-2.5 rounded-lg">
           <span className="font-label-code text-label-code uppercase text-text-secondary">
             Max Daily Loss
           </span>
-          <span className="font-metric-md text-metric-md text-text-primary font-bold">
+          <span className="font-metric-md text-metric-md text-text-primary font-bold tabular-nums">
             ₹{maxDailyLoss.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
           </span>
-          <span className="font-body-xs text-body-xs text-accent-bullish">
+          <span className="font-body-xs text-body-xs text-accent-bullish tabular-nums">
             ₹{lossDrawn.toFixed(2)} drawn
           </span>
         </div>
       </div>
 
-      {/* Trade Quota Progress Bar */}
-      <div className="flex flex-col gap-1 pt-space-xs">
-        <div className="flex justify-between items-center font-label-code text-label-code">
-          <span className="text-text-secondary">Execution Session Quota:</span>
-          <span className="font-semibold text-text-primary">
-            {finalExecutionsUsed} of {maxDailyExecutions} Max Daily Executions Used
+      {/* Execution Quota & Max Daily Loss Limit Tracker */}
+      <div className="bg-canvas sm:bg-transparent p-2 sm:p-0 rounded-lg flex flex-col gap-1.5 pt-space-xs font-label-code text-label-code">
+        <div className="flex sm:hidden justify-between items-center text-text-secondary">
+          <span>Max Daily Loss Limit:</span>
+          <span className="text-text-primary font-metric-sm font-semibold tabular-nums">
+            ₹{maxDailyLoss.toLocaleString("en-IN", { minimumFractionDigits: 2 })}{" "}
+            <span className="text-accent-bullish font-normal">(₹{lossDrawn.toFixed(2)} Drawn)</span>
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-text-secondary">Daily Execution Quota:</span>
+          <span className="font-semibold text-text-primary font-metric-sm tabular-nums">
+            {finalExecutionsUsed} of {maxDailyExecutions} Used
           </span>
         </div>
         <div className="w-full bg-surface-high h-1.5 rounded-full overflow-hidden flex">

@@ -49,36 +49,49 @@ export function MarketRegimeStrip({
       <div>
         {/* Regime Title and VIX Chip */}
         <div className="flex items-center justify-between gap-space-sm mb-space-sm flex-wrap">
-          <div className="flex items-center gap-space-sm flex-wrap">
-            <span className="px-space-sm py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold uppercase tracking-wider">
+          <div className="flex items-center gap-1.5 sm:gap-space-sm flex-wrap">
+            <span className="px-1.5 sm:px-space-sm py-0.5 rounded bg-surface-high sm:bg-status-live-bg text-accent-primary sm:text-status-live-text font-label-code text-label-code font-bold uppercase tracking-wider">
               {data.regimeNumber}
             </span>
             <span className="font-headline-sm text-headline-sm text-text-primary font-bold">
               {data.regimeName}
             </span>
-            <span className="font-body-xs text-body-xs text-text-secondary">
+            <span className="hidden sm:inline font-body-xs text-body-xs text-text-secondary">
               — {data.volatilityLabel}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-surface-container px-2 py-0.5 rounded">
+          <div className="flex items-center gap-1 sm:gap-1.5 bg-surface-container px-2 py-0.5 rounded">
             <span className="font-label-code text-label-code text-text-secondary uppercase">
-              India VIX
+              VIX
             </span>
-            <span className={`font-metric-sm text-metric-sm font-semibold ${isVixDown ? "text-accent-bullish" : "text-accent-danger"}`}>
+            <span className={`font-metric-sm text-metric-sm font-semibold tabular-nums ${isVixDown ? "text-accent-bullish" : "text-accent-danger"}`}>
               {data.vixValue?.toFixed(2)}
             </span>
-            <span className={`font-label-code text-label-code ${isVixDown ? "text-accent-bullish" : "text-accent-danger"}`}>
+            <span className={`font-label-code text-label-code tabular-nums ${isVixDown ? "text-accent-bullish" : "text-accent-danger"}`}>
               ({data.vixChangePct && data.vixChangePct > 0 ? "+" : ""}{data.vixChangePct?.toFixed(1)}%)
             </span>
           </div>
         </div>
 
-        {/* Benchmark Reference */}
-        <div className="flex flex-wrap items-center gap-space-md text-body-sm text-text-secondary mb-space-md">
+        {/* Mobile Compact Key Index Row (<640px) — Stitch 5780553391039865460 */}
+        <div className="flex sm:hidden items-center justify-between text-text-secondary font-label-code text-label-code bg-surface-high px-2 py-1 rounded mb-space-sm">
+          <span>
+            NIFTY 50: <strong className="text-text-primary font-metric-sm tabular-nums">{data.benchmarkPrice?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong>
+          </span>
+          <span className={`flex items-center font-metric-sm tabular-nums ${isBenchmarkUp ? "text-accent-bullish" : "text-accent-danger"}`}>
+            <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
+              {isBenchmarkUp ? "arrow_drop_up" : "arrow_drop_down"}
+            </span>
+            {isBenchmarkUp ? "+" : ""}{data.benchmarkChangePct?.toFixed(2)}%
+          </span>
+        </div>
+
+        {/* Desktop Benchmark Reference (>=640px) */}
+        <div className="hidden sm:flex flex-wrap items-center gap-space-md text-body-sm text-text-secondary mb-space-md">
           <div className="flex items-center gap-1">
             <span className="font-medium text-text-primary">{data.benchmarkName}:</span>
-            <span className={`font-metric-sm text-metric-sm font-bold ${isBenchmarkUp ? "text-accent-bullish" : "text-accent-danger"}`}>
+            <span className={`font-metric-sm text-metric-sm font-bold tabular-nums ${isBenchmarkUp ? "text-accent-bullish" : "text-accent-danger"}`}>
               {data.benchmarkPrice?.toLocaleString("en-IN", { minimumFractionDigits: 2 })} ({isBenchmarkUp ? "+" : ""}{data.benchmarkChangePct?.toFixed(2)}%)
             </span>
             <span className="font-body-xs text-body-xs text-text-secondary ml-1">
@@ -90,14 +103,15 @@ export function MarketRegimeStrip({
 
       {/* Advance / Decline Visual Ratio Bar */}
       <div className="flex flex-col gap-1.5 pt-space-xs">
-        <div className="flex items-center justify-between font-label-code text-label-code font-semibold">
+        <div className="flex items-center justify-between font-label-code text-label-code font-semibold tabular-nums">
           <span className="text-status-live-text flex items-center gap-1">
-            <span className="material-symbols-outlined text-[13px]">arrow_upward</span>
-            Advances: {data.advancesCount?.toLocaleString("en-IN")} ({data.advancesPct}%)
+            <span className="material-symbols-outlined text-[13px]" aria-hidden="true">arrow_upward</span>
+            <span>Advances: {data.advancesCount?.toLocaleString("en-IN")} ({data.advancesPct}%)</span>
           </span>
+          <span className="text-text-secondary font-normal hidden xs:inline sm:hidden">NSE Advances vs Declines</span>
           <span className="text-accent-danger flex items-center gap-1">
-            Declines: {data.declinesCount?.toLocaleString("en-IN")} ({data.declinesPct}%)
-            <span className="material-symbols-outlined text-[13px]">arrow_downward</span>
+            <span>Declines: {data.declinesCount?.toLocaleString("en-IN")} ({data.declinesPct}%)</span>
+            <span className="material-symbols-outlined text-[13px]" aria-hidden="true">arrow_downward</span>
           </span>
         </div>
 

@@ -19,34 +19,39 @@ export function BottomNav() {
   ]
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest shadow-lg px-margin py-2 lg:hidden">
-      <div className="max-w-[420px] mx-auto flex items-center justify-around">
+    <nav
+      aria-label="Primary mobile navigation"
+      className="fixed bottom-0 left-0 right-0 z-50 pb-[env(safe-area-inset-bottom)] bg-surface/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(19,34,56,0.05)] border-t border-border-subtle lg:hidden"
+    >
+      <div className="h-16 max-w-[480px] mx-auto px-gutter flex items-center justify-around">
         {links.map((link) => {
           const isActive = pathname === link.href || (pathname.startsWith(link.href) && link.href !== "/dashboard" && link.href !== "/")
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-colors relative ${
-                isActive ? "text-primary" : "text-on-surface-variant hover:text-on-surface"
+              aria-current={isActive ? "page" : undefined}
+              className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 py-1 rounded-lg transition-colors relative ${
+                isActive ? "text-accent-primary font-semibold" : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              <span 
-                className="material-symbols-outlined text-[22px]" 
+              <span
+                aria-hidden="true"
+                className="material-symbols-outlined text-[20px]"
                 style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
               >
                 {link.icon}
               </span>
-              <span className={`font-label-caps text-label-caps ${isActive ? 'font-bold' : 'font-semibold'}`}>
+              <span className={`font-body-xs text-body-xs tracking-tight ${isActive ? "font-semibold" : "font-normal"}`}>
                 {link.label}
               </span>
               {link.showIndicator && !isActive && (
-                <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                <span className="absolute top-1.5 right-2 w-1.5 h-1.5 rounded-full bg-secondary" aria-label="Active items indicator"></span>
               )}
             </Link>
           )
         })}
       </div>
-    </div>
+    </nav>
   )
 }

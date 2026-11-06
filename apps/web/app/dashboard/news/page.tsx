@@ -134,10 +134,12 @@ export default function NewsIntelligencePage() {
       summary: e.excerpt,
       confirmedFacts: e.isOfficialFiling ? `Verified disclosure from ${e.source} with certified cryptographic provenance.` : "Unverified media wire statement.",
       inferredModel: e.sentimentInterpretation || `Automated sentiment score: ${e.direction} (Confidence ${(e.confidence * 100).toFixed(0)}%).`,
-      keyTerms: e.extractedKeyTerms?.map(k => ({ label: "Material Item", value: k })) || [
-        { label: "Direction", value: e.direction },
-        { label: "Confidence", value: `${(e.confidence * 100).toFixed(0)}%` },
-      ],
+      keyTerms: e.extractedKeyTerms && e.extractedKeyTerms.length > 0
+        ? e.extractedKeyTerms.map((k, idx) => ({ label: `Item ${idx + 1}`, value: k }))
+        : [
+            { label: "Direction", value: e.direction },
+            { label: "Confidence", value: `${(e.confidence * 100).toFixed(0)}%` },
+          ],
     }))
 
     // Merge and deduplicate by headline
@@ -467,8 +469,8 @@ export default function NewsIntelligencePage() {
               Extracted Material Terms
             </span>
             <div className="grid grid-cols-2 gap-space-xs font-label-code text-label-code">
-              {selectedEvent.keyTerms.map(term => (
-                <div key={term.label} className="bg-canvas border border-border-subtle p-2 rounded">
+              {selectedEvent.keyTerms.map((term, idx) => (
+                <div key={`${term.label}-${term.value}-${idx}`} className="bg-canvas border border-border-subtle p-2 rounded">
                   <span className="text-text-secondary text-[10px] block">{term.label}:</span>
                   <span className="font-bold text-text-primary font-mono text-body-xs truncate block">{term.value}</span>
                 </div>

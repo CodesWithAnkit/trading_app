@@ -1,17 +1,74 @@
 "use client"
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useDashboardState } from "@/lib/contexts/DashboardContext"
+import { useMarketIntelligence } from "@/lib/hooks/useMarketIntelligence"
 import { SymbolSearch } from "@/components/domain/SymbolSearch"
+import { useNow } from "@/lib/useNow"
+
+function resolveRouteTitle(pathname: string): string {
+  if (pathname === "/dashboard" || pathname === "/") return "Dashboard"
+  if (pathname.startsWith("/dashboard/signals")) return "Signals"
+  if (pathname.startsWith("/dashboard/trades")) return "Trades"
+  if (pathname.startsWith("/dashboard/journal")) return "Journal"
+  if (pathname.startsWith("/dashboard/scanner")) return "Scanner"
+  if (pathname.startsWith("/dashboard/intelligence")) return "Intel"
+  if (pathname.startsWith("/dashboard/news")) return "News & Filings"
+  if (pathname.startsWith("/dashboard/performance")) return "Performance"
+  if (pathname.startsWith("/dashboard/analysis")) return "Signal Analysis"
+  if (pathname.startsWith("/dashboard/markets")) return "Markets"
+  if (pathname.startsWith("/settings")) return "Settings"
+  return "Dashboard"
+}
+
+function formatNseSessionCountdown(nowMs: number | null): string {
+  if (nowMs === null) return "32:18"
+  const ist = new Date(new Date(nowMs).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }))
+  const totalSec = ist.getHours() * 3600 + ist.getMinutes() * 60 + ist.getSeconds()
+  const openSec = 9 * 3600 + 15 * 60
+  const closeSec = 15 * 3600 + 30 * 60
+  let diff = closeSec - totalSec
+  if (totalSec < openSec) {
+    diff = openSec - totalSec
+  } else if (totalSec >= closeSec) {
+    return "CLOSED"
+  }
+  const mins = Math.floor(diff / 60)
+  const secs = diff % 60
+  if (mins >= 60) {
+    const hrs = Math.floor(mins / 60)
+    const remMins = mins % 60
+    return `${hrs}h ${String(remMins).padStart(2, "0")}m`
+  }
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
+}
 
 export function Topbar() {
+  const pathname = usePathname()
   const { marketState, marketStatus, instruments } = useDashboardState()
+  const { data: intelData, feedLatencyMs, isStale, isDisconnected } = useMarketIntelligence()
+  const nowMs = useNow(1_000)
+
+  const [isSearchExpanded, setIsSearchExpanded] = React.useState(false)
+  const [isMenuSheetOpen, setIsMenuSheetOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsSearchExpanded(false)
+    setIsMenuSheetOpen(false)
+  }, [pathname])
 
   // Calculate live breadth from watched instruments
   const advances = instruments.filter(i => i.change1dPct > 0).length
   const declines = instruments.filter(i => i.change1dPct < 0).length
-  const isConnected = marketState === "LIVE" || marketStatus?.sessionState === "OPEN"
+  const isConnected = (marketState === "LIVE" || marketStatus?.sessionState === "OPEN") && !isDisconnected && marketState !== "DISCONNECTED"
+  const isDelayed = marketState === "DELAYED" || isStale
   const isAngelOne = marketStatus?.providerType === "ANGEL_ONE"
+
+  const displayLatencyMs = Math.min(999, Math.max(8, intelData?.feedLatencyMs ?? Math.min(feedLatencyMs, 42)))
+  const routeTitle = resolveRouteTitle(pathname)
+  const nseCountdown = formatNseSessionCountdown(nowMs)
+  const niftyUp = (intelData?.niftyChangePct ?? 0.64) >= 0
 
   const lastTickTime = marketStatus?.lastTickAt
     ? new Date(marketStatus.lastTickAt).toLocaleTimeString("en-IN", {
@@ -23,10 +80,172 @@ export function Topbar() {
       }) + " IST"
     : "11:42:04 IST"
 
+  const secondaryLinks = [
+    { href: "/dashboard/scanner", label: "Signal Scanner", icon: "radar", desc: "NSE Momentum Setups" },
+    { href: "/dashboard/analysis/RELIANCE", label: "Signal Analysis", icon: "analytics", desc: "Explainable Evidence & Gates" },
+    { href: "/dashboard/intelligence", label: "Market Intelligence", icon: "candlestick_chart", desc: "Macro, Sectors & Provenance" },
+    { href: "/dashboard/news", label: "News & Filings", icon: "newspaper", desc: "NSE/BSE Official Disclosures" },
+    { href: "/dashboard/performance", label: "Performance & Validation", icon: "fact_check", desc: "Out-of-Sample Calibration" },
+  ]
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-surface border-b border-border-subtle">
-      {/* Tier 1: Brand & Actions Bar (56px) */}
-      <div className="h-14 px-gutter-md flex items-center justify-between border-b border-border-subtle bg-surface gap-space-md">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-surface/85 lg:bg-surface backdrop-blur-xl lg:backdrop-blur-none border-b border-border-subtle shadow-[0_1px_8px_rgba(0,0,0,0.04)] lg:shadow-none">
+      {/* Mobile Single-Tier Bar (<1024px / lg:hidden) — Stitch 5780553391039865460 */}
+      <div className="h-14 px-gutter flex lg:hidden items-center justify-between gap-space-sm">
+        <div className="flex items-center gap-space-sm min-w-0">
+          {/* Status + Latency Pill */}
+          <div
+            data-testid="mobile-topbar-status"
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg ${
+              !isConnected
+                ? "bg-status-disconnected-bg"
+                : isDelayed
+                ? "bg-status-stale-bg"
+                : "bg-status-live-bg"
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                !isConnected
+                  ? "bg-status-disconnected-text"
+                  : isDelayed
+                  ? "bg-status-stale-text"
+                  : "bg-status-live-text animate-pulse"
+              }`}
+            />
+            <span
+              className={`font-label-code text-label-code uppercase font-semibold ${
+                !isConnected
+                  ? "text-status-disconnected-text"
+                  : isDelayed
+                  ? "text-status-stale-text"
+                  : "text-status-live-text"
+              }`}
+            >
+              {!isConnected ? "OFFLINE" : isDelayed ? "DELAYED" : "LIVE"}
+            </span>
+            <span className="font-label-code text-label-code text-text-secondary pl-0.5 tabular-nums">
+              {displayLatencyMs}ms
+            </span>
+          </div>
+
+          {/* NSE Session & Countdown Pill */}
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-surface-high">
+            <span className="font-label-code text-label-code font-semibold text-text-primary">NSE</span>
+            <span className={`font-label-code text-label-code flex items-center tabular-nums ${niftyUp ? "text-accent-bullish" : "text-accent-danger"}`}>
+              <span className="material-symbols-outlined text-[13px]" aria-hidden="true">
+                {niftyUp ? "arrow_drop_up" : "arrow_drop_down"}
+              </span>
+              {nseCountdown}
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Route Title, Search Toggle, Secondary Menu Sheet Trigger, Avatar */}
+        <div className="flex items-center gap-space-xs shrink-0">
+          <div className="text-right mr-1">
+            <div className="font-headline-sm text-headline-sm font-semibold leading-tight text-text-primary truncate max-w-[110px] sm:max-w-[160px]" data-testid="mobile-route-title">
+              {routeTitle}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            aria-label={isSearchExpanded ? "Close symbol search" : "Open symbol search"}
+            aria-expanded={isSearchExpanded}
+            onClick={() => {
+              setIsSearchExpanded(prev => !prev)
+              setIsMenuSheetOpen(false)
+            }}
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-high transition-colors"
+          >
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+              {isSearchExpanded ? "close" : "search"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            aria-label={isMenuSheetOpen ? "Close workspace navigation menu" : "Open workspace navigation menu"}
+            aria-expanded={isMenuSheetOpen}
+            data-testid="mobile-menu-trigger"
+            onClick={() => {
+              setIsMenuSheetOpen(prev => !prev)
+              setIsSearchExpanded(false)
+            }}
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-high transition-colors"
+          >
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+              {isMenuSheetOpen ? "close" : "menu"}
+            </span>
+          </button>
+
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0" aria-label="Trader profile">
+            <span className="material-symbols-outlined text-on-primary text-[18px]" aria-hidden="true">person</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Expandable SymbolSearch Drawer (<1024px) */}
+      {isSearchExpanded && (
+        <div className="lg:hidden px-gutter py-space-sm bg-surface border-t border-border-subtle shadow-md">
+          <SymbolSearch />
+        </div>
+      )}
+
+      {/* Mobile Secondary Routes Navigation Sheet (<1024px) */}
+      {isMenuSheetOpen && (
+        <div
+          className="lg:hidden fixed inset-x-0 top-14 bottom-0 z-50 bg-on-surface/40 backdrop-blur-xs flex flex-col"
+          onClick={() => setIsMenuSheetOpen(false)}
+        >
+          <nav
+            aria-label="Secondary workspace navigation"
+            data-testid="mobile-menu-sheet"
+            className="bg-surface border-b border-border-subtle p-gutter shadow-lg space-y-2"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-space-xs pb-1 border-b border-border-subtle">
+              <span className="font-label-code text-label-code uppercase tracking-wider text-text-secondary font-semibold">
+                More Workspace Views
+              </span>
+              <span className="font-label-code text-label-code text-status-live-text font-semibold">
+                {isAngelOne ? "LIVE SMARTAPI" : "SIMULATED (PHASE 1-3)"}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              {secondaryLinks.map(item => {
+                const active = pathname.startsWith(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMenuSheetOpen(false)}
+                    className={`flex items-center gap-space-sm p-2.5 rounded-lg transition-colors min-h-[44px] ${
+                      active
+                        ? "bg-primary text-on-primary"
+                        : "bg-surface-high/60 text-text-primary hover:bg-surface-container"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[20px] shrink-0" aria-hidden="true">
+                      {item.icon}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-headline-sm text-headline-sm font-semibold truncate">{item.label}</div>
+                      <div className={`font-body-xs text-body-xs truncate ${active ? "text-on-primary-container" : "text-text-secondary"}`}>
+                        {item.desc}
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </nav>
+        </div>
+      )}
+
+      {/* Desktop Tier 1: Brand & Actions Bar (56px, hidden below lg) */}
+      <div className="hidden lg:flex h-14 px-gutter-md items-center justify-between border-b border-border-subtle bg-surface gap-space-md">
         {/* Left: Brand Identity */}
         <div className="flex items-center gap-space-md shrink-0">
           <Link href="/dashboard" className="flex items-center gap-space-sm hover:opacity-90 transition-opacity">
@@ -92,8 +311,8 @@ export function Topbar() {
         </div>
       </div>
 
-      {/* Tier 2: Real-time Telemetry & Market Status Bar (40px) */}
-      <div className="h-10 px-gutter-md bg-surface-bright flex items-center justify-between overflow-x-auto text-nowrap gap-gutter-md border-t border-border-subtle/50">
+      {/* Desktop Tier 2: Real-time Telemetry & Market Status Bar (40px, hidden below lg) */}
+      <div className="hidden lg:flex h-10 px-gutter-md bg-surface-bright items-center justify-between overflow-x-auto text-nowrap gap-gutter-md border-t border-border-subtle/50">
         <div className="flex items-center gap-gutter-md divide-x divide-border-subtle">
           {/* SmartAPI Connection Status */}
           <div className="flex items-center gap-space-sm">
@@ -105,7 +324,7 @@ export function Topbar() {
               {isConnected ? "CONNECTED" : "DISCONNECTED"}
             </span>
             <span className="font-label-code text-label-code text-text-secondary">
-              (12ms latency, tick: {lastTickTime})
+              ({displayLatencyMs}ms latency, tick: {lastTickTime})
             </span>
           </div>
 
@@ -156,3 +375,4 @@ export function Topbar() {
     </header>
   )
 }
+

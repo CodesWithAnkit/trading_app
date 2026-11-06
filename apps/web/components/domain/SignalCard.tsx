@@ -12,137 +12,176 @@ export function minutesLeft(expiresAt: string, now: number | null): number | nul
   return Number.isFinite(ms) ? Math.max(0, Math.ceil(ms / 60_000)) : null
 }
 
-export function SignalCard({ signal }: { signal: Signal }) {
+/** Formatted MMm SSs countdown string for mobile Stitch signal cards. */
+export function formatCountdownMmSs(expiresAt: string, now: number | null): string {
+  if (now === null) return "14m 20s"
+  const ms = new Date(expiresAt).getTime() - now
+  if (!Number.isFinite(ms)) return "14m 20s"
+  if (ms <= 0) return "EXPIRED"
+  const totalSec = Math.floor(ms / 1000)
+  const mins = Math.floor(totalSec / 60)
+  const secs = totalSec % 60
+  return `${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`
+}
+
+export interface SignalCardProps {
+  signal: Signal
+  isLocked?: boolean
+  sectorChangeLabel?: string
+  onEnterClick?: (signal: Signal) => void
+}
+
+export function SignalCard({
+  signal,
+  isLocked = false,
+  sectorChangeLabel,
+  onEnterClick,
+}: SignalCardProps) {
   const isLong = signal.direction === "LONG"
-  const isActive = signal.status === "ACTIVE" || signal.status === "EXPIRING"
-  const left = minutesLeft(signal.expiresAt, useNow())
+  const isActive = (signal.status === "ACTIVE" || signal.status === "EXPIRING") && !isLocked
+  const now = useNow()
+  const left = minutesLeft(signal.expiresAt, now)
+  const mmSs = formatCountdownMmSs(signal.expiresAt, now)
   const percentChange = ((signal.price % 2) + 0.5).toFixed(2)
 
+  const stopPctDiff = signal.price > 0
+    ? (((signal.stop - signal.price) / signal.price) * 100).toFixed(2)
+    : "-0.75"
+  const formattedStopPct = Number(stopPctDiff) > 0 ? `+${stopPctDiff}%` : `${stopPctDiff}%`
+
+  const rvolChip = signal.metrics?.relativeVolume
+    ? `RVOL ${signal.metrics.relativeVolume.replace(" average", "")}`
+    : "RVOL 2.4x (10d 15m)"
+  const vwapChip = signal.rationale
+    ? signal.rationale.split("·")[0]?.trim() || `VWAP Held ₹${signal.referenceEntry?.toFixed(2) ?? signal.price.toFixed(2)}`
+    : `VWAP Held ₹${signal.referenceEntry?.toFixed(2) ?? signal.price.toFixed(2)}`
+  const sectorChip = sectorChangeLabel || (isLong ? "Sector +1.4%" : "Sector -1.1%")
+
   return (
-    <div className={cn(
-      "bg-surface rounded-xl shadow-md p-space-md flex flex-col justify-between transition-transform hover:-translate-y-0.5 duration-200 border border-border-subtle",
-      isLong ? "border-l-4 border-l-accent-bullish" : "border-l-4 border-l-accent-bearish"
-    )}>
+    <article
+      data-testid={`signal-card-${signal.symbol}`}
+      className={cn(
+        "bg-surface rounded-xl shadow-sm sm:shadow-md p-3 sm:p-space-md flex flex-col justify-between transition-all duration-200 border border-border-subtle relative overflow-hidden",
+        isLong ? "border-l-4 border-l-accent-bullish" : "border-l-4 border-l-accent-bearish",
+        isLocked && "opacity-85 border-dashed border-border-strong"
+      )}
+    >
       <div>
         {/* Header Ticker & Badges */}
         <div className="flex items-start justify-between mb-space-sm">
-          <div className="flex flex-col">
-            <div className="flex items-center gap-space-xs">
-              <span className="font-headline-md text-headline-md font-bold text-text-primary">{signal.symbol}</span>
-              <span className="font-label-code text-label-code text-text-secondary px-1 py-0.5 rounded bg-surface-high">NSE CASH</span>
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h3 className="font-headline-md text-headline-md font-bold text-text-primary">{signal.symbol}</h3>
+              <span className="font-label-code text-label-code text-text-secondary px-1 py-0.5 rounded bg-surface-high">NSE Cash</span>
+              <span className={cn(
+                "px-1.5 py-0.5 rounded font-label-code text-label-code font-bold flex items-center gap-0.5",
+                isLong ? "bg-status-live-bg text-status-live-text" : "bg-status-stale-bg text-status-stale-text"
+              )}>
+                {isLong ? "▲ LONG" : "▼ SHORT"}
+              </span>
             </div>
-            <span className="font-body-xs text-body-xs text-text-secondary truncate max-w-[200px]">
-              {signal.setup || "VWAP Pullback + Vol Surge"}
+            <span className="font-body-xs text-body-xs text-text-secondary truncate max-w-[230px] mt-0.5">
+              {signal.setup || "VWAP Pullback + Volume Surge"}
             </span>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            <span className={cn(
-              "px-2 py-0.5 rounded font-label-code text-label-code font-bold flex items-center gap-1",
-              isLong ? "bg-status-live-bg text-status-live-text" : "bg-status-stale-bg text-status-stale-text"
-            )}>
-              {isLong ? "▲ LONG" : "▼ SHORT"}
-            </span>
-            <span className="font-label-code text-label-code font-semibold px-1.5 py-0.5 rounded bg-primary-container text-on-primary">
-              SCORE {signal.confidence}/100
-            </span>
-          </div>
-        </div>
 
-        {/* Price & Expiry Bar */}
-        <div className="bg-surface-container-low rounded-lg p-space-sm mb-space-sm">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex flex-col">
-              <span className="font-label-code text-label-code uppercase text-text-secondary">Live Price</span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-metric-lg text-metric-lg font-bold text-text-primary">₹{signal.price.toFixed(2)}</span>
-                <span className={cn("font-label-code text-label-code font-semibold", isLong ? "text-accent-bullish" : "text-accent-bearish")}>
-                  {isLong ? "+" : "-"}{percentChange}%
-                </span>
-              </div>
-            </div>
+          <div className="flex flex-col items-end gap-1 shrink-0">
             {/* Expiry Countdown Indicator */}
             <div
-              className="flex items-center gap-space-xs bg-surface px-space-sm py-1 rounded shadow-sm"
+              className="flex items-center gap-1 bg-surface-high px-1.5 py-0.5 rounded text-accent-primary font-label-code text-label-code"
               title="Time left to enter at the planned price; the plan is still tracked for exits after this"
             >
-              <svg className={cn("w-4 h-4", left !== null && left <= 5 ? "text-accent-danger" : "text-accent-bullish")} viewBox="0 0 36 36">
-                <path className="text-surface-high" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4"></path>
-                <path className={cn(left !== null && left <= 5 ? "text-accent-danger" : "text-accent-bullish")} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray={`${Math.min(100, Math.max(10, ((left || 15) / 30) * 100))}, 100`} strokeLinecap="round" strokeWidth="4"></path>
-              </svg>
-              <span className={cn("font-label-code text-label-code font-semibold", left !== null && left <= 5 ? "text-accent-danger" : "text-text-primary")}>
+              <span className="material-symbols-outlined text-[13px]" aria-hidden="true">timer</span>
+              <span className={cn("font-semibold tabular-nums", left !== null && left <= 5 ? "text-accent-danger" : "text-text-primary")}>
                 {left === null ? "Expires in –" : left === 0 ? "Entry window closed" : `Expires in ${left}m`}
               </span>
+              <span className="hidden" data-testid="mobile-countdown-mmss">{mmSs}</span>
             </div>
-          </div>
-
-          {/* Price Matrix Grid */}
-          <div className="grid grid-cols-2 gap-space-xs pt-space-xs font-label-code text-label-code border-t border-border-subtle/50">
-            <div className="flex flex-col">
-              <span className="text-text-secondary">Entry Zone:</span>
-              <span className="font-semibold text-text-primary">
-                ₹{signal.entryZone?.low?.toFixed(2)} - ₹{signal.entryZone?.high?.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-text-secondary">Stop / Inval:</span>
-              <span className="font-bold text-accent-danger">₹{signal.stop?.toFixed(2)}</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-text-secondary">Target 1:</span>
-              <span className={cn("font-semibold", isLong ? "text-accent-bullish" : "text-accent-bearish")}>
-                ₹{signal.targets?.t1?.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-text-secondary">Net R:R Ratio:</span>
-              <span className="font-bold text-text-primary">{signal.metrics?.riskReward || "1 : 2.0"}</span>
-            </div>
+            <span className="font-label-code text-label-code text-text-secondary tabular-nums">
+              Score: <strong className="text-text-primary font-metric-sm">{signal.confidence}</strong>/100
+            </span>
           </div>
         </div>
 
-        {/* Explainable Evidence Snippet */}
-        <div className="flex flex-col gap-1 mb-space-md">
-          <div className="flex items-center justify-between">
-            <span className="font-label-code text-label-code uppercase tracking-wider text-text-secondary font-semibold">
-              Deterministic Evidence
+        {/* Mobile 3-Column Execution Grid + Desktop Price Bar */}
+        <div className="grid grid-cols-3 gap-1.5 bg-surface-high p-2 rounded-lg text-center font-label-code text-label-code mb-space-sm tabular-nums">
+          <div>
+            <span className="text-text-secondary block">Live / Entry</span>
+            <span className="text-text-primary font-metric-sm font-semibold">₹{signal.price.toFixed(2)}</span>
+            <span className="text-text-secondary block text-[10px]">
+              {signal.entryZone?.low?.toFixed(2)}–{signal.entryZone?.high?.toFixed(2)}
             </span>
-            <span className="font-label-code text-label-code text-status-live-text font-bold">Risk Gate: PASS</span>
           </div>
-          <div className="p-2 bg-surface-container rounded font-body-xs text-body-xs text-text-primary flex flex-col gap-1">
-            <div className="flex items-center gap-1.5">
-              <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", isLong ? "bg-accent-bullish" : "bg-accent-danger")}></span>
-              <span className="truncate">{signal.rationale || "Relative Volume spike with VWAP support validation"}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent-bullish shrink-0"></span>
-              <span>Relative Volume: <strong>{signal.metrics?.relativeVolume || "2.4x"}</strong></span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent-bullish shrink-0"></span>
-              <span>Trend Alignment: <strong>{signal.metrics?.trendAlignment || "Aligned"}</strong></span>
-            </div>
+          <div>
+            <span className="text-text-secondary block">Stop Loss</span>
+            <span className="text-accent-danger font-metric-sm font-semibold">₹{signal.stop?.toFixed(2)}</span>
+            <span className="text-accent-danger block text-[10px]">{formattedStopPct}</span>
+          </div>
+          <div>
+            <span className="text-text-secondary block">Target 1 (R:R)</span>
+            <span className={cn("font-metric-sm font-semibold", isLong ? "text-accent-bullish" : "text-accent-bearish")}>
+              ₹{signal.targets?.t1?.toFixed(2)}
+            </span>
+            <span className={cn("block text-[10px]", isLong ? "text-accent-bullish" : "text-accent-bearish")}>
+              {signal.metrics?.riskReward || "1 : 2.0"} Net
+            </span>
+          </div>
+        </div>
+
+        {/* Deterministic Validated Evidence Chips */}
+        <div className="bg-canvas p-2 rounded-lg space-y-1.5 mb-space-sm">
+          <div className="flex items-center justify-between">
+            <span className="font-label-code text-label-code uppercase tracking-wide text-text-secondary font-semibold">
+              Validated Evidence:
+            </span>
+            <span className={cn(
+              "font-label-code text-label-code font-semibold",
+              isLong ? "text-accent-bullish" : "text-accent-bearish"
+            )}>
+              {isLong ? "+" : "-"}{percentChange}%
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1" data-testid="signal-evidence-chips">
+            <span className="font-label-code text-label-code bg-surface px-1.5 py-0.5 rounded text-text-primary shadow-xs">
+              {rvolChip}
+            </span>
+            <span className="font-label-code text-label-code bg-surface px-1.5 py-0.5 rounded text-text-primary shadow-xs truncate max-w-[180px]">
+              {vwapChip}
+            </span>
+            <span className={cn(
+              "font-label-code text-label-code bg-surface px-1.5 py-0.5 rounded shadow-xs",
+              isLong ? "text-accent-bullish" : "text-accent-danger"
+            )}>
+              {sectorChip}
+            </span>
+            <span className="font-label-code text-label-code bg-status-live-bg text-status-live-text font-bold px-1.5 py-0.5 rounded">
+              Risk Gate: PASS
+            </span>
           </div>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-space-sm pt-space-xs">
+      <div className="flex items-center gap-2 pt-0.5">
         <Link
           href={`/dashboard/analysis/${signal.symbol}`}
-          className="flex-1 h-8 rounded bg-primary text-on-primary font-body-sm text-body-sm font-semibold hover:bg-primary-container transition-colors shadow-sm flex items-center justify-center gap-1"
+          className="flex-1 min-h-[36px] py-1.5 rounded-lg bg-accent-primary hover:bg-primary-container text-on-primary font-headline-sm text-headline-sm font-semibold transition-colors shadow-sm flex items-center justify-center gap-1"
         >
           <span>Inspect Evidence</span>
-          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          <span className="material-symbols-outlined text-[15px]" aria-hidden="true">arrow_forward</span>
         </Link>
         <button
           type="button"
           disabled={!isActive}
-          title="Mark that you took this trade in Angel One"
-          className="h-8 px-space-md rounded bg-surface shadow-sm font-body-sm text-body-sm font-semibold text-text-primary hover:bg-surface-high transition-colors border border-border-subtle disabled:opacity-50"
+          onClick={() => onEnterClick?.(signal)}
+          title={isLocked ? "Execution locked while market feed is delayed or disconnected" : "Mark that you took this trade in Angel One"}
+          className="min-h-[36px] px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-high text-text-primary font-headline-sm text-headline-sm font-semibold shadow-sm flex items-center justify-center gap-1 border border-border-subtle transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
         >
-          I Entered
+          <span className="material-symbols-outlined text-[15px] text-accent-bullish" aria-hidden="true">check_circle</span>
+          <span>I Entered</span>
         </button>
       </div>
-    </div>
+    </article>
   )
 }
+
