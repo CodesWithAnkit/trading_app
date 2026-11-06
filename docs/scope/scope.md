@@ -271,7 +271,7 @@
   - [x] MobilePositionCard and responsive tab views across Dashboard, Trades, Journal, Signals, and Settings (AC-5, AC-7, AC-9)
   - [x] Mobile bottom sheet adaptation for TradeJournalAuditDrawer, TradeEntryModal, TradeExitModal, and Adjust SL sheet with component tests (AC-8, AC-9)
 - [ ] Verify it: /check verify Stitch Mobile View and Responsive Tab Views
-- [ ] Test it: /test Stitch Mobile View and Responsive Tab Views
+- [x] Test it: /test Stitch Mobile View and Responsive Tab Views
 
 
 
