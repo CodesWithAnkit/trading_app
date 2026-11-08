@@ -21,6 +21,7 @@
 | Stitch Mobile View and Responsive Tab Views | in-progress |
 | Sign In and Access Control | in-progress |
 | Guru Strategy Backtest Lab | in-progress |
+| Backtest History Provider | in-progress |
 | Guru Strategy Live Promotion | planned |
 ---
 
@@ -302,11 +303,26 @@
 - [x] Design it (spec): [0020](../specs/0020-guru-strategy-backtest-lab/index.md) · code in `apps/backend/src/scanner/strategy/guru/`, `apps/backend/src/backtest/`, `apps/backend/src/auth/`, `apps/web/app/dashboard/backtest/`
 - [ ] Build it: /develop Guru Strategy Backtest Lab
   - [ ] Migration, AdminGuard, and web admin gate (AC-1, AC-11)
-  - [ ] Historical backfill for NIFTY and SENSEX with retry, resume, and lock (AC-1, AC-12)
-  - [ ] Backtest core, cost model, metrics, 70/30 split, and the first rule `UP_ORB` end to end with gate and leaderboard thread (AC-3, AC-4, AC-5, AC-7, AC-8, AC-9)
-  - [ ] Remaining rules plus baselines, and the full leaderboard page with mobile cards (AC-2, AC-6, AC-9, AC-10)
+  - [x] Historical backfill for NIFTY and SENSEX with retry, resume, and lock (AC-1, AC-12)
+  - [x] Backtest core, cost model, metrics, 70/30 split, and the first rule `UP_ORB` end to end with gate and leaderboard thread (AC-3, AC-4, AC-5, AC-7, AC-8, AC-9)
+  - [x] Remaining rules plus baselines, and the full leaderboard page with mobile cards (AC-2, AC-6, AC-9, AC-10)
 - [ ] Verify it: /check verify Guru Strategy Backtest Lab
 - [ ] Test it: /test Guru Strategy Backtest Lab
+
+---
+
+## Backtest History Provider `in-progress`
+
+**Intent**: Make the backtest lab's history source pluggable (Angel One or Kite Connect), give a clear message for Angel One's AG8004, and judge the gate on NIFTY alone when SENSEX history is unavailable. From spec 0020, because Angel One rejects historical calls.
+**Done when**: The backfill loads 5m and daily history from a working provider into `candles`, and the lab runs end to end on it.
+
+- [x] Design it (spec): [0022](../specs/0022-backtest-history-provider/index.md) · code in `apps/backend/src/backtest/history/`
+- [ ] Build it: /develop Backtest History Provider
+  - [x] Provider interface with Angel One wrapped, the historical key option and AG8004 message (AC-1, AC-2)
+  - [x] Unavailable symbol handling and the NIFTY only gate with labels (AC-4, AC-5, AC-6)
+  - [ ] Kite provider, blocked on the token flow decision (AC-3)
+- [ ] Verify it: /check verify Backtest History Provider
+- [ ] Test it: /test Backtest History Provider
 
 ---
 

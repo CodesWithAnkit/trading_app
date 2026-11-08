@@ -7,9 +7,10 @@ import { SupabaseModule } from './supabase/supabase.module.js';
 import { ApiModule } from './api/api.module.js';
 import { IntelligenceModule } from './intelligence/intelligence.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { BacktestModule } from './backtest/backtest.module.js';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), SupabaseModule, AuthModule, ScannerModule, ApiModule, IntelligenceModule],
+  imports: [ScheduleModule.forRoot(), SupabaseModule, AuthModule, ScannerModule, ApiModule, IntelligenceModule, BacktestModule],
   controllers: [AppController],
   providers: [AppService],
 })
