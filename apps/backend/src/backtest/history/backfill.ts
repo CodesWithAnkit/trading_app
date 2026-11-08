@@ -23,23 +23,63 @@ export type BackfillEvent =
   | { type: 'chunk'; symbol: string; timeframe: Timeframe; from: string; to: string; rows: number; chunk: number; chunks: number }
   | { type: 'retry'; symbol: string; timeframe: Timeframe; from: string; attempt: number; error: string }
   | { type: 'resume'; symbol: string; timeframe: Timeframe; from: string }
-  | { type: 'done'; symbol: string; timeframe: Timeframe; rows: number };
+  | { type: 'done'; symbol: string; timeframe: Timeframe; rows: number }
+  | { type: 'unavailable'; symbol: string; timeframe: Timeframe; provider: string };
 
 export type CandleFetcher = (p: { exchange: string; token: string; interval: string; from: string; to: string }) => Promise<
   [string, number, number, number, number, number][]
 >;
 
-/** Logs in once and returns a fetcher that throws on API errors (so the caller can retry). */
-export async function createAngelOneFetcher(): Promise<CandleFetcher> {
+// spec 0022: the history source is pluggable. Every provider returns the same raw rows.
+export const HISTORY_PROVIDERS = ['angelone', 'kite'] as const;
+export type HistoryProviderName = (typeof HISTORY_PROVIDERS)[number];
+
+export const AG8004_MESSAGE = 'Angel One rejected historical data for this API key (AG8004). See docs/specs/0022.';
+
+/** An error the backfill must not retry (a retry can never succeed). */
+export class NonRetryableError extends Error {
+  readonly retryable = false;
+}
+
+/** --provider flag, else request body, else HISTORY_PROVIDER, else angelone (spec 0022 AC-1). */
+export function resolveProvider(explicit?: string | null, env = process.env): HistoryProviderName {
+  const v = (explicit || env.HISTORY_PROVIDER || 'angelone').trim().toLowerCase();
+  if (!(HISTORY_PROVIDERS as readonly string[]).includes(v)) {
+    throw Object.assign(new Error(`Unknown history provider "${v}". Use one of: ${HISTORY_PROVIDERS.join(', ')}.`), { status: 422 });
+  }
+  return v as HistoryProviderName;
+}
+
+/** Builds the fetcher for a provider. Kite is blocked until its token flow is decided (spec 0022 Follow-up). */
+export async function createHistoryFetcher(provider: HistoryProviderName): Promise<CandleFetcher> {
+  if (provider === 'kite') {
+    throw Object.assign(new Error('Kite history provider is not configured yet: its daily token flow is still undecided (spec 0022).'), { status: 409 });
+  }
+  return createAngelOneFetcher();
+}
+
+/** Turns an Angel One error response into an Error; AG8004 is not retryable (spec 0022 AC-2). */
+export function angelOneError(res: { errorcode?: string; errorCode?: string; message?: string } | null | undefined): Error {
+  const code = res?.errorcode || res?.errorCode || '';
+  if (code === 'AG8004') return new NonRetryableError(AG8004_MESSAGE);
+  return new Error(`getCandleData ${code} ${res?.message ?? 'failed'}`.replace(/\s+/g, ' ').trim());
+}
+
+/**
+ * Logs in once and returns a fetcher that throws on API errors (so the caller can retry).
+ * Uses ANGEL_ONE_HISTORICAL_API_KEY for candle calls when set, else the trading key (spec 0022 AC-2).
+ */
+export async function createAngelOneFetcher(env = process.env): Promise<CandleFetcher> {
   const a = config.angelOne;
-  if (!a.apiKey || !a.clientCode || !a.totpSecret) throw new Error('Missing Angel One credentials (ANGEL_ONE_API_KEY, _CLIENT_ID, _TOTP_SECRET).');
-  const api = new SmartAPI({ api_key: a.apiKey });
+  const apiKey = env.ANGEL_ONE_HISTORICAL_API_KEY || a.apiKey;
+  if (!apiKey || !a.clientCode || !a.totpSecret) throw new Error('Missing Angel One credentials (ANGEL_ONE_API_KEY, _CLIENT_ID, _TOTP_SECRET).');
+  const api = new SmartAPI({ api_key: apiKey });
   const totp = new OTPAuth.TOTP({ secret: a.totpSecret }).generate();
   const session = await api.generateSession(a.clientCode, a.password || a.clientCode, totp);
   if (!session?.data?.jwtToken) throw new Error('Angel One login failed: no session token.');
   return async ({ exchange, token, interval, from, to }) => {
     const res = await api.getCandleData({ exchange, symboltoken: token, interval, fromdate: from, todate: to });
-    if (!res?.status) throw new Error(`getCandleData ${res?.errorcode ?? ''} ${res?.message ?? 'failed'}`.trim());
+    if (!res?.status) throw angelOneError(res as any);
     return res.data ?? [];
   };
 }
@@ -115,6 +155,7 @@ export async function backfill(opts: {
   today?: string;
   onEvent?: (e: BackfillEvent) => void;
   sleepMs?: (ms: number) => Promise<void>;
+  provider?: HistoryProviderName;
 }): Promise<{ rows: number }> {
   const { db, fetcher, instruments } = opts;
   const wait = opts.sleepMs ?? sleep;
@@ -141,6 +182,7 @@ export async function backfill(opts: {
               break;
             } catch (err) {
               const msg = (err as Error).message;
+              if ((err as { retryable?: boolean }).retryable === false) throw err;
               if (attempt >= MAX_ATTEMPTS) throw new Error(`${inst.symbol} ${tf} ${ch.from}..${ch.to} failed after ${MAX_ATTEMPTS} attempts: ${msg}`);
               opts.onEvent?.({ type: 'retry', symbol: inst.symbol, timeframe: tf, from: ch.from, attempt, error: msg });
               await wait(1000 * 2 ** attempt);
@@ -157,7 +199,12 @@ export async function backfill(opts: {
           opts.onEvent?.({ type: 'chunk', symbol: inst.symbol, timeframe: tf, from: ch.from, to: ch.to, rows: rows.length, chunk: c + 1, chunks: chunks.length });
         }
         total += rowsForSeries;
-        opts.onEvent?.({ type: 'done', symbol: inst.symbol, timeframe: tf, rows: rowsForSeries });
+        // spec 0022 AC-4: nothing stored before and nothing returned now = the provider has no history.
+        if (!last && rowsForSeries === 0) {
+          opts.onEvent?.({ type: 'unavailable', symbol: inst.symbol, timeframe: tf, provider: opts.provider ?? 'angelone' });
+        } else {
+          opts.onEvent?.({ type: 'done', symbol: inst.symbol, timeframe: tf, rows: rowsForSeries });
+        }
       }
     }
   } finally {

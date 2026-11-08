@@ -33,5 +33,13 @@ export function gateForSymbol(oos: Metrics, coinMedianNetR: number | null): Symb
 
 /** A rule passes only when every required symbol passes. */
 export function ruleGate(bySymbol: Record<string, SymbolGate | undefined>, symbols: string[]): boolean {
-  return symbols.every((s) => bySymbol[s]?.ok === true);
+  return symbols.length > 0 && symbols.every((s) => bySymbol[s]?.ok === true);
+}
+
+/**
+ * spec 0022 AC-5: symbols whose history the provider does not have are left out of the gate;
+ * every other symbol must still pass. With nothing left to judge, the rule cannot pass.
+ */
+export function judgedSymbols(all: readonly string[], unavailable: readonly string[]): string[] {
+  return all.filter((s) => !unavailable.includes(s));
 }

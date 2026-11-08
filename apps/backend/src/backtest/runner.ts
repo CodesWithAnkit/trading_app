@@ -5,7 +5,7 @@ import { Bar, DailyBar, DEFINITIONS_VERSION, istDate, ruleById } from '../scanne
 import { COST_MODEL_V1, Exchange } from './engine/costModel.js';
 import { simulate, SimTrade } from './engine/simulate.js';
 import { buyAndHold, computeMetrics, fullYearsBetween, Metrics, oosStartDate } from './engine/metrics.js';
-import { gateForSymbol, ruleGate, SymbolGate } from './engine/gate.js';
+import { gateForSymbol, judgedSymbols, ruleGate, SymbolGate } from './engine/gate.js';
 
 export const SYMBOLS = ['NIFTY', 'SENSEX'] as const;
 export type BacktestSymbol = (typeof SYMBOLS)[number];
@@ -31,7 +31,7 @@ export async function queueRuns(db: SupabaseClient, req: RunRequest, createdBy?:
     throw httpError(409, `Already active: ${active.map((a) => `${a.rule_id} · ${a.symbol}`).join(', ')}. Nothing was queued.`);
   }
   const rows = req.ruleIds.flatMap((rule_id) =>
-    req.symbols.map((symbol) => ({ rule_id, symbol, definitions_version: DEFINITIONS_VERSION, cost_model: COST_MODEL_V1, status: 'queued', created_by: createdBy ?? null })),
+    req.symbols.map((symbol) => ({ rule_id, symbol, definitions_version: DEFINITIONS_VERSION, cost_model: { ...COST_MODEL_V1, notes: { history_provider: historyProvider() } }, status: 'queued', created_by: createdBy ?? null })),
   );
   // One insert: the partial unique index makes a race fail the whole batch, never half of it.
   const { data, error: insErr } = await db.from('backtest_runs').insert(rows).select('id');
@@ -78,13 +78,30 @@ export type Lots = Record<BacktestSymbol, number>;
 
 /** Executes one queued run end to end. Never throws: failures are stored on the run (AC-12). */
 export async function executeRun(db: SupabaseClient, runId: string, lots: Lots, data?: { bars: Bar[]; daily: DailyBar[] }): Promise<void> {
-  const { data: run, error } = await db.from('backtest_runs').select('*').eq('id', runId).single();
+  // Claim the run atomically: only a still `queued` row moves to `running`. If the API worker and the
+  // CLI both pick up the same queued run, exactly one of them gets it; the other skips.
+  const { data: claimed, error } = await db
+    .from('backtest_runs')
+    .update({ status: 'running', progress: 0 })
+    .eq('id', runId)
+    .eq('status', 'queued')
+    .select('*');
+  const run = claimed?.[0];
   if (error || !run) return;
-  await db.from('backtest_runs').update({ status: 'running', progress: 0 }).eq('id', runId);
   try {
     const symbol = run.symbol as BacktestSymbol;
     const { bars, daily } = data ?? (await loadBars(db, symbol));
-    if (bars.length === 0) throw new Error(`No 5m history for ${symbol}. Run the backfill first.`);
+    if (bars.length === 0) {
+      // spec 0022 AC-4: no history from the provider is "unavailable", not a failure.
+      const provider = run.cost_model?.notes?.history_provider ?? historyProvider();
+      const reason = `No 5m history for ${symbol} from ${provider} (unavailable from the provider, or not backfilled yet).`;
+      await db
+        .from('backtest_runs')
+        .update({ status: 'done', progress: 100, trades: 0, passed_gate: false, out_of_sample: { unavailable: true, provider, reason }, finished_at: new Date().toISOString() })
+        .eq('id', runId);
+      await recomputeGate(db, run.rule_id);
+      return;
+    }
 
     const setProgress = async (done: number, total: number) => {
       await db.from('backtest_runs').update({ progress: Math.round((done / total) * 100) }).eq('id', runId);
@@ -207,18 +224,24 @@ export async function recomputeGate(db: SupabaseClient, ruleId: string): Promise
   }
   const latest = await latestDoneRuns(db, [ruleId, 'BASE_COIN']);
   const bySymbol: Record<string, SymbolGate | undefined> = {};
+  const unavailable: { symbol: string; provider: string }[] = [];
   for (const s of SYMBOLS) {
     const run = latest.get(`${ruleId}|${s}`);
     const coin = latest.get(`BASE_COIN|${s}`);
+    if (run?.out_of_sample?.unavailable) {
+      unavailable.push({ symbol: s, provider: run.out_of_sample.provider ?? 'unknown' });
+      continue;
+    }
     if (run?.out_of_sample) bySymbol[s] = gateForSymbol(run.out_of_sample as Metrics, coin ? Number(coin.net_pnl_r) : null);
   }
-  const passed = ruleGate(bySymbol, [...SYMBOLS]);
+  const judgedOn = judgedSymbols(SYMBOLS, unavailable.map((u) => u.symbol));
+  const passed = ruleGate(bySymbol, judgedOn);
   for (const s of SYMBOLS) {
     const run = latest.get(`${ruleId}|${s}`);
     if (!run) continue;
     await db
       .from('backtest_runs')
-      .update({ passed_gate: passed, out_of_sample: { ...run.out_of_sample, gate: bySymbol[s] } })
+      .update({ passed_gate: passed, out_of_sample: { ...run.out_of_sample, gate: { ...bySymbol[s], judgedOn, unavailable } } })
       .eq('id', run.id);
   }
 }
@@ -252,6 +275,11 @@ function equityCurve(trades: SimTrade[]): number[] {
 function prevDay(days: string[], d: string): string {
   const i = days.indexOf(d);
   return i > 0 ? days[i - 1] : d;
+}
+
+/** The history source in use (spec 0022 AC-6), recorded on each run for traceability. */
+export function historyProvider(env = process.env): string {
+  return (env.HISTORY_PROVIDER || 'angelone').trim().toLowerCase();
 }
 
 export function httpError(status: number, message: string) {
