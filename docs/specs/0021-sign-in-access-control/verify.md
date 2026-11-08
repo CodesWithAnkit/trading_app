@@ -2,7 +2,7 @@
 _Steps derived from spec 0021 acceptance criteria. `/check verify` runs these; `/test` locks the durable ones._
 
 ## Setup (you, once, in the Supabase dashboard and env)
-- [ ] Authentication › JWT Signing Keys: the project uses an asymmetric key (ES256 or RS256), not the legacy HS256 secret → otherwise every token fails AC-4
+- [x] Authentication › JWT Signing Keys: the project uses an asymmetric key (ES256 or RS256), not the legacy HS256 secret → otherwise every token fails AC-4
 - [ ] Authentication › Sign In / Providers: "Allow new users to sign up" is off → AC-2
 - [ ] Authentication › Providers › Email: minimum password length 10 → AC-9
 - [ ] Authentication › URL Configuration: `<site>/auth/confirm` is in Redirect URLs, and Site URL is set → AC-9
@@ -11,7 +11,7 @@ _Steps derived from spec 0021 acceptance criteria. `/check verify` runs these; `
 - [ ] Web env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`, `BACKEND_API_URL` → AC-1, AC-9
 
 ## UI / manual
-- [ ] Signed out, open `/dashboard/trades?tab=open` → redirected to `/login?next=%2Fdashboard%2Ftrades%3Ftab%3Dopen` → AC-3
+- [x] Signed out, open `/dashboard/trades?tab=open` → redirected to `/login?next=%2Fdashboard%2Ftrades%3Ftab%3Dopen` → AC-3
 - [ ] Sign in with a wrong password → "Email or password is incorrect." and no hint which was wrong → AC-1
 - [ ] Sign in correctly → lands on `/dashboard/trades?tab=open` → AC-1
 - [ ] Open `/login?next=//evil.com` and `/login?next=/%5Cevil.com`, sign in → lands on `/dashboard` → AC-1
@@ -28,17 +28,17 @@ _Steps derived from spec 0021 acceptance criteria. `/check verify` runs these; `
 - [ ] Leave a tab open past the token lifetime (about 1 h) → data keeps loading (silent refresh) and the stream reconnects → AC-6, AC-10
 
 ## Commands
-- [ ] `curl -i localhost:3001/health` → 200 with no token → AC-4
-- [ ] `curl -i localhost:3001/api/v1/signals` → 401 → AC-4
+- [x] `curl -i localhost:3001/health` → 200 with no token → AC-4
+- [x] `curl -i localhost:3001/api/v1/signals` → 401 → AC-4
 - [ ] `curl -i -H "Authorization: Bearer <your access token>" localhost:3001/api/v1/me` → 200 `{ id, email, isAdmin }` → AC-4, AC-7
-- [ ] `curl -i -X OPTIONS -H "Origin: http://localhost:3000" -H "Access-Control-Request-Headers: authorization" localhost:3001/api/v1/signals` → 204 with `access-control-allow-headers` including Authorization → AC-4
-- [ ] `curl -i "localhost:3001/api/v1/scanner/stream?access_token=<token>"` → 401 (raw tokens never accepted in a query) → AC-6
+- [x] `curl -i -X OPTIONS -H "Origin: http://localhost:3000" -H "Access-Control-Request-Headers: authorization" localhost:3001/api/v1/signals` → 204 with `access-control-allow-headers` including Authorization → AC-4
+- [x] `curl -i "localhost:3001/api/v1/scanner/stream?access_token=<token>"` → 401 (raw tokens never accepted in a query) → AC-6
 - [ ] `POST /api/v1/auth/sse-ticket` with a bearer → `{ ticket, expiresIn: 30 }`; using the ticket twice → second is 401 → AC-6
 - [ ] Remove your admin role in Supabase while signed in → `/api/v1/me` shows `isAdmin: false` within 60 s → AC-7
-- [ ] Start the backend with a wrong `SUPABASE_JWKS_URL` → it refuses to boot with a clear message → AC-4
-- [ ] `cd apps/backend && npx vitest run src/auth` → 10 passed → AC-4, AC-6, AC-7
-- [ ] `cd apps/web && npx vitest run lib/api lib/auth` → apiFetch and safeNext tests pass → AC-1, AC-3, AC-5, AC-10
-- [ ] `cd apps/web && npx next build` → builds, and lists `Proxy (Middleware)` → AC-3
+- [x] Start the backend with a wrong `SUPABASE_JWKS_URL` → it refuses to boot with a clear message → AC-4
+- [x] `cd apps/backend && npx vitest run src/auth` → 10 passed → AC-4, AC-6, AC-7
+- [x] `cd apps/web && npx vitest run lib/api lib/auth` → apiFetch and safeNext tests pass → AC-1, AC-3, AC-5, AC-10
+- [x] `cd apps/web && npx next build` → builds, and lists `Proxy (Middleware)` → AC-3
 
 ## Value sourcing checks
 - [ ] Token from another Supabase project (different issuer) → 401 → issuer pinned to `SUPABASE_URL`
