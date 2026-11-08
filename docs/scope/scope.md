@@ -19,6 +19,9 @@
 | Deploy Monorepo Web and Backend on Free Tier | in-progress |
 | Market Intelligence and Explainable Analysis | done |
 | Stitch Mobile View and Responsive Tab Views | in-progress |
+| Sign In and Access Control | in-progress |
+| Guru Strategy Backtest Lab | in-progress |
+| Guru Strategy Live Promotion | planned |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -273,5 +276,43 @@
 - [ ] Verify it: /check verify Stitch Mobile View and Responsive Tab Views
 - [x] Test it: /test Stitch Mobile View and Responsive Tab Views
 
+---
 
+## Sign In and Access Control `in-progress`
 
+**Intent**: Invite only Supabase email and password sign in. Every page and API route requires a signed in user, and admin only areas (the backtest lab) require the admin role. From spec 0020's admin gate.
+**Done when**: You can sign in, reset a password, and sign out. Every `/api/v1/*` call carries a verified bearer token, the scanner stream works with a ticket, and a non admin can neither see nor call the backtest lab.
+
+- [x] Design it (spec): [0021](../specs/0021-sign-in-access-control.md) · code in `apps/backend/src/auth/`, `apps/web/proxy.ts`, `apps/web/lib/auth/`, `apps/web/app/login/`
+- [ ] Build it: /develop Sign In and Access Control
+  - [ ] Backend AuthGuard (JWKS, pinned claims), CORS, `/me`, and the web login page plus `apiFetch` end to end (AC-1, AC-4, AC-5, AC-10)
+  - [ ] Proxy and layout page gate, and every web call moved to `apiFetch` (AC-3, AC-5)
+  - [ ] SSE tickets, AdminGuard with role cache, and the admin nav and page gate (AC-6, AC-7, AC-8)
+  - [ ] PKCE confirm route, forgot and reset password, sign out, and the Supabase settings (AC-2, AC-9, AC-11)
+- [ ] Verify it: /check verify Sign In and Access Control
+- [ ] Test it: /test Sign In and Access Control
+
+---
+
+## Guru Strategy Backtest Lab `in-progress`
+
+**Intent**: Test five YouTube guru intraday rules (adapted to NSE) on years of Nifty and Sensex 5m history with realistic costs, against buy and hold and coin toss baselines, and give each a pre registered PASS or FAIL. Admin only.
+**Done when**: An admin can backfill history, run all rules from the CLI or the `/dashboard/backtest` page, and see an out of sample leaderboard with equity curves, per year results, trades, and gate badges.
+
+- [x] Design it (spec): [0020](../specs/0020-guru-strategy-backtest-lab/index.md) · code in `apps/backend/src/scanner/strategy/guru/`, `apps/backend/src/backtest/`, `apps/backend/src/auth/`, `apps/web/app/dashboard/backtest/`
+- [ ] Build it: /develop Guru Strategy Backtest Lab
+  - [ ] Migration, AdminGuard, and web admin gate (AC-1, AC-11)
+  - [ ] Historical backfill for NIFTY and SENSEX with retry, resume, and lock (AC-1, AC-12)
+  - [ ] Backtest core, cost model, metrics, 70/30 split, and the first rule `UP_ORB` end to end with gate and leaderboard thread (AC-3, AC-4, AC-5, AC-7, AC-8, AC-9)
+  - [ ] Remaining rules plus baselines, and the full leaderboard page with mobile cards (AC-2, AC-6, AC-9, AC-10)
+- [ ] Verify it: /check verify Guru Strategy Backtest Lab
+- [ ] Test it: /test Guru Strategy Backtest Lab
+
+---
+
+## Guru Strategy Live Promotion `planned` · needs a decision
+
+**Intent**: Let an admin switch on, per rule and symbol, only the guru rules whose latest backtest passed the gate, so they appear as normal signal cards through the existing risk gates. No automatic orders. From spec 0020.
+**Done when**: A passing rule toggled on in Settings emits live signals from `multiStrategyEngine` on closed bars, and a rule whose newer run fails is blocked automatically.
+
+- [ ] Design it (spec): /architect Guru Strategy Live Promotion
