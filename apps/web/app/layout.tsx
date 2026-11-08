@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { Providers } from "@/app/providers";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,9 +38,8 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Providers>
-          {children}
-        </Providers>
+        {/* Data providers mount in ProtectedShell only, so public pages never call the API (spec 0021). */}
+        {children}
       </body>
     </html>
   );

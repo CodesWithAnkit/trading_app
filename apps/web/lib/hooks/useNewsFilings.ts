@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch, openAuthedStream } from "@/lib/api/apiFetch"
 import * as React from "react"
 import type { NewsFilingItemContract, NewsFilingsResponseContract } from "../contracts/intelligence"
 
@@ -87,7 +88,7 @@ export function useNewsFilings(symbol?: string, pollIntervalMs = 60_000): UseNew
       const url = symbol
         ? `/api/v1/intelligence/news?symbol=${encodeURIComponent(symbol)}`
         : "/api/v1/intelligence/news"
-      const res = await fetch(url)
+      const res = await apiFetch(url)
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
       const json: NewsFilingsResponseContract = await res.json()
       if (json && json.events && json.events.length > 0) {
@@ -110,9 +111,8 @@ export function useNewsFilings(symbol?: string, pollIntervalMs = 60_000): UseNew
 
   // Real time SSE subscription for freshly ingested corporate news
   React.useEffect(() => {
-    let eventSource: EventSource | null = null
-    try {
-      eventSource = new EventSource("/api/v1/scanner/stream")
+    // spec 0021 AC-6: ticket authenticated stream with automatic reconnect.
+    const closeStream = openAuthedStream("/api/v1/scanner/stream", eventSource => {
       eventSource.addEventListener("intelligence:news", (event: MessageEvent) => {
         try {
           const newFiling: NewsFilingItemContract = JSON.parse(event.data)
@@ -130,13 +130,9 @@ export function useNewsFilings(symbol?: string, pollIntervalMs = 60_000): UseNew
           console.error("Error parsing intelligence:news SSE:", e)
         }
       })
-    } catch (err) {
-      console.warn("SSE stream unavailable for news filings:", err)
-    }
+    })
 
-    return () => {
-      if (eventSource) eventSource.close()
-    }
+    return closeStream
   }, [symbol])
 
   return {

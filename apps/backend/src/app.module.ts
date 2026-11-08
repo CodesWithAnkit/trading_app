@@ -6,9 +6,10 @@ import { ScannerModule } from './scanner/scanner.module.js';
 import { SupabaseModule } from './supabase/supabase.module.js';
 import { ApiModule } from './api/api.module.js';
 import { IntelligenceModule } from './intelligence/intelligence.module.js';
+import { AuthModule } from './auth/auth.module.js';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), SupabaseModule, ScannerModule, ApiModule, IntelligenceModule],
+  imports: [ScheduleModule.forRoot(), SupabaseModule, AuthModule, ScannerModule, ApiModule, IntelligenceModule],
   controllers: [AppController],
   providers: [AppService],
 })

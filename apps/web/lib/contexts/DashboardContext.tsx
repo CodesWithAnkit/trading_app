@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch } from "@/lib/api/apiFetch"
 import React, { createContext, useContext, useState, useEffect } from "react"
 import { MarketState } from "@/mock/market"
 
@@ -43,8 +44,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     const fetchMarketData = async () => {
       try {
         const [statusRes, watchRes] = await Promise.all([
-          fetch('/api/v1/market/status'),
-          fetch('/api/v1/market/watch')
+          apiFetch('/api/v1/market/status'),
+          apiFetch('/api/v1/market/watch')
         ])
 
         if (statusRes.ok) {

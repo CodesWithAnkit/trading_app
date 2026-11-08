@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch, openAuthedStream } from "@/lib/api/apiFetch"
 import React, { createContext, useContext, useState } from "react"
 import type { ExitReason, Signal, SignalExit, SignalStatus } from "@/mock/signals"
 import type { ApproachingSetup, MomentumStock } from "@/lib/scanner-types"
@@ -50,7 +51,7 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
     // momentum are not fetched here: the stream sends both on every (re)connect, and a
     // slower REST response would overwrite them with older data.
     const loadSnapshot = () =>
-      fetch("/api/v1/scanner/top-setups")
+      apiFetch("/api/v1/scanner/top-setups")
         .then(res => (res.ok ? res.json() : Promise.reject(res.status)))
         .then((payload: { data?: Signal[] }) => {
           if (cancelled) return
@@ -69,14 +70,15 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
         .catch(err => console.error("Failed to load scanner snapshot", err))
         .finally(() => !cancelled && setHydrated(true))
 
-    const source = new EventSource(STREAM_URL)
-
-    source.onopen = () => {
+    // spec 0021 AC-6: ticket authenticated stream; reconnects with a fresh ticket on error or token expiry.
+    const closeStream = openAuthedStream(STREAM_URL, source => {
+    const opened = source.onopen
+    source.onopen = (ev) => {
+      opened?.call(source, ev)
       setStreamStatus("live")
       // Also refills anything missed while a dropped connection was reconnecting.
       loadSnapshot()
     }
-    source.onerror = () => setStreamStatus(source.readyState === EventSource.CLOSED ? "connecting" : "reconnecting")
 
     source.addEventListener("signal:new", (e: MessageEvent) => {
       const signal = JSON.parse(e.data) as Signal
@@ -104,9 +106,11 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
       setMomentum(payload.stocks)
     })
 
+    }, () => setStreamStatus("reconnecting"))
+
     return () => {
       cancelled = true
-      source.close()
+      closeStream()
     }
   }, [])
 

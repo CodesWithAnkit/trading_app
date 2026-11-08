@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch } from "@/lib/api/apiFetch"
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSignals } from "@/lib/contexts/SignalContext"
@@ -32,7 +33,7 @@ export default function StockAnalysisPage() {
   React.useEffect(() => {
     if (contextSignal) return
     let cancelled = false
-    fetch(`/api/v1/scanner/analysis/${encodeURIComponent(symbol)}`)
+    apiFetch(`/api/v1/scanner/analysis/${encodeURIComponent(symbol)}`)
       .then(res => (res.ok ? res.json() : null))
       .then((payload: AnalysisPayload | null) => !cancelled && setRemote(payload))
       .catch(err => console.error("Failed to load analysis", err))
@@ -103,7 +104,7 @@ export default function StockAnalysisPage() {
         notes: signal.rationale
       }
       
-      const res = await fetch("/api/v1/journal", {
+      const res = await apiFetch("/api/v1/journal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

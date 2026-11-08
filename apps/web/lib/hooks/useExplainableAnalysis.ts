@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch } from "@/lib/api/apiFetch"
 import * as React from "react"
 import type { ExplainableAnalysisContract } from "../contracts/intelligence"
 
@@ -19,7 +20,7 @@ export function useExplainableAnalysis(symbol: string): UseExplainableAnalysisRe
     if (!symbol) return
     try {
       setIsLoading(true)
-      const res = await fetch(`/api/v1/intelligence/analysis/${encodeURIComponent(symbol)}`)
+      const res = await apiFetch(`/api/v1/intelligence/analysis/${encodeURIComponent(symbol)}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
       const data: ExplainableAnalysisContract = await res.json()
       setAnalysis(data)

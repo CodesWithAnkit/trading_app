@@ -1,5 +1,7 @@
 import { Body, Controller, Get, HttpException, HttpStatus, MessageEvent, Param, Post, Query, Sse } from '@nestjs/common';
-import { interval, map, merge, Observable, of } from 'rxjs';
+import { interval, map, merge, Observable, of, takeUntil, timer } from 'rxjs';
+import { CurrentUser, SseAuth } from '../auth/decorators.js';
+import type { AuthUser } from '../auth/decorators.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
 import { ScannerService } from '../scanner/scanner.service.js';
 import { toApiSignal } from '../scanner/signalMapper.js';
@@ -65,14 +67,17 @@ export class ScannerController {
 
   /** Pushes `signal:new`, `approaching:update` and `momentum:update`; Nest unsubscribes on client disconnect. */
   @Sse('stream')
-  stream(): Observable<MessageEvent> {
+  @SseAuth()
+  stream(@CurrentUser() user: AuthUser): Observable<MessageEvent> {
     const snapshot: Observable<MessageEvent> = of(
       { type: 'approaching:update', data: this.scanner.getApproachingSetups() },
       { type: 'momentum:update', data: { watching: this.scanner.latestTicks.size, stocks: this.scanner.getMomentumRanking() } },
     );
     const live = this.scanner.events$.pipe(map((event): MessageEvent => ({ type: event.type, data: event.data })));
     const heartbeat = interval(SSE_HEARTBEAT_MS).pipe(map((): MessageEvent => ({ type: 'heartbeat', data: '' })));
-    return merge(snapshot, live, heartbeat);
+    // spec 0021 AC-6: end the stream when the user's token expires; the web reconnects with a new ticket.
+    const untilExpiry = timer(Math.max(0, user.exp * 1000 - Date.now()));
+    return merge(snapshot, live, heartbeat).pipe(takeUntil(untilExpiry));
   }
 
   @Get('analysis/:symbol')

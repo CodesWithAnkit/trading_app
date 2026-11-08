@@ -283,11 +283,11 @@
 **Intent**: Invite only Supabase email and password sign in. Every page and API route requires a signed in user, and admin only areas (the backtest lab) require the admin role. From spec 0020's admin gate.
 **Done when**: You can sign in, reset a password, and sign out. Every `/api/v1/*` call carries a verified bearer token, the scanner stream works with a ticket, and a non admin can neither see nor call the backtest lab.
 
-- [x] Design it (spec): [0021](../specs/0021-sign-in-access-control.md) · code in `apps/backend/src/auth/`, `apps/web/proxy.ts`, `apps/web/lib/auth/`, `apps/web/app/login/`
+- [x] Design it (spec): [0021](../specs/0021-sign-in-access-control/index.md) · code in `apps/backend/src/auth/`, `apps/web/proxy.ts`, `apps/web/lib/auth/`, `apps/web/app/login/`
 - [ ] Build it: /develop Sign In and Access Control
-  - [ ] Backend AuthGuard (JWKS, pinned claims), CORS, `/me`, and the web login page plus `apiFetch` end to end (AC-1, AC-4, AC-5, AC-10)
-  - [ ] Proxy and layout page gate, and every web call moved to `apiFetch` (AC-3, AC-5)
-  - [ ] SSE tickets, AdminGuard with role cache, and the admin nav and page gate (AC-6, AC-7, AC-8)
+  - [x] Backend AuthGuard (JWKS, pinned claims), CORS, `/me`, and the web login page plus `apiFetch` end to end (AC-1, AC-4, AC-5, AC-10)
+  - [x] Proxy and layout page gate, and every web call moved to `apiFetch` (AC-3, AC-5)
+  - [x] SSE tickets, AdminGuard with role cache, and the admin nav and page gate (AC-6, AC-7, AC-8)
   - [ ] PKCE confirm route, forgot and reset password, sign out, and the Supabase settings (AC-2, AC-9, AC-11)
 - [ ] Verify it: /check verify Sign In and Access Control
 - [ ] Test it: /test Sign In and Access Control

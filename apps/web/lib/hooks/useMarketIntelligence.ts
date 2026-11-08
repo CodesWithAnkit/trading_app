@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch, openAuthedStream } from "@/lib/api/apiFetch"
 import * as React from "react"
 import type { MarketContextContract } from "../contracts/intelligence"
 
@@ -50,7 +51,7 @@ export function useMarketIntelligence(pollIntervalMs = 30_000): UseMarketIntelli
   const fetchContext = React.useCallback(async () => {
     try {
       setIsLoading(true)
-      const res = await fetch("/api/v1/intelligence/context")
+      const res = await apiFetch("/api/v1/intelligence/context")
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
       const json: MarketContextContract = await res.json()
       setData(json)
@@ -73,9 +74,8 @@ export function useMarketIntelligence(pollIntervalMs = 30_000): UseMarketIntelli
 
   // Live SSE listener for real time regime shifts
   React.useEffect(() => {
-    let eventSource: EventSource | null = null
-    try {
-      eventSource = new EventSource("/api/v1/scanner/stream")
+    // spec 0021 AC-6: ticket authenticated stream with automatic reconnect.
+    const closeStream = openAuthedStream("/api/v1/scanner/stream", eventSource => {
       eventSource.addEventListener("intelligence:regime", (event: MessageEvent) => {
         try {
           const parsed = JSON.parse(event.data)
@@ -85,13 +85,9 @@ export function useMarketIntelligence(pollIntervalMs = 30_000): UseMarketIntelli
           console.error("Error parsing intelligence:regime SSE:", e)
         }
       })
-    } catch (err) {
-      console.warn("SSE stream unavailable for market intelligence:", err)
-    }
+    })
 
-    return () => {
-      if (eventSource) eventSource.close()
-    }
+    return closeStream
   }, [])
 
   const currentAgeMs = Date.now() - lastTickReceivedAt

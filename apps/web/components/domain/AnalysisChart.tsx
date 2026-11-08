@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch } from "@/lib/api/apiFetch"
 import * as React from "react"
 import { createChart, ColorType, IChartApi, ISeriesApi, CandlestickData, HistogramData, CandlestickSeries, HistogramSeries } from "lightweight-charts"
 import { useSignals } from "@/lib/contexts/SignalContext"
@@ -21,7 +22,7 @@ function useAnalysisChart(symbol: string, signal: Signal) {
       setLoading(true)
       try {
         const timeframe = signal.setup === "Scalping" ? "1m" : "5m"
-        const res = await fetch(`/api/v1/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${timeframe}&limit=100`)
+        const res = await apiFetch(`/api/v1/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${timeframe}&limit=100`)
         if (res.ok && !cancelled) {
           const json = await res.json()
           const sorted = (json.data || []).sort((a: any, b: any) => 

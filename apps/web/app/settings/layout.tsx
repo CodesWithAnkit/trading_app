@@ -1,10 +1,6 @@
 import * as React from "react"
-import { AppShell } from "@/components/layout/AppShell"
+import { ProtectedShell } from "@/components/layout/ProtectedShell"
 
-export default function SettingsLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return <AppShell>{children}</AppShell>
+export default function SettingsLayout({ children }: { children: React.ReactNode }) {
+  return <ProtectedShell fallbackPath="/settings">{children}</ProtectedShell>
 }

@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch } from "@/lib/api/apiFetch"
 import * as React from "react"
 import { Trophy, Hourglass } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -16,7 +17,7 @@ export function OutcomesComparison() {
   const [state, setState] = React.useState<"loading" | "ready" | "empty" | "error">("loading")
 
   React.useEffect(() => {
-    fetch("/api/v1/scanner/outcomes")
+    apiFetch("/api/v1/scanner/outcomes")
       .then(async res => {
         if (res.status === 404) return setState("empty")
         if (!res.ok) throw new Error(`HTTP ${res.status}`)

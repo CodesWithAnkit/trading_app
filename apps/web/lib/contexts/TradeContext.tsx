@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch } from "@/lib/api/apiFetch"
 import React, { createContext, useContext, useState } from "react"
 import { Trade, TradeAction, mockTrades } from "@/mock/trades"
 
@@ -17,7 +18,7 @@ export function TradeProvider({ children }: { children: React.ReactNode }) {
   const [trades, setTrades] = useState<Trade[]>([])
 
   React.useEffect(() => {
-    fetch("http://localhost:3001/api/v1/journal")
+    apiFetch("/api/v1/journal")
       .then(res => res.json())
       .then(data => {
         if (!data.data || data.data.length === 0) {

@@ -1,16 +1,12 @@
 import * as React from "react"
-import { AppShell } from "@/components/layout/AppShell"
+import { ProtectedShell } from "@/components/layout/ProtectedShell"
 import { ExitToasts } from "@/components/domain/ExitToasts"
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AppShell>
+    <ProtectedShell fallbackPath="/dashboard">
       {children}
       <ExitToasts />
-    </AppShell>
+    </ProtectedShell>
   )
 }

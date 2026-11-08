@@ -6,6 +6,7 @@ import { useDashboardState } from "@/lib/contexts/DashboardContext"
 import { useMarketIntelligence } from "@/lib/hooks/useMarketIntelligence"
 import { SymbolSearch } from "@/components/domain/SymbolSearch"
 import { useNow } from "@/lib/useNow"
+import { AccountMenu } from "@/components/layout/AccountMenu"
 
 function resolveRouteTitle(pathname: string): string {
   if (pathname === "/dashboard" || pathname === "/") return "Dashboard"
@@ -180,9 +181,7 @@ export function Topbar() {
             </span>
           </button>
 
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0" aria-label="Trader profile">
-            <span className="material-symbols-outlined text-on-primary text-[18px]" aria-hidden="true">person</span>
-          </div>
+          <AccountMenu />
         </div>
       </div>
 
@@ -296,9 +295,7 @@ export function Topbar() {
           </button>
           <div className="h-4 w-px bg-border-subtle"></div>
           <div className="flex items-center gap-space-sm">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
-            </div>
+            <AccountMenu />
             <div className="hidden sm:flex flex-col text-left">
               <span className="font-body-sm text-body-sm font-semibold text-text-primary leading-tight">
                 Trader

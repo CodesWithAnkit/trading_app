@@ -4,11 +4,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSignals } from "@/lib/contexts/SignalContext"
 import { useTrades } from "@/lib/contexts/TradeContext"
+import { useSessionUser } from "@/lib/contexts/AuthContext"
 
 export function Sidebar() {
   const pathname = usePathname()
   const { activeSignals, approachingSignals } = useSignals()
   const { openTrades } = useTrades()
+  const user = useSessionUser()
 
   const totalNewSignals = activeSignals.length + approachingSignals.length
 
@@ -62,6 +64,10 @@ export function Sidebar() {
       label: "Settings & Risk",
       icon: "tune"
     },
+    // spec 0021 AC-8: admin only; not rendered at all for anyone else.
+    ...(user?.isAdmin
+      ? [{ href: "/dashboard/backtest", label: "Backtest Lab", icon: "science" }]
+      : []),
   ]
 
   return (

@@ -171,7 +171,7 @@ describe('ScannerController', () => {
   });
 
   it('streams a snapshot then live scanner events (covers 0009 AC-4)', async () => {
-    const received = firstValueFrom(controller.stream().pipe(take(3), toArray()));
+    const received = firstValueFrom(controller.stream({ id: "u", email: null, exp: Math.floor(Date.now() / 1000) + 3600 }).pipe(take(3), toArray()));
     scannerServiceMock.events$.next({ type: 'signal:new', data: { id: 'sig-1' } });
 
     const events = await received;

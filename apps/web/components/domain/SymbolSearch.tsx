@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch } from "@/lib/api/apiFetch"
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -56,7 +57,7 @@ export function SymbolSearch() {
   const loadUniverse = () => {
     if (loadState === "loading" || loadState === "ready") return
     setLoadState("loading")
-    fetch("/api/v1/scanner/universe")
+    apiFetch("/api/v1/scanner/universe")
       .then(res => (res.ok ? res.json() : Promise.reject(res.status)))
       .then((payload: { data?: { symbol: string }[]; nse?: string[] }) => {
         setUniverse((payload.data ?? []).map(r => r.symbol))

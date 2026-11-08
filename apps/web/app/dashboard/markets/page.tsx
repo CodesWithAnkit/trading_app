@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch } from "@/lib/api/apiFetch"
 import * as React from "react"
 import { useDashboardState } from "@/lib/contexts/DashboardContext"
 import { useSignals } from "@/lib/contexts/SignalContext"
@@ -16,7 +17,7 @@ export default function MarketsPage() {
   React.useEffect(() => {
     const fetchDiag = async () => {
       try {
-        const res = await fetch('/api/v1/scanner/diagnostics')
+        const res = await apiFetch('/api/v1/scanner/diagnostics')
         if (res.ok) {
           setDiagnostics(await res.json())
         }

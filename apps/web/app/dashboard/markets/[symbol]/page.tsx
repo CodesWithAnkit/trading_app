@@ -1,4 +1,5 @@
 "use client"
+import { apiFetch } from "@/lib/api/apiFetch"
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useDashboardState } from "@/lib/contexts/DashboardContext"
@@ -27,7 +28,7 @@ export default function StockDetailPage() {
   const [isFno, setIsFno] = React.useState<boolean | null>(null)
   
   React.useEffect(() => {
-    fetch("/api/v1/scanner/universe")
+    apiFetch("/api/v1/scanner/universe")
       .then(res => res.json())
       .then(payload => {
          const fnoSymbols = new Set((payload.data || []).map((s: any) => s.symbol))
@@ -40,7 +41,7 @@ export default function StockDetailPage() {
     const fetchCandles = async () => {
       setLoadingCandles(true)
       try {
-        const res = await fetch(`/api/v1/candles?symbol=${decodedSymbol}&timeframe=${timeframe}&limit=100`)
+        const res = await apiFetch(`/api/v1/candles?symbol=${decodedSymbol}&timeframe=${timeframe}&limit=100`)
         if (res.ok) {
           const json = await res.json()
           // Sort candles chronologically
