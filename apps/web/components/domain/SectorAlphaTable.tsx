@@ -5,7 +5,8 @@ export type SectorRow = {
   name: string
   ltp: number
   changePct: number
-  alphaVsNifty: number
+  /** null when the real NIFTY change is unknown (spec 0026). */
+  alphaVsNifty: number | null
   leaderSymbol: string
   leaderChangePct: number
   advances: number
@@ -32,7 +33,8 @@ const BIAS = {
  * Alpha vs NIFTY as a bar growing from a zero line, with a tick at the +0.50% gate.
  * This is the column the rule gate reads, so it is the one visual accent of the table.
  */
-function AlphaBar({ alpha }: { alpha: number }) {
+function AlphaBar({ alpha }: { alpha: number | null }) {
+  if (alpha === null) return <span className="font-metric-sm text-text-secondary" title="NIFTY change not known yet">–</span>
   const width = Math.min(Math.abs(alpha) / ALPHA_SCALE_PCT, 1) * 50
   const passes = alpha >= ALPHA_GATE_PCT
   const gateLeft = 50 + (ALPHA_GATE_PCT / ALPHA_SCALE_PCT) * 50
@@ -80,8 +82,8 @@ function BiasLabel({ bias }: { bias: SectorRow["bias"] }) {
 
 /** Sectors sorted by alpha, strongest first, so the gate passers lead the table. */
 export function SectorAlphaTable({ rows }: { rows: SectorRow[] }) {
-  const sorted = React.useMemo(() => [...rows].sort((a, b) => b.alphaVsNifty - a.alphaVsNifty), [rows])
-  const passing = sorted.filter((r) => r.alphaVsNifty >= ALPHA_GATE_PCT).length
+  const sorted = React.useMemo(() => [...rows].sort((a, b) => (b.alphaVsNifty ?? -Infinity) - (a.alphaVsNifty ?? -Infinity)), [rows])
+  const passing = sorted.filter((r) => r.alphaVsNifty !== null && r.alphaVsNifty >= ALPHA_GATE_PCT).length
 
   return (
     <>
@@ -107,7 +109,7 @@ export function SectorAlphaTable({ rows }: { rows: SectorRow[] }) {
         </thead>
         <tbody className="text-text-primary">
           {sorted.map((s, i) => {
-            const gateEdge = i > 0 && sorted[i - 1].alphaVsNifty >= ALPHA_GATE_PCT && s.alphaVsNifty < ALPHA_GATE_PCT
+            const gateEdge = i > 0 && (sorted[i - 1].alphaVsNifty ?? -Infinity) >= ALPHA_GATE_PCT && (s.alphaVsNifty ?? -Infinity) < ALPHA_GATE_PCT
             return (
               <tr
                 key={s.name}

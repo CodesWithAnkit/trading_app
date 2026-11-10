@@ -124,26 +124,25 @@ export default function DashboardPage() {
     return true
   })
 
+  // spec 0026: only real values; a missing one stays undefined and the strip shows a dash.
+  const und = <T,>(v: T | null | undefined) => (v === null ? undefined : v)
+  const adv = intelData?.advanceCount ?? null
+  const dec = intelData?.declineCount ?? null
+  const advPct = adv !== null && dec !== null ? Math.round((adv / Math.max(1, adv + dec)) * 100) : undefined
   const regimePropData = intelData
     ? {
-        regimeNumber: intelData.regimeLabel.split("//")[0]?.trim() || "REGIME 01",
-        regimeName: intelData.regimeLabel.split("//")[1]?.trim() || "Bullish Trend Day",
-        volatilityLabel: intelData.vixStatus === "LOW_NORMAL" ? "Moderate Volatility" : "Elevated Volatility",
-        vixValue: intelData.vixLtp,
-        vixChangePct: intelData.vixChangePct,
+        regimeNumber: und(intelData.regimeLabel?.split("//")[0]?.trim()),
+        regimeName: und(intelData.regimeLabel?.split("//")[1]?.trim()),
+        volatilityLabel: intelData.vixStatus === null ? undefined : intelData.vixStatus === "LOW_NORMAL" ? "Moderate Volatility" : "Elevated Volatility",
+        vixValue: und(intelData.vixLtp),
+        vixChangePct: und(intelData.vixChangePct),
         benchmarkName: "Nifty 50 Reference",
-        benchmarkPrice: intelData.niftyLtp,
-        benchmarkChangePct: intelData.niftyChangePct,
-        advancesCount: intelData.advanceCount,
-        declinesCount: intelData.declineCount,
-        advancesPct: Math.round(
-          (intelData.advanceCount / Math.max(1, intelData.advanceCount + intelData.declineCount)) * 100
-        ),
-        declinesPct:
-          100 -
-          Math.round(
-            (intelData.advanceCount / Math.max(1, intelData.advanceCount + intelData.declineCount)) * 100
-          ),
+        benchmarkPrice: und(intelData.niftyLtp),
+        benchmarkChangePct: und(intelData.niftyChangePct),
+        advancesCount: und(adv),
+        declinesCount: und(dec),
+        advancesPct: advPct,
+        declinesPct: advPct === undefined ? undefined : 100 - advPct,
       }
     : undefined
 

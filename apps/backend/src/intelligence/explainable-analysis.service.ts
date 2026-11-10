@@ -2,7 +2,9 @@ import { Injectable, Logger, Optional } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { SupabaseService } from '../supabase/supabase.service.js';
 import { ScannerService } from '../scanner/scanner.service.js';
-import { MarketBreadthService } from './market-breadth.service.js';
+import { MarketBreadthService, sectorNameOf } from './market-breadth.service.js';
+import { ema, wilderAtr } from '../scanner/strategy/guru/indicators.js';
+import { istDate } from './news/news.text.js';
 import { OfficialFilingsAndNewsService } from './official-filings-news.service.js';
 import { NewsGateService } from './news/news-gate.service.js';
 import type { GateVerdict } from './news/news-gate.js';
@@ -39,6 +41,30 @@ export class ExplainableAnalysisService {
   }
 
   /**
+   * spec 0026: today's 5m candles for `symbol`: the scanner's in memory history, else the
+   * `candles` table rows for today's IST session (`timeframe = '5m'`), oldest first.
+   */
+  private async candles5m(symbol: string): Promise<{ h: number; l: number; c: number }[]> {
+    const mem = this.scanner?.getHistory5m?.(symbol) ?? [];
+    if (mem.length) return mem.map(b => ({ h: Number(b.high), l: Number(b.low), c: Number(b.close) }));
+    const db = this.supabase.client;
+    if (!db) return [];
+    const start = new Date(`${istDate(new Date())}T00:00:00+05:30`).toISOString();
+    const { data, error } = await db
+      .from('candles')
+      .select('high, low, close, start_time')
+      .eq('symbol', symbol)
+      .eq('timeframe', '5m')
+      .gte('start_time', start)
+      .order('start_time', { ascending: true });
+    if (error) {
+      this.logger.warn(`Reading 5m candles for ${symbol} failed: ${error.message}`);
+      return [];
+    }
+    return (data ?? []).map(b => ({ h: Number(b.high), l: Number(b.low), c: Number(b.close) }));
+  }
+
+  /**
    * Generates a deterministic, explainable analysis snapshot for the requested symbol.
    */
   async getAnalysis(rawSymbol: string): Promise<ExplainableAnalysisContract> {
@@ -70,11 +96,20 @@ export class ExplainableAnalysisService {
     const riskRupees = (currentPrice - stopLoss) * suggestedQuantity;
     const netRewardRisk = Number((netProfitRupees / Math.max(1, riskRupees)).toFixed(2));
 
-    // Sector relative strength
-    const matchingSector = marketContext.sectors.find(s =>
-      s.leaderSymbol === symbol || s.name.toLowerCase().includes('metal'),
-    ) || marketContext.sectors[0];
-    const sectorRelativeStrength = matchingSector ? matchingSector.alphaVsNifty : 1.45;
+    // spec 0026 AC-10: the symbol's own sector (by membership), only when it has live ticks.
+    const sectorName = sectorNameOf(symbol);
+    const matchingSector = sectorName ? marketContext.sectors.find(s => s.name === sectorName) ?? null : null;
+    const sectorRelativeStrength = matchingSector?.alphaVsNifty ?? null;
+
+    // spec 0026 AC-9: distance from the 20 EMA in ATR (Wilder 14) units on today's 5m candles.
+    const bars = await this.candles5m(symbol);
+    const closes = bars.map(b => b.c);
+    const ema20 = ema(closes, 20);
+    const atr14 = wilderAtr(bars, 14);
+    const last = bars.length - 1;
+    const atrDistance = bars.length >= 20 && atr14[last] > 0 ? (closes[last] - ema20[last]) / atr14[last] : null;
+    const ema50 = ema(closes, 50);
+    const emaAligned = bars.length >= 50 ? ema20[last] > ema50[last] : null;
 
     // Evaluate Deterministic Six Risk Gates (AC-9, Spec 0017 & Spec 0018)
     const riskGates: RiskGateEvaluationContract[] = [
@@ -97,9 +132,11 @@ export class ExplainableAnalysisService {
       {
         id: 'GATE-03',
         title: 'GATE 03 // ATR OVEREXTENSION GUARD',
-        status: 'PASS',
-        description: 'Setup price distance from 20 EMA is well contained inside normal volatility limits.',
-        measuredValue: '0.82 ATR Distance',
+        status: atrDistance === null ? 'WARNING' : Math.abs(atrDistance) <= 1.5 ? 'PASS' : 'FAIL',
+        description: atrDistance === null
+          ? 'Insufficient candles: needs at least 20 completed 5m candles today.'
+          : 'Distance of the last 5m close from the 20 EMA, in Wilder ATR (14) units.',
+        measuredValue: atrDistance === null ? 'Insufficient candles' : `${atrDistance.toFixed(2)} ATR Distance`,
         thresholdValue: '< 1.50 ATR Limit',
       },
       {
@@ -107,15 +144,19 @@ export class ExplainableAnalysisService {
         title: 'GATE 04 // REALTIME FEED HEALTH & DRIFT',
         status: marketContext.feedHealth === 'HEALTHY' ? 'PASS' : 'FAIL',
         description: 'Continuous tick ingest latency and absence of missing candle timestamps.',
-        measuredValue: `${marketContext.feedLatencyMs}ms Ingest Delay`,
+        measuredValue: marketContext.feedLatencyMs === null ? 'No ticks received' : `${marketContext.feedLatencyMs}ms Ingest Delay`,
         thresholdValue: '< 5,000ms Latency',
       },
       {
         id: 'GATE-05',
         title: 'GATE 05 // REGIME CONFLUENCE & DRIFT',
-        status: marketContext.regime !== 'BEARISH_TREND_DAY' && marketContext.regime !== 'VOLATILE_DISLOCATED' ? 'PASS' : 'FAIL',
-        description: 'Setup direction aligns with prevailing market regime and sector participation.',
-        measuredValue: marketContext.regime,
+        status: marketContext.regime === null
+          ? 'WARNING'
+          : marketContext.regime !== 'BEARISH_TREND_DAY' && marketContext.regime !== 'VOLATILE_DISLOCATED' ? 'PASS' : 'FAIL',
+        description: marketContext.regime === null
+          ? 'No live data: the market regime is unknown until breadth ticks arrive.'
+          : 'Setup direction aligns with prevailing market regime and sector participation.',
+        measuredValue: marketContext.regime ?? 'No live data',
         thresholdValue: 'Non-Bearish Trend Day for Longs',
       },
       {
@@ -144,89 +185,47 @@ export class ExplainableAnalysisService {
       rejectionReason = 'Warning flag on event clearance requires manual visual audit before execution.';
     }
 
-    // Build Positive Evidence Factors across Categories A, B, C, D
+    // spec 0026 AC-10: only evidence with a real source. Lines with no calculator yet (opening
+    // range, VWAP wick defense, CVD, swing structure, R2 pivot, 1m volume) are left out.
+    // RVOL: the scanner runs with volume analysis disabled, so `calculateRvol` yields null and the line is omitted.
+    const sign = (n: number) => (n >= 0 ? '+' : '');
     const positiveEvidence = {
-      categoryA: [
-        {
-          id: 'CAT-A1',
-          title: 'Opening Range High Breakout Hold',
-          detail: 'Price broke initial 15 minute balance range high on 2.4x volume and retested without breaking structural pivot.',
-          timeframe: '5m / 15m',
-          status: 'ACTIVE' as const,
-        },
-        {
-          id: 'CAT-A2',
-          title: 'Session VWAP Dynamic Defense',
-          detail: 'Institutional volume weighted average price ascending continuously; 3 consecutive rejections of lower wick tests.',
-          timeframe: '1m / 5m',
-          status: 'ACTIVE' as const,
-        },
-      ],
-      categoryB: [
-        {
-          id: 'CAT-B1',
-          title: `${matchingSector.name} Sector Alpha Leadership`,
-          detail: `${matchingSector.name} index up +${matchingSector.changePct}% with relative alpha of +${matchingSector.alphaVsNifty}% versus Nifty 50 benchmark.`,
-          timeframe: 'Session',
-          status: 'ACTIVE' as const,
-        },
-        {
-          id: 'CAT-B2',
-          title: 'Sector Breadth Expansion',
-          detail: `${matchingSector.advances} sector components advancing versus ${matchingSector.declines} declining, confirming broad based thematic buying.`,
-          timeframe: 'Session',
-          status: 'ACTIVE' as const,
-        },
-      ],
-      categoryC: [
-        {
-          id: 'CAT-C1',
-          title: 'Aggressive Buyer Order Flow Delta',
-          detail: 'Positive cumulative volume delta (CVD) divergence over the last three 5 minute candles indicating absorption.',
-          timeframe: '5m',
-          status: 'ACTIVE' as const,
-        },
-        {
-          id: 'CAT-C2',
-          title: 'Relative Volume Surge (RVOL 2.85x)',
-          detail: 'Session turnover pacing at 285% of 10 day average volume at this time of the trading day.',
-          timeframe: 'Session',
-          status: 'ACTIVE' as const,
-        },
-      ],
-      categoryD: [
-        {
-          id: 'CAT-D1',
-          title: 'Multi Timeframe EMA Alignment',
-          detail: '20 EMA stacked above 50 EMA on both 5m and 15m timeframes with expanding upward trajectory.',
-          timeframe: '5m / 15m',
-          status: 'ACTIVE' as const,
-        },
-        {
-          id: 'CAT-D2',
-          title: 'Higher Low Structural Progression',
-          detail: 'Intraday swing lows consistently stepping higher by at least 0.35% with zero lower high prints.',
-          timeframe: '5m',
-          status: 'ACTIVE' as const,
-        },
-      ],
+      categoryA: [] as EvidenceFactorContract[],
+      categoryB: (matchingSector
+        ? [
+            {
+              id: 'CAT-B1',
+              title: `${matchingSector.name} sector relative strength`,
+              detail: matchingSector.alphaVsNifty === null
+                ? `${matchingSector.name} median change ${sign(matchingSector.changePct)}${matchingSector.changePct}%; NIFTY change unknown, so no alpha.`
+                : `${matchingSector.name} median change ${sign(matchingSector.changePct)}${matchingSector.changePct}%, alpha ${sign(matchingSector.alphaVsNifty)}${matchingSector.alphaVsNifty}% versus NIFTY 50.`,
+              timeframe: 'Session',
+              status: 'ACTIVE' as const,
+            },
+            {
+              id: 'CAT-B2',
+              title: 'Sector breadth',
+              detail: `${matchingSector.advances} sector components advancing versus ${matchingSector.declines} declining.`,
+              timeframe: 'Session',
+              status: 'ACTIVE' as const,
+            },
+          ]
+        : []) as EvidenceFactorContract[],
+      categoryC: [] as EvidenceFactorContract[],
+      categoryD: (emaAligned === null
+        ? []
+        : [
+            {
+              id: 'CAT-D1',
+              title: emaAligned ? '20 EMA above 50 EMA (5m)' : '20 EMA below 50 EMA (5m)',
+              detail: `5m 20 EMA ${ema20[last].toFixed(2)} versus 50 EMA ${ema50[last].toFixed(2)} on ${bars.length} candles.`,
+              timeframe: '5m',
+              status: 'ACTIVE' as const,
+            },
+          ]) as EvidenceFactorContract[],
     };
 
-    // Contradictory Friction Factors
-    const contradictoryFactors: ContradictoryFactorContract[] = [
-      {
-        id: 'FRIC-01',
-        title: 'Overhead Daily Resistance Pivot (R2)',
-        friction: `Major historical swing high sitting at ₹${(currentPrice * 1.018).toFixed(2)}, which could impede immediate extension past Target 1.`,
-        severity: 'MEDIUM',
-      },
-      {
-        id: 'FRIC-02',
-        title: 'Micro Timeframe Volume Deceleration',
-        friction: 'Latest 1m candle showed minor volume drop off compared to the initial impulse breakout bar.',
-        severity: 'LOW',
-      },
-    ];
+    const contradictoryFactors: ContradictoryFactorContract[] = [];
 
     const tradePlan: TradePlanBlueprintContract = {
       entryPrice: currentPrice,

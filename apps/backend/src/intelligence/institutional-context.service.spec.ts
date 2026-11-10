@@ -26,16 +26,12 @@ describe('InstitutionalContextService', () => {
     expect(service).toBeDefined();
   });
 
-  // covers: AC-6, AC-7
-  it('returns delayed EOD flows and bulk deals with explicit regulatory disclaimer', async () => {
+  // covers: 0026 AC-7
+  it('with no stored rows returns no flows, no deals and connected false (no seed figures)', async () => {
     const context = await service.getInstitutionalContext();
-
-    expect(context).toBeDefined();
-    expect(context.flows).toBeDefined();
-    expect(context.flows.reportingPeriod).toBe('PREVIOUS_DAY_EOD');
-    expect(context.flows.fiiNetCr).toBeDefined();
-    expect(context.flows.diiNetCr).toBeDefined();
-    expect(context.recentDeals.length).toBeGreaterThan(0);
+    expect(context.flows).toBeNull();
+    expect(context.recentDeals).toEqual([]);
+    expect(context.connected).toBe(false);
     expect(context.disclaimer).toContain('Delayed End of Day regulatory disclosure');
   });
 

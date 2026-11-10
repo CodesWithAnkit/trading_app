@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import type { InstitutionalContextContract } from "@/lib/contracts/intelligence"
 
 export interface InstitutionalFlowData {
   reportDate?: string
@@ -15,25 +16,41 @@ export interface InstitutionalFlowData {
   }>
 }
 
-export function InstitutionalFlowCard({
-  data = {
-    reportDate: "Prior Trading Day Net Cash (NSE/BSE Provisional)",
-    fiiNetCr: -842.15,
-    diiNetCr: 1210.40,
-    blockDeals: [
-      {
-        id: "deal-1",
-        symbol: "ICICIPRULI",
-        price: 612.00,
-        quantityText: "4.2L shares purchased by HDFC Mutual Fund",
-        client: "HDFC Mutual Fund",
-        time: "Batch 09:30 IST"
-      }
-    ]
+/** spec 0026 AC-7: maps the institutional API answer to the card; null when nothing is stored. */
+export function toInstitutionalFlowData(c: InstitutionalContextContract | null): InstitutionalFlowData | null {
+  if (!c || !c.connected) return null
+  return {
+    reportDate: c.flows ? `${c.flows.reportDate} (${c.flows.reportingPeriod === "PREVIOUS_DAY_EOD" ? "previous day EOD" : "monthly cumulative"})` : undefined,
+    fiiNetCr: c.flows?.fiiNetCr,
+    diiNetCr: c.flows?.diiNetCr,
+    blockDeals: c.recentDeals.map(d => ({
+      id: d.id,
+      symbol: d.symbol,
+      price: d.price,
+      quantityText: `${d.quantity.toLocaleString("en-IN")} shares ${d.action === "BUY" ? "bought" : "sold"} by ${d.clientName}`,
+      client: d.clientName,
+      time: d.dealTime ?? d.dealDate,
+    })),
   }
-}: {
-  data?: InstitutionalFlowData
-}) {
+}
+
+/**
+ * Delayed end of day institutional disclosures. With no stored rows (`data` null) it says so
+ * plainly: no sample figures are ever shown (spec 0026 AC-7).
+ */
+export function InstitutionalFlowCard({ data }: { data: InstitutionalFlowData | null }) {
+  if (!data) {
+    return (
+      <div className="bg-surface rounded border border-border-subtle p-space-md shadow-sm">
+        <div className="flex items-center gap-1.5 pb-space-xs border-b border-border-subtle">
+          <span className="material-symbols-outlined text-[18px] text-primary">account_balance</span>
+          <span className="font-headline-sm text-headline-sm text-text-primary font-bold">Institutional Disclosures</span>
+        </div>
+        <p className="mt-space-sm text-body-sm text-text-secondary">No institutional flow source connected.</p>
+        <p className="mt-1 text-[11px] text-text-secondary">FII/DII flows and bulk deals appear here once a real data source is set up.</p>
+      </div>
+    )
+  }
   const isFiiPositive = (data.fiiNetCr ?? 0) >= 0
   const isDiiPositive = (data.diiNetCr ?? 0) >= 0
 
@@ -63,18 +80,18 @@ export function InstitutionalFlowCard({
         <div className="text-label-code font-label-code text-text-secondary uppercase text-[10px] font-semibold">
           {data.reportDate}
         </div>
-        <div className="flex items-center justify-between p-space-sm bg-surface-bright rounded border border-border-subtle">
+        {data.fiiNetCr !== undefined && <div className="flex items-center justify-between p-space-sm bg-surface-bright rounded border border-border-subtle">
           <span className="font-body-sm text-text-primary font-medium">FII / FPI Net Flows:</span>
           <span className={`font-metric-md font-bold ${isFiiPositive ? "text-accent-bullish" : "text-accent-danger"}`}>
             {isFiiPositive ? "+" : ""}₹{data.fiiNetCr?.toFixed(2)} Cr
           </span>
-        </div>
-        <div className="flex items-center justify-between p-space-sm bg-surface-bright rounded border border-border-subtle">
+        </div>}
+        {data.diiNetCr !== undefined && <div className="flex items-center justify-between p-space-sm bg-surface-bright rounded border border-border-subtle">
           <span className="font-body-sm text-text-primary font-medium">DII Domestic Net Flows:</span>
           <span className={`font-metric-md font-bold ${isDiiPositive ? "text-accent-bullish" : "text-accent-danger"}`}>
             {isDiiPositive ? "+" : ""}₹{data.diiNetCr?.toFixed(2)} Cr
           </span>
-        </div>
+        </div>}
       </div>
 
       {/* Bulk & Block Deals (Informational Context) */}

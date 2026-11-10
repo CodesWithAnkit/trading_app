@@ -70,7 +70,7 @@ const CANDLE_FLUSH_MS = 2000;
 const CANDLE_QUEUE_LIMIT = 5000;
 const PAGE_SIZE = 1000;
 
-type LatestTick = { symbol: string, ltp: number, timestamp: Date, dayOpen: number, volume: number, change1dPct: number, prevClose: number | null };
+type LatestTick = { symbol: string, ltp: number, timestamp: Date, dayOpen: number, volume: number, change1dPct: number, prevClose: number | null, dayHigh?: number, dayLow?: number };
 
 @Injectable()
 export class ScannerService implements OnModuleInit, OnModuleDestroy {
@@ -342,8 +342,9 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
    * skip the stock universe and stock strategies, but still update latest prices and run plan exits.
    * Returns false when no live Angel One feed is running (mock provider).
    */
-  async subscribeIndices(indices: { symbol: string; token: string; exchangeType: string }[], onTick: (tick: MarketTick) => void): Promise<boolean> {
-    this.indexTickListener = onTick;
+  async subscribeIndices(indices: { symbol: string; token: string; exchangeType: string }[], onTick?: (tick: MarketTick) => void): Promise<boolean> {
+    // spec 0026: the market context subscribes NIFTY and India VIX without a listener; keep guru's.
+    if (onTick) this.indexTickListener = onTick;
     const fresh = indices.filter((i) => !this.indexTokens.has(i.token));
     for (const i of fresh) this.indexTokens.set(i.token, i.symbol);
     if (!this.angel) return false;
@@ -388,6 +389,8 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     existing.timestamp = tick.timestamp;
     if (tick.open) existing.dayOpen = tick.open;
     if (tick.prevClose) existing.prevClose = tick.prevClose;
+    if (tick.high) existing.dayHigh = tick.high;
+    if (tick.low) existing.dayLow = tick.low;
 
     // Quote mode sends the day's cumulative volume; other feeds send per tick volume.
     if (tick.cumulativeVolume !== undefined) {
@@ -873,6 +876,21 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
       this.logger.error('Failed to persist candle(s):', err.message);
       return false;
     }
+  }
+
+  /** spec 0026: the market data provider's health for the provenance block, null without a provider. */
+  getFeedHealth() {
+    return this.provider?.getHealth() ?? null;
+  }
+
+  /** spec 0026 AC-9: today's 5m candles held in memory for `symbol` (oldest first). */
+  getHistory5m(symbol: string): { open: number; high: number; low: number; close: number; volume: number; startTime?: Date | string }[] {
+    return [...(this.history5m.get(symbol) ?? [])];
+  }
+
+  /** spec 0026: whether `symbol` is a subscribed index (its ticks never count in breadth). */
+  isIndexSymbol(symbol: string): boolean {
+    return [...this.indexTokens.values()].includes(symbol);
   }
 
   async flushHealth() {

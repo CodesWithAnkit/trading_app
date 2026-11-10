@@ -46,6 +46,12 @@ function parseExpiry(e?: string): number {
   return Number.isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
 }
 
+/** spec 0026: the India VIX spot token (NSE AMXIDX row named India VIX), or null if absent. */
+export function parseVixToken(rows: InstrumentRow[]): string | null {
+  const row = rows.find(r => r.exch_seg === 'NSE' && r.instrumenttype === 'AMXIDX' && /^india ?vix$/i.test((r.symbol ?? r.name ?? '').trim()));
+  return row?.token ?? null;
+}
+
 /** Downloads the master file and returns the NIFTY and SENSEX index instruments. */
 export async function downloadIndexInstruments(
   fetchImpl: typeof fetch = fetch,
@@ -53,10 +59,36 @@ export async function downloadIndexInstruments(
   cacheFile: string | null = INDEX_CACHE_FILE,
   today = new Date().toISOString().slice(0, 10),
 ): Promise<IndexInstrument[]> {
+  return (await loadIndexEntry(fetchImpl, timeoutMs, cacheFile, today, false)).instruments;
+}
+
+/** spec 0026: the NIFTY 50 and India VIX spot tokens for the market context feed. */
+export async function downloadMarketIndexTokens(
+  fetchImpl: typeof fetch = fetch,
+  timeoutMs = 60_000,
+  cacheFile: string | null = INDEX_CACHE_FILE,
+  today = new Date().toISOString().slice(0, 10),
+): Promise<{ nifty: string; vix: string | null }> {
+  const entry = await loadIndexEntry(fetchImpl, timeoutMs, cacheFile, today, true);
+  const nifty = entry.instruments.find(i => i.symbol === 'NIFTY');
+  if (!nifty) throw new Error('Index token for NIFTY not found in instrument file');
+  return { nifty: nifty.token, vix: entry.vixToken ?? null };
+}
+
+type IndexEntry = { instruments: IndexInstrument[]; vixToken?: string | null };
+
+async function loadIndexEntry(
+  fetchImpl: typeof fetch,
+  timeoutMs: number,
+  cacheFile: string | null,
+  today: string,
+  needVix: boolean,
+): Promise<IndexEntry> {
   // The master file is ~38 MB and can take minutes on a slow link; only 2 rows are needed,
   // so they are cached per day (lot sizes and tokens rarely change within a day).
   const cached = cacheFile ? readIndexCache(cacheFile, today) : null;
-  if (cached) return cached;
+  // A cache written before the VIX token was added has no `vixToken` key: download again once.
+  if (cached && (!needVix || cached.vixToken !== undefined)) return cached;
   // `timeoutMs` bounds waiting for the server to answer; the 38 MB body gets its own, longer limit.
   const ctrl = new AbortController();
   const connectTimer = setTimeout(() => ctrl.abort(new Error(`Instrument file: no response within ${timeoutMs / 1000}s`)), timeoutMs);
@@ -74,9 +106,9 @@ export async function downloadIndexInstruments(
   } finally {
     clearTimeout(bodyTimer);
   }
-  const parsed = parseIndexInstruments(rows);
-  if (cacheFile) writeIndexCache(cacheFile, today, parsed);
-  return parsed;
+  const entry: IndexEntry = { instruments: parseIndexInstruments(rows), vixToken: parseVixToken(rows) };
+  if (cacheFile) writeIndexCache(cacheFile, today, entry);
+  return entry;
 }
 
 /** Upper bound for reading the ~38 MB body on a slow connection. */
@@ -85,18 +117,18 @@ const BODY_TIMEOUT_MS = 10 * 60_000;
 /** Per day cache of the parsed index rows, outside the repo tree's tracked files. */
 export const INDEX_CACHE_FILE = join(tmpdir(), 'trading-index-instruments.json');
 
-function readIndexCache(file: string, today: string): IndexInstrument[] | null {
+function readIndexCache(file: string, today: string): IndexEntry | null {
   try {
-    const c = JSON.parse(readFileSync(file, 'utf8')) as { date: string; instruments: IndexInstrument[] };
-    return c.date === today && Array.isArray(c.instruments) && c.instruments.length ? c.instruments : null;
+    const c = JSON.parse(readFileSync(file, 'utf8')) as { date: string } & IndexEntry;
+    return c.date === today && Array.isArray(c.instruments) && c.instruments.length ? { instruments: c.instruments, vixToken: c.vixToken } : null;
   } catch {
     return null;
   }
 }
 
-function writeIndexCache(file: string, today: string, instruments: IndexInstrument[]) {
+function writeIndexCache(file: string, today: string, entry: IndexEntry) {
   try {
-    writeFileSync(file, JSON.stringify({ date: today, instruments }));
+    writeFileSync(file, JSON.stringify({ date: today, ...entry }));
   } catch {
     // A cache write failure only means the next run downloads again.
   }

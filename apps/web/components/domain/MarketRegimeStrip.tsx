@@ -18,23 +18,11 @@ export interface MarketRegimeData {
   pullbackSectors?: string
 }
 
+/** A missing value renders as a dash (spec 0026: never a sample number). */
+const dash = "–"
+
 export function MarketRegimeStrip({
-  data = {
-    regimeNumber: "REGIME 01",
-    regimeName: "Bullish Trend Day",
-    volatilityLabel: "Moderate Volatility",
-    vixValue: 13.42,
-    vixChangePct: -2.1,
-    benchmarkName: "Nifty 50 Reference",
-    benchmarkPrice: 24482.10,
-    benchmarkChangePct: 0.64,
-    advancesCount: 1482,
-    declinesCount: 988,
-    advancesPct: 60,
-    declinesPct: 40,
-    outperformingSectors: "Metals (+1.8%), Auto (+1.2%) Outperforming",
-    pullbackSectors: "IT (-0.4%), Realty (-1.1%) In Corrective Pullback"
-  }
+  data = {},
 }: {
   data?: MarketRegimeData
 }) {
@@ -51,7 +39,7 @@ export function MarketRegimeStrip({
         <div className="flex items-center justify-between gap-space-sm mb-space-sm flex-wrap">
           <div className="flex items-center gap-1.5 sm:gap-space-sm flex-wrap">
             <span className="px-1.5 sm:px-space-sm py-0.5 rounded bg-surface-high sm:bg-status-live-bg text-accent-primary sm:text-status-live-text font-label-code text-label-code font-bold uppercase tracking-wider">
-              {data.regimeNumber}
+              {data.regimeNumber ?? "No live data"}
             </span>
             <span className="font-headline-sm text-headline-sm text-text-primary font-bold">
               {data.regimeName}
@@ -66,7 +54,7 @@ export function MarketRegimeStrip({
               VIX
             </span>
             <span className={`font-metric-sm text-metric-sm font-semibold tabular-nums ${isVixDown ? "text-accent-bullish" : "text-accent-danger"}`}>
-              {data.vixValue?.toFixed(2)}
+              {data.vixValue?.toFixed(2) ?? dash}
             </span>
             <span className={`font-label-code text-label-code tabular-nums ${isVixDown ? "text-accent-bullish" : "text-accent-danger"}`}>
               ({data.vixChangePct && data.vixChangePct > 0 ? "+" : ""}{data.vixChangePct?.toFixed(1)}%)
@@ -77,7 +65,7 @@ export function MarketRegimeStrip({
         {/* Mobile Compact Key Index Row (<640px) — Stitch 5780553391039865460 */}
         <div className="flex sm:hidden items-center justify-between text-text-secondary font-label-code text-label-code bg-surface-high px-2 py-1 rounded mb-space-sm">
           <span>
-            NIFTY 50: <strong className="text-text-primary font-metric-sm tabular-nums">{data.benchmarkPrice?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong>
+            NIFTY 50: <strong className="text-text-primary font-metric-sm tabular-nums">{data.benchmarkPrice?.toLocaleString("en-IN", { minimumFractionDigits: 2 }) ?? dash}</strong>
           </span>
           <span className={`flex items-center font-metric-sm tabular-nums ${isBenchmarkUp ? "text-accent-bullish" : "text-accent-danger"}`}>
             <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
@@ -106,11 +94,11 @@ export function MarketRegimeStrip({
         <div className="flex items-center justify-between font-label-code text-label-code font-semibold tabular-nums">
           <span className="text-status-live-text flex items-center gap-1">
             <span className="material-symbols-outlined text-[13px]" aria-hidden="true">arrow_upward</span>
-            <span>Advances: {data.advancesCount?.toLocaleString("en-IN")} ({data.advancesPct}%)</span>
+            <span>Advances: {data.advancesCount?.toLocaleString("en-IN") ?? dash}{data.advancesPct !== undefined ? ` (${data.advancesPct}%)` : ""}</span>
           </span>
           <span className="text-text-secondary font-normal hidden xs:inline sm:hidden">NSE Advances vs Declines</span>
           <span className="text-accent-danger flex items-center gap-1">
-            <span>Declines: {data.declinesCount?.toLocaleString("en-IN")} ({data.declinesPct}%)</span>
+            <span>Declines: {data.declinesCount?.toLocaleString("en-IN") ?? dash}{data.declinesPct !== undefined ? ` (${data.declinesPct}%)` : ""}</span>
             <span className="material-symbols-outlined text-[13px]" aria-hidden="true">arrow_downward</span>
           </span>
         </div>
@@ -118,11 +106,11 @@ export function MarketRegimeStrip({
         <div className="h-2 w-full bg-surface-high rounded-full overflow-hidden flex shadow-inner">
           <div
             className="h-full bg-accent-bullish transition-all duration-500"
-            style={{ width: `${data.advancesPct ?? 60}%` }}
+            style={{ width: `${data.advancesPct ?? 0}%` }}
           />
           <div
             className="h-full bg-accent-danger transition-all duration-500"
-            style={{ width: `${data.declinesPct ?? 40}%` }}
+            style={{ width: `${data.declinesPct ?? 0}%` }}
           />
         </div>
 

@@ -14,6 +14,14 @@ const mockNewsGate = {
   evaluate: async (): Promise<any> => passVerdict,
 };
 
+/** A gentle 5m uptrend with a small range: price stays near its 20 EMA. */
+const trend = (n: number) =>
+  Array.from({ length: n }, (_, i) => {
+    const c = 150 + i * 0.05 + (i % 2 ? 0.1 : -0.1);
+    return { open: c, high: c + 0.4, low: c - 0.4, close: c, volume: 1000 };
+  });
+let candles = trend(60);
+
 describe('ExplainableAnalysisService', () => {
   let service: ExplainableAnalysisService;
 
@@ -87,6 +95,7 @@ describe('ExplainableAnalysisService', () => {
     const mockScanner = {
       latestTicks: new Map<string, any>(),
       getApproachingSetup: vi.fn().mockReturnValue(null),
+      getHistory5m: vi.fn(() => candles),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -128,14 +137,33 @@ describe('ExplainableAnalysisService', () => {
     mockNewsGate.evaluate = original;
   });
 
-  it('includes positive evidence categories and contradictory friction factors', async () => {
-    const analysis = await service.getAnalysis('TATASTEEL');
-    expect(analysis.positiveEvidence.categoryA.length).toBeGreaterThan(0);
-    expect(analysis.positiveEvidence.categoryB.length).toBeGreaterThan(0);
-    expect(analysis.positiveEvidence.categoryC.length).toBeGreaterThan(0);
-    expect(analysis.positiveEvidence.categoryD.length).toBeGreaterThan(0);
-    expect(analysis.contradictoryFactors.length).toBeGreaterThan(0);
+  // covers: 0026 AC-9
+  it('Gate 03 is computed from real 5m candles, and reads WARNING "Insufficient candles" under 20', async () => {
+    let g = (await service.getAnalysis('TATASTEEL')).riskGates.find(r => r.id === 'GATE-03')!;
+    expect(g.status).toBe('PASS');
+    expect(g.measuredValue).toMatch(/^-?\d+\.\d\d ATR Distance$/);
+    candles = trend(10);
+    g = (await service.getAnalysis('TATASTEEL')).riskGates.find(r => r.id === 'GATE-03')!;
+    expect(g).toMatchObject({ status: 'WARNING', measuredValue: 'Insufficient candles' });
+    candles = trend(60);
   });
+
+  // covers: 0026 AC-10
+  it('evidence uses real sector and EMA values only; sourceless lines and the 1.45 fallback are gone', async () => {
+    const analysis = await service.getAnalysis('TATASTEEL');
+    expect(analysis.sectorRelativeStrength).toBe(1.6);
+    expect(analysis.positiveEvidence.categoryB[0].detail).toContain('alpha +1.6%');
+    expect(analysis.positiveEvidence.categoryD[0].title).toBe('20 EMA above 50 EMA (5m)');
+    expect(analysis.positiveEvidence.categoryA).toEqual([]);
+    expect(analysis.positiveEvidence.categoryC).toEqual([]);
+    expect(analysis.contradictoryFactors).toEqual([]);
+    expect(JSON.stringify(analysis)).not.toMatch(/CVD|R2\)|2\.4x|2\.85x/);
+    // A stock outside every sector definition gets no sector line and no alpha.
+    const other = await service.getAnalysis('ZOMATO');
+    expect(other.sectorRelativeStrength).toBeNull();
+    expect(other.positiveEvidence.categoryB).toEqual([]);
+  });
+
 
   it('computes net reward to risk factoring transaction friction', async () => {
     const analysis = await service.getAnalysis('TATASTEEL');

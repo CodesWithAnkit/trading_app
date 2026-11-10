@@ -12,7 +12,7 @@ export interface SectorMetricContract {
   name: string;
   ltp: number;
   changePct: number;
-  alphaVsNifty: number;
+  alphaVsNifty: number | null;
   leaderSymbol: string;
   leaderChangePct: number;
   advances: number;
@@ -20,26 +20,42 @@ export interface SectorMetricContract {
   bias: 'LONG' | 'SHORT' | 'NEUTRAL';
 }
 
+/** spec 0026: where the market values came from. */
+export type MarketContextSource = "LIVE" | "LAST_KNOWN" | "NONE";
+
+/** spec 0026 AC-8: real state for the Data Provenance Registry. */
+export interface ProvenanceContract {
+  feed: { status: string; lastTickAt: string | null; latencyMs: number | null };
+  news: { status: string; finishedAt: string | null } | null;
+  institutional: { connected: false };
+}
+
+/** spec 0026: every market value is real or null; `asOf` is the time of a last known reading. */
 export interface MarketContextContract {
-  regime: MarketRegimeType;
-  regimeLabel: string;
-  regimeDescription: string;
-  regimeConfidence: number;
-  niftyLtp: number;
-  niftyChangePct: number;
-  vixLtp: number;
-  vixChangePct: number;
-  vixStatus: 'LOW_NORMAL' | 'ELEVATED' | 'EXTREME_VOLATILE';
-  advanceCount: number;
-  declineCount: number;
-  unchangedCount: number;
-  advanceDeclineRatio: number;
-  pctAboveVwap: number;
-  medianDayChange: number;
+  source: MarketContextSource;
+  asOf: string | null;
+  regime: MarketRegimeType | null;
+  regimeLabel: string | null;
+  regimeDescription: string | null;
+  regimeConfidence: number | null;
+  niftyLtp: number | null;
+  niftyChangePct: number | null;
+  vixLtp: number | null;
+  vixChangePct: number | null;
+  vixDayLow: number | null;
+  vixDayHigh: number | null;
+  vixStatus: "LOW_NORMAL" | "ELEVATED" | "EXTREME_VOLATILE" | null;
+  advanceCount: number | null;
+  declineCount: number | null;
+  unchangedCount: number | null;
+  advanceDeclineRatio: number | null;
+  pctAboveVwap: number | null;
+  medianDayChange: number | null;
   sectors: SectorMetricContract[];
   snapshotTime: string;
-  feedLatencyMs: number;
-  feedHealth: 'HEALTHY' | 'DEGRADED' | 'DISCONNECTED';
+  feedLatencyMs: number | null;
+  feedHealth: "HEALTHY" | "DEGRADED" | "DISCONNECTED";
+  provenance: ProvenanceContract;
 }
 
 export interface NewsFilingItemContract {
@@ -129,9 +145,12 @@ export interface BulkBlockDealContract {
 }
 
 export interface InstitutionalContextContract {
-  flows: InstitutionalFlowContract;
+  /** null until a real source writes a row (spec 0026 AC-7). */
+  flows: InstitutionalFlowContract | null;
   recentDeals: BulkBlockDealContract[];
   disclaimer: string;
+  /** spec 0026: false until a real institutional source is connected. */
+  connected: boolean;
 }
 
 export interface RiskGateEvaluationContract {
@@ -175,8 +194,8 @@ export interface ExplainableAnalysisContract {
   setupName: string;
   timeframe: string;
   timestamp: string;
-  marketRegime: MarketRegimeType;
-  sectorRelativeStrength: number;
+  marketRegime: MarketRegimeType | null;
+  sectorRelativeStrength: number | null;
   qualificationStatus: 'QUALIFIED' | 'REJECTED' | 'OBSERVATION_ONLY';
   rejectionReason?: string;
   riskGates: RiskGateEvaluationContract[];

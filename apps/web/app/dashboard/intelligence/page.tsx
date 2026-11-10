@@ -1,7 +1,9 @@
 "use client"
 import * as React from "react"
 import { SectorAlphaTable, type SectorRow } from "@/components/domain/SectorAlphaTable"
-import { InstitutionalFlowCard } from "@/components/domain/InstitutionalFlowCard"
+import { InstitutionalFlowCard, toInstitutionalFlowData } from "@/components/domain/InstitutionalFlowCard"
+import { apiFetch } from "@/lib/api/apiFetch"
+import type { InstitutionalContextContract } from "@/lib/contracts/intelligence"
 import { NewsFilingsTimeline } from "@/components/domain/NewsFilingsTimeline"
 import { MarketRegimeStrip } from "@/components/domain/MarketRegimeStrip"
 import { 
@@ -23,33 +25,44 @@ export default function MarketIntelligencePage() {
   const [selectedSource, setSelectedSource] = React.useState<"ALL" | "FILINGS" | "ACTIONS" | "MACRO">("ALL")
   const { data: context, refresh, isStale, feedLatencyMs, isLoading } = useMarketIntelligence()
   const news = useNewsFilings()
+  // spec 0026 AC-7: the real institutional answer (empty until a source writes rows).
+  const [institutional, setInstitutional] = React.useState<InstitutionalContextContract | null>(null)
+  React.useEffect(() => {
+    let live = true
+    apiFetch("/api/v1/intelligence/institutional")
+      .then(r => (r.ok ? r.json() : null))
+      .then(j => live && setInstitutional(j))
+      .catch(() => live && setInstitutional(null))
+    return () => { live = false }
+  }, [])
 
-  // Live sector metrics when available; otherwise a clearly static sample so the layout is visible.
-  const sectors: SectorRow[] = (context?.sectors && context.sectors.length > 0)
-    ? context.sectors.map(s => ({
-        name: s.name,
-        ltp: s.ltp,
-        changePct: s.changePct,
-        alphaVsNifty: s.alphaVsNifty,
-        leaderSymbol: s.leaderSymbol,
-        leaderChangePct: s.leaderChangePct,
-        advances: s.advances,
-        declines: s.declines,
-        bias: s.bias,
-      }))
-    : [
-        { name: "Nifty Metal", ltp: 9240.5, changePct: 1.82, alphaVsNifty: 1.18, leaderSymbol: "TATASTEEL", leaderChangePct: 2.1, advances: 12, declines: 3, bias: "LONG" },
-        { name: "Nifty Auto", ltp: 23110.15, changePct: 1.24, alphaVsNifty: 0.6, leaderSymbol: "M&M", leaderChangePct: 1.95, advances: 11, declines: 4, bias: "LONG" },
-        { name: "Nifty Bank", ltp: 52380.4, changePct: 0.38, alphaVsNifty: -0.26, leaderSymbol: "HDFCBANK", leaderChangePct: 0.45, advances: 7, declines: 5, bias: "NEUTRAL" },
-        { name: "Nifty FMCG", ltp: 58410.2, changePct: 0.15, alphaVsNifty: -0.49, leaderSymbol: "ITC", leaderChangePct: 0.3, advances: 8, declines: 7, bias: "NEUTRAL" },
-        { name: "Nifty IT", ltp: 37620.8, changePct: -0.42, alphaVsNifty: -1.06, leaderSymbol: "INFY", leaderChangePct: -0.6, advances: 3, declines: 7, bias: "SHORT" },
-        { name: "Nifty Realty", ltp: 1012.3, changePct: -1.14, alphaVsNifty: -1.78, leaderSymbol: "DLF", leaderChangePct: -1.8, advances: 2, declines: 8, bias: "SHORT" },
-      ]
+  // spec 0026: real sectors only (live, or today's last reading); never a sample list.
+  const sectors: SectorRow[] = context?.sectors ?? []
 
-  const totalBreadth = (context?.advanceCount || 142) + (context?.declineCount || 56) + (context?.unchangedCount || 32)
-  const advPct = (((context?.advanceCount || 142) / totalBreadth) * 100).toFixed(1)
-  const decPct = (((context?.declineCount || 56) / totalBreadth) * 100).toFixed(1)
-  const unchPct = (((context?.unchangedCount || 32) / totalBreadth) * 100).toFixed(1)
+  // spec 0026 AC-3, AC-4: every value is real or a dash; `asOf` labels a last known reading.
+  const DASH = "–"
+  const adv = context?.advanceCount ?? null
+  const dec = context?.declineCount ?? null
+  const unch = context?.unchangedCount ?? null
+  const totalBreadth = adv !== null && dec !== null && unch !== null ? adv + dec + unch : 0
+  const share = (n: number | null) => (n !== null && totalBreadth > 0 ? ((n / totalBreadth) * 100).toFixed(1) : null)
+  const advPct = share(adv)
+  const decPct = share(dec)
+  const unchPct = share(unch)
+  const signedPct = (n: number | null | undefined) => (n === null || n === undefined ? DASH : `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`)
+  const asOfClock = context?.asOf
+    ? new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(context.asOf))
+    : null
+  const freshness =
+    !context || context.source === "NONE" ? "No live data" : context.source === "LIVE" ? "Live" : `As of ${asOfClock} IST (last real reading today)`
+  const vixNote =
+    context?.vixStatus === "EXTREME_VOLATILE" ? "Volatility is extreme: expect wide swings and failed breakouts."
+    : context?.vixStatus === "ELEVATED" ? "Volatility is elevated: size down and allow wider stops."
+    : context?.vixStatus === "LOW_NORMAL" ? "Volatility is in the normal band."
+    : "No live VIX reading yet."
+  const prov = context?.provenance
+  const istTime = (iso: string | null | undefined) =>
+    iso ? new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).format(new Date(iso)) : DASH
 
   return (
     <div className="flex flex-col gap-3 sm:gap-margin px-gutter sm:px-gutter-md lg:px-margin-lg py-2 sm:py-space-md lg:py-margin w-full">
@@ -92,20 +105,24 @@ export default function MarketIntelligencePage() {
 
       {/* Top 4 Macro Tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-gutter">
+        <p className="sm:col-span-2 xl:col-span-4 -mb-2 font-label-code text-[11px] text-text-secondary" data-testid="market-freshness">
+          Market data: <strong className="text-text-primary">{freshness}</strong>
+        </p>
+
         {/* Tile 1: Market Regime */}
         <div className="bg-surface rounded-xl border border-border-subtle p-space-md shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between pb-space-xs border-b border-border-subtle">
             <span className="font-label-code text-label-code text-text-secondary uppercase font-semibold">Broad Market Regime</span>
             <span className="px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-[10px] font-bold">
-              {context?.regime || "REGIME 01"}
+              {context?.regime ?? DASH}
             </span>
           </div>
           <div className="py-space-sm">
             <span className="font-headline-md text-headline-md font-bold text-text-primary">
-              {context?.regimeLabel || "Bullish Trend Day"}
+              {context?.regimeLabel ?? "No live data"}
             </span>
             <p className="font-body-xs text-body-xs text-text-secondary mt-1">
-              {context?.regimeDescription || "Trading solidly above daily VWAP with sustained volume expansion across high beta sectors."}
+              {context?.regimeDescription ?? "The regime appears once breadth ticks arrive."}
             </p>
           </div>
           <div className="pt-space-xs border-t border-border-subtle flex items-center justify-between text-body-xs text-text-secondary">
@@ -113,7 +130,7 @@ export default function MarketIntelligencePage() {
             <span className={`font-label-code font-bold ${
               context?.regime === "BEARISH_TREND_DAY" ? "text-accent-danger" : "text-accent-bullish"
             }`}>
-              {context?.regime === "BEARISH_TREND_DAY" ? "Short Setups Preferred" : "Long Setups Preferred"}
+              {context?.regime == null ? DASH : context.regime === "BEARISH_TREND_DAY" ? "Short Setups Preferred" : "Long Setups Preferred"}
             </span>
           </div>
         </div>
@@ -127,24 +144,24 @@ export default function MarketIntelligencePage() {
           <div className="py-space-sm flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1">
-                <span className="font-metric-lg text-metric-lg text-accent-bullish font-bold">{context?.advanceCount || 142}</span>
-                <span className="font-label-code text-label-code text-accent-bullish">({advPct}%)</span>
+                <span className="font-metric-lg text-metric-lg text-accent-bullish font-bold">{adv ?? DASH}</span>
+                {advPct && <span className="font-label-code text-label-code text-accent-bullish">({advPct}%)</span>}
               </div>
               <span className="font-body-xs text-body-xs text-text-secondary">Advances</span>
             </div>
             <div className="text-right">
               <div className="flex items-center justify-end gap-1">
-                <span className="font-metric-lg text-metric-lg text-accent-danger font-bold">{context?.declineCount || 56}</span>
-                <span className="font-label-code text-label-code text-accent-danger">({decPct}%)</span>
+                <span className="font-metric-lg text-metric-lg text-accent-danger font-bold">{dec ?? DASH}</span>
+                {decPct && <span className="font-label-code text-label-code text-accent-danger">({decPct}%)</span>}
               </div>
               <span className="font-body-xs text-body-xs text-text-secondary">Declines</span>
             </div>
           </div>
           <div className="pt-space-xs border-t border-border-subtle">
             <div className="w-full h-2 bg-surface-high rounded-full overflow-hidden flex">
-              <div className="bg-accent-bullish h-full" style={{ width: `${advPct}%` }}></div>
-              <div className="bg-border-strong h-full" style={{ width: `${unchPct}%` }}></div>
-              <div className="bg-accent-danger h-full" style={{ width: `${decPct}%` }}></div>
+              <div className="bg-accent-bullish h-full" style={{ width: `${advPct ?? 0}%` }}></div>
+              <div className="bg-border-strong h-full" style={{ width: `${unchPct ?? 0}%` }}></div>
+              <div className="bg-accent-danger h-full" style={{ width: `${decPct ?? 0}%` }}></div>
             </div>
           </div>
         </div>
@@ -158,16 +175,16 @@ export default function MarketIntelligencePage() {
           <div className="py-space-sm">
             <div className="flex items-baseline gap-space-sm">
               <span className="font-metric-lg text-metric-lg text-text-primary font-bold">
-                {context?.niftyLtp ? context.niftyLtp.toLocaleString("en-IN", { minimumFractionDigits: 2 }) : "24,845.60"}
+                {context?.niftyLtp != null ? context.niftyLtp.toLocaleString("en-IN", { minimumFractionDigits: 2 }) : DASH}
               </span>
               <span className={`font-metric-md text-metric-md font-bold ${
                 (context?.niftyChangePct || 0) >= 0 ? "text-accent-bullish" : "text-accent-danger"
               }`}>
-                {(context?.niftyChangePct || 0) >= 0 ? "+" : ""}{(context?.niftyChangePct || 0.85).toFixed(2)}%
+                {signedPct(context?.niftyChangePct)}
               </span>
             </div>
             <p className="font-body-xs text-body-xs text-text-secondary mt-1">
-              {context?.pctAboveVwap || 68}% of watched components holding above session VWAP
+              {context?.pctAboveVwap != null ? `${context.pctAboveVwap}% of watched components holding above session VWAP` : "No live breadth data"}
             </p>
           </div>
           <div className="pt-space-xs border-t border-border-subtle flex items-center justify-between font-label-code text-[10px] text-text-secondary">
@@ -183,27 +200,27 @@ export default function MarketIntelligencePage() {
             <span className={`px-1.5 py-0.5 rounded font-label-code text-[10px] font-bold ${
               context?.vixStatus === "EXTREME_VOLATILE" ? "bg-accent-danger/20 text-accent-danger" : "bg-status-live-bg text-status-live-text"
             }`}>
-              {context?.vixStatus || "LOW_NORMAL"}
+              {context?.vixStatus ?? DASH}
             </span>
           </div>
           <div className="py-space-sm">
             <div className="flex items-baseline gap-space-sm">
               <span className="font-metric-lg text-metric-lg text-text-primary font-bold">
-                {context?.vixLtp ? context.vixLtp.toFixed(2) : "13.42"}
+                {context?.vixLtp != null ? context.vixLtp.toFixed(2) : DASH}
               </span>
               <span className={`font-metric-md text-metric-md font-bold ${
                 (context?.vixChangePct || 0) <= 0 ? "text-accent-bullish" : "text-accent-danger"
               }`}>
-                {(context?.vixChangePct || 0) >= 0 ? "+" : ""}{(context?.vixChangePct || -3.8).toFixed(2)}%
+                {signedPct(context?.vixChangePct)}
               </span>
             </div>
             <p className="font-body-xs text-body-xs text-text-secondary mt-1">
-              Intraday volatility remains compressed. Breakouts have higher statistical follow-through.
+              {vixNote}
             </p>
           </div>
           <div className="pt-space-xs border-t border-border-subtle flex items-center justify-between font-label-code text-label-code text-text-secondary">
-            <span>Range: 13.10 - 13.88</span>
-            <span className="font-bold text-accent-bullish">Threshold &lt; 18.00 PASS</span>
+            <span>Range: {context?.vixDayLow != null && context?.vixDayHigh != null ? `${context.vixDayLow.toFixed(2)} – ${context.vixDayHigh.toFixed(2)}` : DASH}</span>
+            <span title="Status bands used by the backend">Normal &lt; 16 · Elevated 16 to 22 · Extreme &gt; 22</span>
           </div>
         </div>
       </div>
@@ -237,7 +254,7 @@ export default function MarketIntelligencePage() {
         {/* Right 4 Columns */}
         <div className="xl:col-span-4 flex flex-col gap-margin">
           {/* Institutional Flow Context */}
-          <InstitutionalFlowCard />
+          <InstitutionalFlowCard data={toInstitutionalFlowData(institutional)} />
 
           {/* Data Pipeline Ingestion Status & Provenance */}
           <div className="bg-surface rounded-xl border border-border-subtle p-space-md shadow-sm flex flex-col gap-space-sm">
@@ -246,23 +263,27 @@ export default function MarketIntelligencePage() {
                 <Server className="w-4 h-4 text-primary" />
                 <h3 className="font-headline-sm text-headline-sm font-bold text-text-primary">Data Provenance Registry</h3>
               </div>
-              <span className="px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-[10px] font-bold">
-                AUDITED
+              <span className="px-1.5 py-0.5 rounded bg-surface-container text-text-secondary font-label-code text-[10px] font-bold">
+                {freshness}
               </span>
             </div>
 
             <div className="flex flex-col gap-space-xs text-body-xs divide-y divide-border-subtle">
               <div className="py-2 flex items-center justify-between first:pt-0">
                 <span className="text-text-secondary">SmartAPI WebSocket:</span>
-                <span className="font-label-code text-status-live-text font-bold">Live Stream (12ms)</span>
+                <span className={`font-label-code font-bold ${prov?.feed.status === "CONNECTED" ? "text-status-live-text" : "text-text-secondary"}`}>
+                  {prov ? `${prov.feed.status}${prov.feed.latencyMs != null ? ` (last tick ${Math.round(prov.feed.latencyMs / 1000)}s ago, ${istTime(prov.feed.lastTickAt)})` : ", no ticks"}` : DASH}
+                </span>
               </div>
               <div className="py-2 flex items-center justify-between">
-                <span className="text-text-secondary">NSE/BSE Filings RSS:</span>
-                <span className="font-label-code text-text-primary font-semibold">Polled 60s (Zero Error)</span>
+                <span className="text-text-secondary">News fetch:</span>
+                <span className={`font-label-code font-semibold ${prov?.news?.status === "failed" ? "text-accent-danger" : "text-text-primary"}`}>
+                  {prov?.news ? `Last run ${prov.news.status}${prov.news.finishedAt ? ` at ${istTime(prov.news.finishedAt)}` : ""}` : "No fetch yet"}
+                </span>
               </div>
               <div className="py-2 flex items-center justify-between">
                 <span className="text-text-secondary">FII/DII EOD Disclosures:</span>
-                <span className="font-label-code text-accent-bearish font-semibold">Stamped T-1 Close</span>
+                <span className="font-label-code text-text-secondary font-semibold">Not connected</span>
               </div>
               <div className="py-2 flex items-center justify-between">
                 <span className="text-text-secondary">Social Media Policy:</span>
