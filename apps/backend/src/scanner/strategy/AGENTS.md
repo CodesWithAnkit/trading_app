@@ -20,6 +20,7 @@ This area contains the deterministic, stateless, side-effect-free pipeline for s
   - `plan/`: Entry/stop/target planning and risk reward (`tradePlanBuilder.ts`).
   - `signal/`: Immutable signal state (`signalSnapshot.ts`).
   - `simulation/`: Orchestration and historical evaluation (`simulationRunner.ts`, `calibration.ts`).
+  - `guru/`: pure guru rule functions (definitions v1, spec 0020) used by the backtest lab in `src/backtest/`; they must stay free of backtest imports.
 
 - **Verification:**
   - Verify changes with deterministic unit tests and the `/check verify` runtime proofs.

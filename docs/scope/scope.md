@@ -291,7 +291,7 @@
   - [x] SSE tickets, AdminGuard with role cache, and the admin nav and page gate (AC-6, AC-7, AC-8)
   - [ ] PKCE confirm route, forgot and reset password, sign out, and the Supabase settings (AC-2, AC-9, AC-11)
 - [ ] Verify it: /check verify Sign In and Access Control
-- [ ] Test it: /test Sign In and Access Control
+- [x] Test it: /test Sign In and Access Control
 
 ---
 
@@ -301,13 +301,13 @@
 **Done when**: An admin can backfill history, run all rules from the CLI or the `/dashboard/backtest` page, and see an out of sample leaderboard with equity curves, per year results, trades, and gate badges.
 
 - [x] Design it (spec): [0020](../specs/0020-guru-strategy-backtest-lab/index.md) · code in `apps/backend/src/scanner/strategy/guru/`, `apps/backend/src/backtest/`, `apps/backend/src/auth/`, `apps/web/app/dashboard/backtest/`
-- [ ] Build it: /develop Guru Strategy Backtest Lab
-  - [ ] Migration, AdminGuard, and web admin gate (AC-1, AC-11)
+- [x] Build it: /develop Guru Strategy Backtest Lab
+  - [x] Migration, AdminGuard, and web admin gate (AC-1, AC-11)
   - [x] Historical backfill for NIFTY and SENSEX with retry, resume, and lock (AC-1, AC-12)
   - [x] Backtest core, cost model, metrics, 70/30 split, and the first rule `UP_ORB` end to end with gate and leaderboard thread (AC-3, AC-4, AC-5, AC-7, AC-8, AC-9)
   - [x] Remaining rules plus baselines, and the full leaderboard page with mobile cards (AC-2, AC-6, AC-9, AC-10)
 - [ ] Verify it: /check verify Guru Strategy Backtest Lab
-- [ ] Test it: /test Guru Strategy Backtest Lab
+- [x] Test it: /test Guru Strategy Backtest Lab
 
 ---
 
@@ -322,7 +322,7 @@
   - [x] Unavailable symbol handling and the NIFTY only gate with labels (AC-4, AC-5, AC-6)
   - [ ] Kite provider, blocked on the token flow decision (AC-3)
 - [ ] Verify it: /check verify Backtest History Provider
-- [ ] Test it: /test Backtest History Provider
+- [x] Test it: /test Backtest History Provider
 
 ---
 
