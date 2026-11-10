@@ -1,3 +1,6 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 // Angel One's public instrument master (spec 0009 AC-12, AC-13). No API key needed.
 export const INSTRUMENT_FILE_URL = 'https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json';
 
@@ -44,10 +47,59 @@ function parseExpiry(e?: string): number {
 }
 
 /** Downloads the master file and returns the NIFTY and SENSEX index instruments. */
-export async function downloadIndexInstruments(fetchImpl: typeof fetch = fetch, timeoutMs = 60_000): Promise<IndexInstrument[]> {
-  const res = await fetchImpl(INSTRUMENT_FILE_URL, { signal: AbortSignal.timeout(timeoutMs) });
+export async function downloadIndexInstruments(
+  fetchImpl: typeof fetch = fetch,
+  timeoutMs = 60_000,
+  cacheFile: string | null = INDEX_CACHE_FILE,
+  today = new Date().toISOString().slice(0, 10),
+): Promise<IndexInstrument[]> {
+  // The master file is ~38 MB and can take minutes on a slow link; only 2 rows are needed,
+  // so they are cached per day (lot sizes and tokens rarely change within a day).
+  const cached = cacheFile ? readIndexCache(cacheFile, today) : null;
+  if (cached) return cached;
+  // `timeoutMs` bounds waiting for the server to answer; the 38 MB body gets its own, longer limit.
+  const ctrl = new AbortController();
+  const connectTimer = setTimeout(() => ctrl.abort(new Error(`Instrument file: no response within ${timeoutMs / 1000}s`)), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetchImpl(INSTRUMENT_FILE_URL, { signal: ctrl.signal });
+  } finally {
+    clearTimeout(connectTimer);
+  }
   if (!res.ok) throw new Error(`Instrument file download failed: HTTP ${res.status}`);
-  return parseIndexInstruments((await res.json()) as InstrumentRow[]);
+  const bodyTimer = setTimeout(() => ctrl.abort(new Error(`Instrument file: download slower than ${BODY_TIMEOUT_MS / 60_000} min`)), BODY_TIMEOUT_MS);
+  let rows: InstrumentRow[];
+  try {
+    rows = (await res.json()) as InstrumentRow[];
+  } finally {
+    clearTimeout(bodyTimer);
+  }
+  const parsed = parseIndexInstruments(rows);
+  if (cacheFile) writeIndexCache(cacheFile, today, parsed);
+  return parsed;
+}
+
+/** Upper bound for reading the ~38 MB body on a slow connection. */
+const BODY_TIMEOUT_MS = 10 * 60_000;
+
+/** Per day cache of the parsed index rows, outside the repo tree's tracked files. */
+export const INDEX_CACHE_FILE = join(tmpdir(), 'trading-index-instruments.json');
+
+function readIndexCache(file: string, today: string): IndexInstrument[] | null {
+  try {
+    const c = JSON.parse(readFileSync(file, 'utf8')) as { date: string; instruments: IndexInstrument[] };
+    return c.date === today && Array.isArray(c.instruments) && c.instruments.length ? c.instruments : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeIndexCache(file: string, today: string, instruments: IndexInstrument[]) {
+  try {
+    writeFileSync(file, JSON.stringify({ date: today, instruments }));
+  } catch {
+    // A cache write failure only means the next run downloads again.
+  }
 }
 
 export type FnoStock = { symbol: string; token: string };

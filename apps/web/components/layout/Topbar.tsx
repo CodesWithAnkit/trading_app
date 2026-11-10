@@ -248,11 +248,8 @@ export function Topbar() {
         {/* Left: Brand Identity */}
         <div className="flex items-center gap-space-md shrink-0">
           <Link href="/dashboard" className="flex items-center gap-space-sm hover:opacity-90 transition-opacity">
-            <img
-              alt="Intraday Stock Tracker Logo"
-              className="h-8 w-auto object-contain"
-              src="https://lh3.googleusercontent.com/aida/AEtjO1UpxruEZGtSh-tmaTQqS_ImCl2wsBpLJQW25bGSPMp5zqQTZIIV0JwKtVaWQgDf3GC689rYl0Mfc4zryQ5zc-BAh_8ZdotYF7UDRXjxnoByFrJY6g9LBwIepPXIGeh6iw5yIapnHGQb1DegyS61aiBNPhKGpCzogoPqOMkIFp29WS_R0Fv_zfQUa_m2nIt8vWRex4hK7TP7B3rBREtdk3zlEknZCtcjPr7YVf1ED2TKfGJM79ywna5fydg"
-            />
+            {/* The app's own icon (app/icon.png). The old Stitch export URL expired (HTTP 403). */}
+            <img alt="" aria-hidden="true" className="h-8 w-8 rounded-md object-contain" src="/icon.png" width={32} height={32} />
             <div className="flex flex-col">
               <div className="flex items-center gap-space-xs">
                 <span className="font-headline-sm text-headline-sm text-text-primary tracking-tight font-bold">

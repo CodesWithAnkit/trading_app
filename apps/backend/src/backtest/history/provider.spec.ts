@@ -77,3 +77,26 @@ describe('unavailable history (spec 0022 AC-4, AC-5)', () => {
     expect(ruleGate({}, judgedSymbols(['NIFTY', 'SENSEX'], ['NIFTY', 'SENSEX']))).toBe(false);
   });
 });
+
+describe('index instrument cache (slow 38 MB master file)', () => {
+  it('downloads once per day, then serves the cached rows without fetching', async () => {
+    const { downloadIndexInstruments } = await import('../../scanner/universe/instrumentFile.js');
+    const { mkdtempSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    const file = join(mkdtempSync(join(tmpdir(), 'idx-')), 'c.json');
+    const rows = [
+      { exch_seg: 'NSE', instrumenttype: 'AMXIDX', symbol: 'Nifty 50', token: '99926000' },
+      { exch_seg: 'BSE', instrumenttype: 'AMXIDX', symbol: 'SENSEX', token: '99919000' },
+      { exch_seg: 'NFO', instrumenttype: 'FUTIDX', name: 'NIFTY', lotsize: '65', expiry: '27NOV2026' },
+      { exch_seg: 'BFO', instrumenttype: 'FUTIDX', name: 'SENSEX', lotsize: '20', expiry: '27NOV2026' },
+    ];
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => rows });
+    const a = await downloadIndexInstruments(fetchImpl as any, 1000, file, '2026-11-10');
+    const b = await downloadIndexInstruments(fetchImpl as any, 1000, file, '2026-11-10');
+    expect(b).toEqual(a);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    await downloadIndexInstruments(fetchImpl as any, 1000, file, '2026-11-11');
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+});
