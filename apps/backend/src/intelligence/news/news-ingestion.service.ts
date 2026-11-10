@@ -5,9 +5,21 @@ import { ConflictException, HttpException, Injectable, Logger, NotFoundException
 import { Cron } from '@nestjs/schedule';
 import { SupabaseService } from '../../supabase/supabase.service.js';
 import { ScannerService } from '../../scanner/scanner.service.js';
-import { fetchAlphaVantage, fetchBse, fetchNse, fetchRss, rssFeeds } from './news.adapters.js';
+import {
+  ExchangeKey,
+  FeedReader,
+  feedList,
+  fetchAlphaVantage,
+  parseExchangeRss,
+  parseRss,
+  readFeedSource,
+  rssFeeds,
+  rssPublisher,
+  SKIP,
+  SourceOutcome,
+} from './news.adapters.js';
 import { classify, createGeminiCall, GEMINI_DAILY_CAP, GeminiCall } from './news.classifier.js';
-import { buildUniverse, InstrumentDirectory, loadDirectory, mapSymbol, WatchedUniverse } from './news.symbols.js';
+import { buildUniverse, CompanyNames, InstrumentDirectory, loadCompanyNames, loadDirectory, mapSymbol, WatchedUniverse } from './news.symbols.js';
 import { istDate, istMinutes, truncate } from './news.text.js';
 import {
   EXCERPT_LIMIT,
@@ -24,6 +36,7 @@ export const MANUAL_COOLDOWN_MS = 60_000;
 export const STALE_RUN_MS = 10 * 60_000;
 export const AV_MIN_INTERVAL_MS = 30 * 60_000;
 export const PRUNE_AFTER_DAYS = 30;
+const AV_ENDPOINT = 'https://www.alphavantage.co/query';
 const DAY_MS = 24 * 60 * 60_000;
 const SCHEDULE_START_MIN = 8 * 60 + 30;
 /** How often a running fetch looks for a cancel request. */
@@ -33,8 +46,10 @@ export type ScheduleState = { paused: boolean; pausedAt: string | null };
 
 type RunContext = { id: string; trigger: 'manual' | 'schedule'; startedAt: Date };
 
-/** A source loader: returns raw items, or throws to record an error for that source only. */
-type Loader = () => Promise<{ items: RawNewsItem[]; skipped?: string; warning?: string }>;
+/** A source loader: returns its outcome, or throws to record an error for that source only. */
+type Loader = () => Promise<Pick<SourceOutcome, 'items'> & Partial<SourceOutcome>>;
+
+const EXCHANGE_FEED_ENV: Record<ExchangeKey, string> = { nse: 'NEWS_NSE_FEED_URLS', bse: 'NEWS_BSE_FEED_URLS' };
 
 @Injectable()
 export class NewsIngestionService {
@@ -45,7 +60,15 @@ export class NewsIngestionService {
     fetchImpl: typeof fetch;
     loadDirectory: (today: string) => Promise<InstrumentDirectory>;
     now: () => Date;
-  } = { fetchImpl: fetch, loadDirectory: today => loadDirectory(today), now: () => new Date() };
+    companyNames: () => CompanyNames;
+  } = {
+    fetchImpl: fetch,
+    loadDirectory: today => loadDirectory(today),
+    now: () => new Date(),
+    companyNames: () => loadCompanyNames(msg => this.logger.warn(msg)),
+  };
+  /** Keeps ETag / Last-Modified and the 6 hour block memory per feed, for the life of the process. */
+  private readonly feeds = new FeedReader(() => this.deps.fetchImpl, () => this.deps.now());
 
   constructor(
     private readonly supabase: SupabaseService,
@@ -190,29 +213,41 @@ export class NewsIngestionService {
   /** Runs every source independently, then closes the run with its per source result. */
   async execute(ctx: RunContext): Promise<FetchRunContract['status']> {
     const now = this.deps.now();
-    const lookbackDays = ctx.trigger === 'manual' ? 2 : 1;
     const toDate = istDate(now);
-    const fromDate = istDate(new Date(now.getTime() - lookbackDays * DAY_MS));
     const fetchImpl = this.deps.fetchImpl;
+    const manual = { manual: ctx.trigger === 'manual' };
 
     let dirPromise: Promise<InstrumentDirectory> | null = null;
     const directory = () => (dirPromise ??= this.deps.loadDirectory(toDate));
-    const universe = await this.loadUniverse(directory);
+    // Spec 0024 Source queries: feeds return their latest items, so the lookback filters on pubDate.
+    const cutoff = now.getTime() - (ctx.trigger === 'manual' ? 2 : 1) * DAY_MS;
+    let universe: WatchedUniverse;
+    try {
+      universe = await this.loadUniverse(directory);
+    } catch (err) {
+      // Close the run now instead of leaving it `running` until the 10 minute stale rule.
+      this.logger.error(`News fetch ${ctx.id} could not start its sources: ${(err as Error).message}`);
+      await this.db.from('news_fetch_runs').update({ status: 'failed', finished_at: this.deps.now().toISOString() }).eq('id', ctx.id);
+      return 'failed';
+    }
     let geminiCalls = 0;
 
-    const avKey = process.env.ALPHA_VANTAGE_API_KEY;
+    const exchange = (key: ExchangeKey): Loader => () =>
+      readFeedSource(this.feeds, feedList(process.env[EXCHANGE_FEED_ENV[key]]), xml => parseExchangeRss(xml, key), manual);
     const loaders: Record<NewsSourceKey, Loader> = {
-      nse: async () => ({ items: await fetchNse(fromDate, toDate, fetchImpl) }),
-      bse: async () => ({ items: await fetchBse(fromDate, toDate, fetchImpl) }),
-      rss: async () => {
-        const { items, errors } = await fetchRss(rssFeeds(process.env.NEWS_RSS_FEEDS), fetchImpl);
-        return { items, warning: errors.length ? errors.join('; ') : undefined };
-      },
+      nse: exchange('nse'),
+      bse: exchange('bse'),
+      rss: () => readFeedSource(this.feeds, rssFeeds(process.env.NEWS_RSS_FEEDS), (xml, url) => parseRss(xml, rssPublisher(url)), manual),
       alphavantage: async () => {
-        if (!avKey) return { items: [], skipped: 'ALPHA_VANTAGE_API_KEY not set' };
+        if (process.env.NEWS_ALPHAVANTAGE_ENABLED !== 'true') return { items: [], status: 'skipped', skipped: SKIP.disabled };
+        const avKey = process.env.ALPHA_VANTAGE_API_KEY;
+        if (!avKey) return { items: [], status: 'skipped', skipped: SKIP.noKey };
         const last = await this.lastAlphaVantageCall();
-        if (last && now.getTime() - last.getTime() < AV_MIN_INTERVAL_MS) return { items: [], skipped: 'called within the last 30 min' };
-        return { items: await fetchAlphaVantage(avKey, [...universe.symbols].sort(), last, fetchImpl) };
+        // Within 30 minutes of the last good call: nothing to do this run, not an error.
+        if (last && now.getTime() - last.getTime() < AV_MIN_INTERVAL_MS) return { items: [], status: 'ok' };
+        const res = await fetchAlphaVantage(avKey, [...universe.symbols].sort(), last, fetchImpl);
+        const feeds = [{ url: AV_ENDPOINT, status: res.skipped ? ('skipped' as const) : ('ok' as const), reason: res.skipped ?? null }];
+        return res.skipped ? { items: [], status: 'skipped', skipped: res.skipped, feeds } : { items: res.items, status: 'ok', feeds };
       },
     };
 
@@ -232,32 +267,43 @@ export class NewsIngestionService {
     const perSource: Partial<Record<NewsSourceKey, SourceResult>> = {};
     await Promise.all(
       (Object.keys(loaders) as NewsSourceKey[]).map(async key => {
-        const result: SourceResult = { fetched: 0, kept: 0, new: 0, error: null };
+        const result: SourceResult = { status: 'ok', fetched: 0, kept: 0, new: 0, error: null, skipped: null, feeds: [] };
         perSource[key] = result;
         try {
           if (await isCancelled()) return;
           const loaded = await loaders[key]();
-          if (loaded.skipped) result.skipped = loaded.skipped;
-          if (loaded.warning) result.error = loaded.warning;
+          result.status = loaded.status ?? 'ok';
+          result.error = loaded.error ?? null;
+          result.skipped = loaded.skipped ?? null;
+          result.feeds = loaded.feeds ?? [];
           result.fetched = loaded.items.length;
           const dir = key === 'bse' ? await directory() : null;
+          let stoppedEarly = false;
           for (const item of loaded.items) {
-            if (await isCancelled()) break;
+            if (await isCancelled()) {
+              stoppedEarly = true;
+              break;
+            }
+            if (new Date(item.publishedAt).getTime() < cutoff) continue;
             const symbol = mapSymbol(item, universe, dir ?? { bseToNse: {}, fno: [] });
             if (!symbol) continue;
             result.kept++;
             const stored = await this.storeItem(ctx, item, symbol, () => geminiCalls++);
             if (stored) result.new++;
           }
+          // Only now is it safe to send If-None-Match next time: every item was stored.
+          if (!stoppedEarly) loaded.commit?.();
         } catch (err) {
+          result.status = 'error';
           result.error = (err as Error).message || String(err);
           this.logger.warn(`News source ${key} failed: ${result.error}`);
         }
       }),
     );
 
-    const attempted = Object.values(perSource).filter(r => !r?.skipped);
-    const failed = attempted.filter(r => r?.error && r.fetched === 0);
+    // Skipped sources never count toward partial or failed (AC-12).
+    const attempted = Object.values(perSource).filter(r => r && r.status !== 'skipped');
+    const failed = attempted.filter(r => r?.status === 'error');
     const status: RunStatus = cancelled || (await isCancelled())
       ? 'cancelled'
       : failed.length === 0 ? 'done' : failed.length === attempted.length ? 'failed' : 'partial';
@@ -337,26 +383,36 @@ export class NewsIngestionService {
     return data != null;
   }
 
-  /** Symbols from `instruments` for the latest selection day; the full F&O list if none. */
+  /**
+   * Symbols from `instruments` for the latest selection day (selecting `symbol` only); on a
+   * query error or an empty result, the instrument file F&O list. Names come from the
+   * committed names file.
+   */
   private async loadUniverse(directory: () => Promise<InstrumentDirectory>): Promise<WatchedUniverse> {
-    const { data: latest } = await this.db
+    const names = this.deps.companyNames();
+    const withNames = (symbols: string[], from: string) => {
+      const universe = buildUniverse(symbols, names);
+      const named = new Set(universe.names.values());
+      const missing = [...universe.symbols].filter(s => !named.has(s)).length;
+      this.logger.log(`News universe: ${universe.symbols.size} symbols from ${from}, ${missing} with no company name`);
+      return universe;
+    };
+
+    const { data: latest, error: latestError } = await this.db
       .from('instruments')
       .select('last_selected_on')
       .not('last_selected_on', 'is', null)
       .order('last_selected_on', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (latest?.last_selected_on) {
-      const { data } = await this.db.from('instruments').select('symbol, name').eq('last_selected_on', latest.last_selected_on);
-      if (data?.length) {
-        return buildUniverse(
-          data.map(r => r.symbol as string),
-          Object.fromEntries(data.map(r => [r.symbol as string, r.name as string | null])),
-        );
-      }
+    if (latestError) this.logger.error(`Watched universe query failed: ${latestError.message}; using the F&O list`);
+    else if (latest?.last_selected_on) {
+      const { data, error } = await this.db.from('instruments').select('symbol').eq('last_selected_on', latest.last_selected_on);
+      if (error) this.logger.error(`Watched universe query failed: ${error.message}; using the F&O list`);
+      else if (data?.length) return withNames(data.map(r => r.symbol as string), 'instruments');
     }
     try {
-      return buildUniverse((await directory()).fno);
+      return withNames((await directory()).fno, 'the instrument file F&O list');
     } catch (err) {
       this.logger.warn(`No watched universe available: ${(err as Error).message}`);
       return buildUniverse([]);
@@ -373,7 +429,8 @@ export class NewsIngestionService {
       .limit(50);
     const hit = (data ?? []).find(r => {
       const av = (r.per_source as Record<string, SourceResult> | null)?.alphavantage;
-      return av && !av.skipped && !av.error;
+      // A run that only waited out the 30 minutes records no feed, so it never counts.
+      return av?.status === 'ok' && (av.feeds ?? []).length > 0;
     });
     return hit ? new Date(hit.started_at) : null;
   }

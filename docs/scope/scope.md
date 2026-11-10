@@ -350,13 +350,13 @@
 **Done when**: The page shows only real, linked items with how each was classified, the Fetch button and schedule both bring in new items without duplicates, and no seed item is ever served.
 
 - [x] Design it (spec): [0024](../specs/0024-real-news-ingestion/index.md) · code in `apps/backend/src/intelligence/news/`, `apps/web/app/dashboard/news/`
-- [ ] Build it: /develop Real News Ingestion
+- [x] Build it: /develop Real News Ingestion
   - [x] Migration, BSE adapter, symbol mapper, rules v1, dedup storage, fetch API, seed removal: real items end to end (AC-1, AC-4, AC-5, AC-6, AC-7, AC-9)
   - [x] NSE, RSS and Alpha Vantage adapters with independent failure (AC-3, AC-9)
   - [x] Gemini step with the atomic daily cap, the cron schedule, concurrency and pruning (AC-2, AC-6)
   - [x] Page: Fetch button, last fetch line, classification labels, empty state, SSE refresh (AC-1, AC-6, AC-8)
   - [x] Admin controls: admin only fetch, cancel, schedule pause, HIGH news kept (AC-1, AC-10, AC-11)
-  - [ ] News sources: official exchange RSS via config (off until confirmed), honest requests, skipped handling, Alpha Vantage disabled, company names file, universe query fix (AC-3, AC-4, AC-12)
+  - [x] News sources: official exchange RSS via config (off until confirmed), honest requests, skipped handling, Alpha Vantage disabled, company names file, universe query fix (AC-3, AC-4, AC-12)
 - [ ] Verify it: /check verify Real News Ingestion
 - [ ] Test it: /test Real News Ingestion
 

@@ -67,11 +67,14 @@ export interface NewsFilingItemContract {
 
 /** Spec 0024: one news source's result within a fetch run. */
 export interface NewsSourceResultContract {
+  /** Absent on runs stored before the news sources change. */
+  status?: 'ok' | 'skipped' | 'error';
   fetched: number;
   kept: number;
   new: number;
   error: string | null;
-  skipped?: string;
+  skipped?: string | null;
+  feeds?: Array<{ url: string; status: 'ok' | 'skipped' | 'error'; reason: string | null }>;
 }
 
 /** Spec 0024 AC-11: whether the scheduled fetch is paused. */

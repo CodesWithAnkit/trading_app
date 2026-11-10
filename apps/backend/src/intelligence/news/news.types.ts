@@ -35,7 +35,16 @@ export type Classification = {
   rulesVersion: string | null;
 };
 
-export type SourceResult = { fetched: number; kept: number; new: number; error: string | null; skipped?: string };
+/** Spec 0024 News sources detail: `per_source.<key>`. Skipped is never written to `error`. */
+export type SourceResult = {
+  status: 'ok' | 'skipped' | 'error';
+  fetched: number;
+  kept: number;
+  new: number;
+  error: string | null;
+  skipped: string | null;
+  feeds: Array<{ url: string; status: 'ok' | 'skipped' | 'error'; reason: string | null }>;
+};
 
 export type RunStatus = 'running' | 'done' | 'partial' | 'failed' | 'cancelled';
 

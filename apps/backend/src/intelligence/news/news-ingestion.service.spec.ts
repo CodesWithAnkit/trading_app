@@ -81,19 +81,22 @@ function fakeDb(seed: Record<string, any[]> = {}) {
   return { client, tables, geminiCap, failUpdates, get geminiCalls() { return geminiCalls; } };
 }
 
-const NSE_JSON = [{ seq_id: '1', symbol: 'TCS', desc: 'Order received', attchmntFile: 'https://n/1.pdf', an_dt: '10-Nov-2026 10:00:00' }];
-const BSE_JSON = { Table: [{ NEWSID: 'b1', SCRIP_CD: 500325, NEWSSUB: 'Reliance - Company opens new office', NEWS_DT: '2026-11-10T10:05:00' }] };
+const NSE_FEED = 'https://nse.example/announcements.xml';
+const BSE_FEED = 'https://bse.example/announcements.xml';
+const NSE_XML = '<?xml version="1.0"?><rss version="2.0"><channel><item><title>TCS: Order received</title><link>https://n/1.pdf</link><guid>n1</guid><pubDate>Tue, 10 Nov 2026 10:00:00 +0530</pubDate></item></channel></rss>';
+const BSE_XML = '<rss version="2.0"><channel><item><title>Reliance Industries Ltd (500325): Company opens new office</title><guid>b1</guid><pubDate>Tue, 10 Nov 2026 10:05:00 +0530</pubDate></item></channel></rss>';
 const RSS_XML = '<rss><channel><item><title>RBI cuts repo rate</title><link>https://et/1</link><pubDate>Tue, 10 Nov 2026 08:30:00 +0530</pubDate></item></channel></rss>';
 
-function fakeFetch(fail: Partial<Record<'nse' | 'bse' | 'rss', boolean>> = {}) {
-  return vi.fn(async (url: string) => {
-    const ok = (body: any, text = false) =>
-      ({ ok: true, status: 200, headers: { getSetCookie: () => ['nsit=abc; Path=/'], get: () => null }, json: async () => body, text: async () => (text ? body : '') }) as any;
-    if (url === 'https://www.nseindia.com') return ok('');
-    if (url.includes('nseindia.com/api')) { if (fail.nse) throw new Error('NSE blocked'); return ok(NSE_JSON); }
-    if (url.includes('bseindia')) { if (fail.bse) throw new Error('BSE down'); return ok(JSON.stringify(BSE_JSON), true); }
-    if (fail.rss) throw new Error('feed down');
-    return ok(RSS_XML, true);
+type Answer = { status?: number; body?: string; type?: string; throws?: string };
+/** A fetch double that records every request; `answers` override a URL's response. */
+function fakeFetch(answers: Record<string, Answer> = {}) {
+  return vi.fn(async (url: string, _init?: RequestInit) => {
+    const a = answers[url] ?? {};
+    if (a.throws) throw new Error(a.throws);
+    const body = a.body ?? (url === NSE_FEED ? NSE_XML : url === BSE_FEED ? BSE_XML : RSS_XML);
+    const status = a.status ?? 200;
+    const headers = new Map([['content-type', a.type ?? 'application/rss+xml']]);
+    return { ok: status < 300, status, headers: { get: (k: string) => headers.get(k.toLowerCase()) ?? null }, text: async () => body, json: async () => JSON.parse(body) } as any;
   });
 }
 
@@ -105,6 +108,9 @@ describe('NewsIngestionService (spec 0024)', () => {
 
   beforeEach(() => {
     delete process.env.ALPHA_VANTAGE_API_KEY;
+    delete process.env.NEWS_ALPHAVANTAGE_ENABLED;
+    process.env.NEWS_NSE_FEED_URLS = NSE_FEED;
+    process.env.NEWS_BSE_FEED_URLS = BSE_FEED;
     process.env.NEWS_RSS_FEEDS = 'https://economictimes.indiatimes.com/markets/rss';
     now = new Date('2026-11-10T06:00:00.000Z');
     db = fakeDb({ instruments: [{ symbol: 'TCS', name: null, last_selected_on: '2026-11-10' }, { symbol: 'RELIANCE', name: null, last_selected_on: '2026-11-10' }] });
@@ -117,6 +123,7 @@ describe('NewsIngestionService (spec 0024)', () => {
         { exch_seg: 'BSE', symbol: 'RELIANCE', token: '500325', name: 'RELIANCE' },
       ]),
       now: () => now,
+      companyNames: () => ({}),
     };
     service.setGemini(async () => ({ impact: 'MEDIUM', direction: 'BULLISH', eventType: 'GENERAL_NEWS', confidence: 0.6 }));
   });
@@ -139,7 +146,7 @@ describe('NewsIngestionService (spec 0024)', () => {
       ['ET Markets', 'MARKET', 'gemini'],
       ['NSE', 'TCS', 'rules'],
     ]);
-    expect(rows.find(r => r.source === 'NSE')).toMatchObject({ is_official_filing: true, source_url: 'https://n/1.pdf', direction: 'BULLISH' });
+    expect(rows.find(r => r.source === 'NSE')).toMatchObject({ is_official_filing: true, source_url: 'https://n/1.pdf', source_item_id: 'n1', direction: 'BULLISH' });
     expect(pushed).toHaveLength(3);
     expect(pushed[0].type).toBe('intelligence:news');
     expect(pushed.map(p => p.data.classifiedBy).sort()).toEqual(['gemini', 'gemini', 'rules']);
@@ -160,10 +167,11 @@ describe('NewsIngestionService (spec 0024)', () => {
 
   // covers: 0024 AC-3
   it('keeps storing from other sources when one fails, marking the run partial with the error', async () => {
-    service.deps.fetchImpl = fakeFetch({ bse: true }) as any;
+    service.deps.fetchImpl = fakeFetch({ [BSE_FEED]: { throws: 'BSE down' } }) as any;
     const { id, status } = await runOnce();
     expect(status).toBe('partial');
     const run = db.tables.news_fetch_runs.find(r => r.id === id);
+    expect(run.per_source.bse).toMatchObject({ status: 'error', skipped: null });
     expect(run.per_source.bse.error).toContain('BSE down');
     expect(run.per_source.nse.new).toBe(1);
     expect(db.tables.news_and_events.some(r => r.source === 'NSE')).toBe(true);
@@ -208,11 +216,165 @@ describe('NewsIngestionService (spec 0024)', () => {
   });
 
   // covers: 0024 AC-3
-  it('calls Alpha Vantage at most once per 30 minutes', async () => {
+  it('calls Alpha Vantage at most once per 30 minutes, counting only real calls', async () => {
+    process.env.NEWS_ALPHAVANTAGE_ENABLED = 'true';
     process.env.ALPHA_VANTAGE_API_KEY = 'k';
-    db.tables.news_fetch_runs.push({ id: 'p', status: 'done', started_at: new Date(now.getTime() - 10 * 60_000).toISOString(), per_source: { alphavantage: { fetched: 3, kept: 0, new: 0, error: null } } });
+    const fetchImpl = fakeFetch();
+    service.deps.fetchImpl = fetchImpl as any;
+    db.tables.news_fetch_runs.push({ id: 'p', status: 'done', started_at: new Date(now.getTime() - 10 * 60_000).toISOString(), per_source: { alphavantage: { status: 'ok', fetched: 3, feeds: [{ url: 'av', status: 'ok', reason: null }] } } });
     const { id } = await runOnce();
-    expect(db.tables.news_fetch_runs.find(r => r.id === id).per_source.alphavantage.skipped).toContain('30 min');
+    expect(db.tables.news_fetch_runs.find(r => r.id === id).per_source.alphavantage).toMatchObject({ status: 'ok', skipped: null, feeds: [] });
+    expect(fetchImpl.mock.calls.some(([u]) => String(u).includes('alphavantage'))).toBe(false);
+  });
+
+  // covers: 0024 AC-3, AC-12
+  it('with no exchange feeds and Alpha Vantage off, ends done with NSE, BSE and Alpha Vantage skipped', async () => {
+    process.env.NEWS_NSE_FEED_URLS = '';
+    delete process.env.NEWS_BSE_FEED_URLS;
+    const { id, status } = await runOnce();
+    expect(status).toBe('done');
+    const ps = db.tables.news_fetch_runs.find(r => r.id === id).per_source;
+    expect(ps.nse).toMatchObject({ status: 'skipped', skipped: 'no official feed configured', error: null });
+    expect(ps.bse).toMatchObject({ status: 'skipped', skipped: 'no official feed configured', error: null });
+    expect(ps.alphavantage).toMatchObject({ status: 'skipped', skipped: 'disabled until premium', error: null });
+    expect(ps.rss.status).toBe('ok');
+  });
+
+  // covers: 0024 AC-12
+  it('Alpha Vantage enabled without a key is skipped "no key"; a premium answer is skipped "premium required"', async () => {
+    process.env.NEWS_ALPHAVANTAGE_ENABLED = 'true';
+    const first = await runOnce();
+    expect(db.tables.news_fetch_runs.find(r => r.id === first.id).per_source.alphavantage.skipped).toBe('no key');
+    db.tables.news_fetch_runs.forEach(r => (r.status = 'done'));
+    process.env.ALPHA_VANTAGE_API_KEY = 'k';
+    service.deps.fetchImpl = vi.fn(async (url: string) =>
+      String(url).includes('alphavantage')
+        ? ({ ok: true, status: 200, json: async () => ({ Information: 'This is a premium endpoint.' }) } as any)
+        : (fakeFetch() as any)(url),
+    ) as any;
+    const second = await runOnce();
+    expect(second.status).toBe('done');
+    expect(db.tables.news_fetch_runs.find(r => r.id === second.id).per_source.alphavantage).toMatchObject({ status: 'skipped', skipped: 'premium required', error: null });
+  });
+
+  // covers: 0024 AC-12
+  it('a 403 or an HTML block page is skipped "blocked by exchange", remembered for 6 hours, and not counted as a failure', async () => {
+    const fetchImpl = fakeFetch({ [BSE_FEED]: { status: 403 }, [NSE_FEED]: { body: '<html>Access Denied</html>', type: 'text/html' } });
+    service.deps.fetchImpl = fetchImpl as any;
+    const { id, status } = await runOnce();
+    expect(status).toBe('done');
+    const ps = db.tables.news_fetch_runs.find(r => r.id === id).per_source;
+    expect(ps.bse).toMatchObject({ status: 'skipped', skipped: 'blocked by exchange', error: null });
+    expect(ps.nse).toMatchObject({ status: 'skipped', skipped: 'blocked by exchange' });
+
+    db.tables.news_fetch_runs.forEach(r => (r.status = 'done'));
+    now = new Date(now.getTime() + 5 * 60_000);
+    const calls = fetchImpl.mock.calls.length;
+    const again = await runOnce();
+    expect(fetchImpl.mock.calls.length).toBe(calls + 1); // only the market RSS feed
+    expect(db.tables.news_fetch_runs.find(r => r.id === again.id).per_source.bse.skipped).toMatch(/^blocked by exchange, retry after \d\d:\d\d IST$/);
+
+    db.tables.news_fetch_runs.forEach(r => (r.status = 'done'));
+    await runOnce('manual'); // a manual Fetch tries a blocked feed again once
+    expect(fetchImpl.mock.calls.length).toBe(calls + 4);
+  });
+
+  // covers: 0024 AC-3
+  it('sends only an honest User-Agent and an XML Accept: no cookies or browser headers', async () => {
+    process.env.NEWS_USER_AGENT = 'TestReader/2.0';
+    const fetchImpl = fakeFetch();
+    service.deps.fetchImpl = fetchImpl as any;
+    await runOnce();
+    delete process.env.NEWS_USER_AGENT;
+    expect(fetchImpl.mock.calls).toHaveLength(3);
+    for (const [, init] of fetchImpl.mock.calls) {
+      const headers = init?.headers as Record<string, string>;
+      expect(Object.keys(headers).sort()).toEqual(['Accept', 'User-Agent']);
+      expect(headers['User-Agent']).toBe('TestReader/2.0');
+      expect(init?.redirect).toBe('manual');
+    }
+  });
+
+  // covers: 0024 AC-3
+  it('a 5xx feed is an error, and a 304 is ok with no items', async () => {
+    service.deps.fetchImpl = fakeFetch({ [NSE_FEED]: { status: 503 }, [BSE_FEED]: { status: 304 } }) as any;
+    const { id, status } = await runOnce();
+    expect(status).toBe('partial');
+    const ps = db.tables.news_fetch_runs.find(r => r.id === id).per_source;
+    expect(ps.nse).toMatchObject({ status: 'error', error: expect.stringContaining('HTTP 503') });
+    expect(ps.bse).toMatchObject({ status: 'ok', fetched: 0 });
+  });
+
+  // covers: 0024 AC-3 (an invalid feed URL)
+  it('a non https feed URL is skipped "invalid feed URL" without a request', async () => {
+    process.env.NEWS_NSE_FEED_URLS = 'http://nse.example/a.xml';
+    const fetchImpl = fakeFetch();
+    service.deps.fetchImpl = fetchImpl as any;
+    const { id } = await runOnce();
+    expect(db.tables.news_fetch_runs.find(r => r.id === id).per_source.nse).toMatchObject({ status: 'skipped', skipped: 'invalid feed URL' });
+    expect(fetchImpl.mock.calls.some(([u]) => String(u).startsWith('http:'))).toBe(false);
+  });
+
+  // covers: 0024 AC-4
+  it('the watched universe query selects only symbol and uses today\'s instruments list', async () => {
+    const selects: string[] = [];
+    const from = db.client.from.bind(db.client);
+    db.client.from = (t: string) => {
+      const q = from(t);
+      if (t !== 'instruments') return q;
+      const select = q.select.bind(q);
+      q.select = (cols: string) => (selects.push(cols), select(cols));
+      return q;
+    };
+    db.tables.instruments.push({ symbol: 'INFY', last_selected_on: '2026-11-09' });
+    await runOnce();
+    expect(selects).toEqual(['last_selected_on', 'symbol']);
+    expect(db.tables.news_and_events.some(r => r.symbol === 'INFY')).toBe(false);
+  });
+
+  // covers: 0024 Source queries (lookback 1 day on schedule, 2 days on manual, by pubDate)
+  it('drops feed items older than the lookback: 1 day on schedule, 2 days on manual', async () => {
+    const old = (h: number) => `<item><title>RBI cuts repo rate ${h}h</title><guid>g${h}</guid><pubDate>${new Date(now.getTime() - h * 3600_000).toUTCString()}</pubDate></item>`;
+    const xml = `<rss><channel>${old(2)}${old(30)}${old(60)}</channel></rss>`;
+    service.deps.fetchImpl = fakeFetch({ 'https://economictimes.indiatimes.com/markets/rss': { body: xml } }) as any;
+    await runOnce('schedule');
+    expect(db.tables.news_and_events.filter(r => r.source === 'ET Markets').map(r => r.source_item_id)).toEqual(['g2']);
+    db.tables.news_fetch_runs.forEach(r => (r.status = 'done'));
+    await runOnce('manual');
+    expect(db.tables.news_and_events.filter(r => r.source === 'ET Markets').map(r => r.source_item_id).sort()).toEqual(['g2', 'g30']);
+  });
+
+  // covers: review minor (validators saved only after items are stored)
+  it('does not send If-None-Match after a run whose items failed to store', async () => {
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      const r = await (fakeFetch() as any)(url, init);
+      return { ...r, headers: { get: (k: string) => (k.toLowerCase() === 'etag' ? '"v1"' : r.headers.get(k)) } };
+    });
+    service.deps.fetchImpl = fetchImpl as any;
+    const upsert = db.client.from;
+    db.client.from = (t: string) => {
+      const q = upsert(t);
+      if (t === 'news_and_events') q.upsert = () => { throw new Error('db down'); };
+      return q;
+    };
+    await runOnce();
+    db.client.from = upsert;
+    db.tables.news_fetch_runs.forEach(r => (r.status = 'done'));
+    const before = fetchImpl.mock.calls.length;
+    await runOnce();
+    const second = fetchImpl.mock.calls.slice(before).map(([, init]) => (init?.headers as Record<string, string>)['If-None-Match']);
+    expect(second.every(v => v === undefined)).toBe(true);
+    await runOnce();
+    expect(fetchImpl.mock.calls.slice(-3).every(([, init]) => (init?.headers as Record<string, string>)['If-None-Match'] === '"v1"')).toBe(true);
+  });
+
+  // covers: review minor (a crash before the sources run closes the run)
+  it('marks the run failed when loading the watched universe throws', async () => {
+    service.deps.companyNames = () => { throw new Error('boom'); };
+    const { id, status } = await runOnce();
+    expect(status).toBe('failed');
+    expect(db.tables.news_fetch_runs.find(r => r.id === id)).toMatchObject({ status: 'failed' });
+    expect(db.tables.news_fetch_runs.find(r => r.id === id).finished_at).toBeTruthy();
   });
 
   // covers: 0024 AC-10

@@ -1,21 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { parseAlphaVantage, parseBse, parseNse, parseRss, rssFeeds, DEFAULT_RSS_FEEDS } from './news.adapters.js';
+import { cleanLink, feedList, parseAlphaVantage, parseExchangeRss, parseRss, parseRssEntries, rssFeeds, DEFAULT_RSS_FEEDS } from './news.adapters.js';
 import { applyRules } from './news.rules.js';
 import { classify, parseVerdict } from './news.classifier.js';
-import { buildDirectory, buildUniverse, mapSymbol } from './news.symbols.js';
+import { buildDirectory, buildUniverse, loadCompanyNames, mapSymbol } from './news.symbols.js';
 import { parseIstTimestamp, stripHtml } from './news.text.js';
 
-const NSE_SAMPLE = [
-  { seq_id: '104512', symbol: 'TCS', sm_name: 'Tata Consultancy Services Limited', desc: 'Outcome of Board Meeting', attchmntText: 'Board approved <b>dividend</b> of Rs 10', attchmntFile: 'https://nsearchives.nseindia.com/corporate/TCS_1.pdf', an_dt: '10-Nov-2026 14:32:11' },
-  { seq_id: '', symbol: 'INFY', desc: 'Press Release', attchmntFile: 'https://nsearchives.nseindia.com/corporate/INFY_2.pdf', an_dt: '10-Nov-2026 09:00:00' },
-  { seq_id: '9', symbol: 'X', an_dt: 'garbage' },
-];
-const BSE_SAMPLE = {
-  Table: [
-    { NEWSID: 'abc-1', SCRIP_CD: 500325, SLONGNAME: 'Reliance Industries Ltd', NEWSSUB: 'Reliance Industries Ltd - Order received from ONGC', HEADLINE: 'Order details', CATEGORYNAME: 'Company Update', ATTACHMENTNAME: 'x.pdf', NEWS_DT: '2026-11-10T11:15:00.27' },
-    { NEWSID: 'abc-2', SCRIP_CD: 999999, SLONGNAME: 'Tiny Co', NEWSSUB: 'Tiny Co - Change in address', NEWS_DT: '2026-11-10T11:16:00' },
-  ],
-};
+// Synthetic RSS 2.0 samples (spec 0024: real feed samples can replace them once the URLs are confirmed).
+const NSE_RSS = `<?xml version="1.0"?><rss version="2.0"><channel>
+<item><title>TCS: Outcome of Board Meeting</title><link>https://nsearchives.nseindia.com/corporate/TCS_1.pdf?utm_source=rss#top</link><guid>nse-104512</guid><pubDate>Tue, 10 Nov 2026 14:32:11 +0530</pubDate><description><![CDATA[Board approved <b>dividend</b> of Rs 10]]></description></item>
+<item><title>INFY: Press Release</title><link>https://nsearchives.nseindia.com/corporate/INFY_2.pdf?utm_medium=x&amp;id=2</link><pubDate>Tue, 10 Nov 2026 09:00:00 +0530</pubDate></item>
+<item><title>No id</title><pubDate>Tue, 10 Nov 2026 09:00:00 +0530</pubDate></item>
+</channel></rss>`;
+const BSE_RSS = `<rss version="2.0"><channel>
+<item><title>Reliance Industries Ltd (500325): Order received from ONGC</title><link>https://www.bseindia.com/x.pdf</link><guid>bse-1</guid><pubDate>Tue, 10 Nov 2026 11:15:00 +0530</pubDate><description>Company Update</description></item>
+<item><title>Tiny Co (999999): Change in address</title><guid>bse-2</guid><pubDate>Tue, 10 Nov 2026 11:16:00 +0530</pubDate></item>
+</channel></rss>`;
 const RSS_SAMPLE = `<?xml version="1.0"?><rss><channel>
 <item><title><![CDATA[RBI keeps repo rate unchanged at 6.5%]]></title><link>https://et.com/a</link><guid>et-a</guid><pubDate>Tue, 10 Nov 2026 08:30:00 +0530</pubDate><description>&lt;p&gt;Policy&lt;/p&gt;</description></item>
 <item><title>HDFCBANK shares rally on strong loan growth</title><link>https://et.com/b</link><pubDate>Tue, 10 Nov 2026 09:00:00 +0530</pubDate></item>
@@ -24,19 +23,19 @@ const RSS_SAMPLE = `<?xml version="1.0"?><rss><channel>
 
 describe('adapters (spec 0024 AC-3, AC-9)', () => {
   // covers: 0024 AC-3, AC-9
-  it('parses NSE announcements, falling back to the attachment name as the id', () => {
-    const items = parseNse(NSE_SAMPLE);
+  it('parses NSE feed items as official filings: guid, else the cleaned link, as the id; no id items dropped', () => {
+    const items = parseExchangeRss(NSE_RSS, 'nse');
     expect(items).toHaveLength(2);
-    expect(items[0]).toMatchObject({ source: 'NSE', sourceItemId: '104512', symbolHint: 'TCS', isOfficialFiling: true, url: NSE_SAMPLE[0].attchmntFile, publishedAt: '2026-11-10T09:02:11.000Z' });
-    expect(items[0].text).toBe('Board approved dividend of Rs 10');
-    expect(items[1].sourceItemId).toBe('INFY_2.pdf');
+    expect(items[0]).toMatchObject({ source: 'NSE', sourceItemId: 'nse-104512', isOfficialFiling: true, publishedAt: '2026-11-10T09:02:11.000Z', text: 'Board approved dividend of Rs 10' });
+    expect(items[0].tickerHints).toContain('TCS');
+    expect(items[1].sourceItemId).toBe('https://nsearchives.nseindia.com/corporate/INFY_2.pdf?id=2');
+    expect(parseRssEntries(NSE_RSS).dropped).toBe(1);
   });
 
   // covers: 0024 AC-3, AC-9
-  it('parses BSE announcements with an exchange document link', () => {
-    const items = parseBse(BSE_SAMPLE.Table);
-    expect(items[0]).toMatchObject({ source: 'BSE', sourceItemId: 'abc-1', symbolHint: '500325', isOfficialFiling: true, publishedAt: '2026-11-10T05:45:00.000Z' });
-    expect(items[0].url).toBe('https://www.bseindia.com/xml-data/corpfiling/AttachLive/x.pdf');
+  it('parses BSE feed items, reading a 6 digit scrip code from the title', () => {
+    const items = parseExchangeRss(BSE_RSS, 'bse');
+    expect(items[0]).toMatchObject({ source: 'BSE', sourceItemId: 'bse-1', symbolHint: '500325', isOfficialFiling: true, url: 'https://www.bseindia.com/x.pdf', publishedAt: '2026-11-10T05:45:00.000Z' });
   });
 
   // covers: 0024 AC-3, AC-9
@@ -55,6 +54,9 @@ describe('adapters (spec 0024 AC-3, AC-9)', () => {
   it('uses the default feeds unless NEWS_RSS_FEEDS lists some', () => {
     expect(rssFeeds(undefined)).toEqual(DEFAULT_RSS_FEEDS);
     expect(rssFeeds(' https://a.com/x , https://b.com/y ')).toEqual(['https://a.com/x', 'https://b.com/y']);
+    expect(feedList(' , https://a.com/x,, ')).toEqual(['https://a.com/x']);
+    expect(feedList(undefined)).toEqual([]);
+    expect(cleanLink('https://a.com/p?utm_source=x&k=1#f')).toBe('https://a.com/p?k=1');
   });
 
   it('parses IST strings and strips HTML', () => {
@@ -69,12 +71,12 @@ const DIR = buildDirectory([
   { exch_seg: 'BSE', symbol: 'TINY', token: '999999', name: 'TINY' },
   { exch_seg: 'NFO', instrumenttype: 'FUTSTK', name: 'RELIANCE' },
 ]);
-const UNIVERSE = buildUniverse(['RELIANCE', 'TCS', 'HDFCBANK'], { TCS: 'Tata Consultancy Services Ltd' });
+const UNIVERSE = buildUniverse(['RELIANCE', 'TCS', 'HDFCBANK'], { TCS: ['Tata Consultancy Services Ltd', 'TCS'], RELIANCE: 'Reliance Industries Limited', WIPRO: 'Wipro Limited', HDFCBANK: 'HDF' });
 
 describe('symbol mapping (spec 0024 AC-4)', () => {
   // covers: 0024 AC-4
   it('maps BSE scrip codes to NSE symbols and drops unwatched companies', () => {
-    const [rel, tiny] = parseBse(BSE_SAMPLE.Table);
+    const [rel, tiny] = parseExchangeRss(BSE_RSS, 'bse');
     expect(DIR.bseToNse['500325']).toBe('RELIANCE');
     expect(DIR.fno).toEqual(['RELIANCE']);
     expect(mapSymbol(rel, UNIVERSE, DIR)).toBe('RELIANCE');
@@ -83,9 +85,24 @@ describe('symbol mapping (spec 0024 AC-4)', () => {
 
   // covers: 0024 AC-4
   it('keeps NSE items only for watched symbols', () => {
-    const [tcs, infy] = parseNse(NSE_SAMPLE);
+    const [tcs, infy] = parseExchangeRss(NSE_RSS, 'nse');
     expect(mapSymbol(tcs, UNIVERSE, DIR)).toBe('TCS');
     expect(mapSymbol(infy, UNIVERSE, DIR)).toBeNull();
+  });
+
+  // covers: 0024 AC-4
+  it('names file: aliases work, unwatched symbols, short names and names equal to the symbol are ignored', () => {
+    expect([...UNIVERSE.names.entries()].sort()).toEqual([['RELIANCE INDUSTRIES', 'RELIANCE'], ['TATA CONSULTANCY SERVICES', 'TCS']]);
+    const nseNoHint = { ...parseExchangeRss(NSE_RSS, 'nse')[1], headline: 'Reliance Industries Limited: Press release', tickerHints: [] };
+    expect(mapSymbol(nseNoHint, UNIVERSE, DIR)).toBe('RELIANCE');
+  });
+
+  // covers: 0024 AC-4
+  it('a missing or invalid names file warns and gives an empty map', () => {
+    const warnings: string[] = [];
+    expect(loadCompanyNames(m => warnings.push(m), '/nope/company-names.json')).toEqual({});
+    expect(warnings[0]).toContain('Name matching is off');
+    expect(typeof loadCompanyNames(m => warnings.push(m))).toBe('object');
   });
 
   // covers: 0024 AC-4

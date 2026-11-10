@@ -71,12 +71,19 @@ function feedStatus(
   if (run) {
     const results = Object.entries(run.perSource)
     const fresh = results.reduce((n, [, r]) => n + (r?.new ?? 0), 0)
-    const failed = results.filter(([, r]) => r?.error).map(([k]) => SOURCE_LABEL[k] ?? k)
+    const label = (k: string) => SOURCE_LABEL[k] ?? k
+    const failed = results.filter(([, r]) => r?.status === "error" || (!r?.status && r?.error)).map(([k]) => label(k))
+    // AC-12: blocked or rate limited sources are named; ones not configured or disabled collapse to "N sources off".
+    const skipped = results.filter(([, r]) => r?.status === "skipped")
+    const refused = skipped.filter(([, r]) => /^(blocked|rate limited)/.test(r?.skipped ?? ""))
+    const off = skipped.length - refused.length
     const when = timeAgo(run.finishedAt ?? run.startedAt, now)
     if (run.status === "cancelled") parts.push(`Last fetch cancelled ${when}`)
     else if (run.status === "failed") parts.push(`Last fetch failed ${when}`)
     else parts.push(`Last fetch ${when}, ${fresh} new`)
     if (failed.length && run.status !== "failed") parts.push(`${failed.join(" and ")} unavailable`)
+    for (const [k, r] of refused) parts.push(`${label(k)} ${r?.skipped?.startsWith("rate") ? "rate limited" : "blocked"}`)
+    if (off) parts.push(`${off} ${off === 1 ? "source" : "sources"} off`)
   } else {
     parts.push("No fetch has run yet")
   }
