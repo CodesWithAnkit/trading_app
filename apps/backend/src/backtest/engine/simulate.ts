@@ -11,6 +11,10 @@ import {
   wilderAtr,
 } from '../../scanner/strategy/guru/index.js';
 import { CostModel, Exchange, costInR, roundTripCharges } from './costModel.js';
+import { checkExit, ExitReason, openPosition, Position, stopFillPrice } from './fills.js';
+
+export { checkExit, stopFillPrice } from './fills.js';
+export type { ExitReason } from './fills.js';
 
 // Precision rules v1 (spec 0020).
 export const WARMUP_BARS = 30;
@@ -18,8 +22,6 @@ export const WARMUP_DAYS = 20;
 export const LAST_ENTRY_MIN = 14 * 60 + 45; // no new entries on bars opening at or after 14:45 IST
 export const TIME_EXIT_BAR_MIN = 15 * 60 + 10; // the bar closing at 15:15 IST
 export const BARS_PER_FULL_DAY = 75;
-
-export type ExitReason = 'target' | 'stop' | 'time';
 
 export type SimTrade = {
   tradeDate: string;
@@ -63,19 +65,6 @@ export function seededRandom(seed: number): () => number {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-
-type Position = {
-  side: Side;
-  entry: number;
-  stop: number;
-  target: number;
-  risk: number;
-  entryTime: Date;
-  entryIndex: number;
-  /** STOP fills happen inside the bar, so that bar can also hit stop or target. */
-  checkEntryBar: boolean;
-  tradeDate: string;
-};
 
 type Pending = Order & { placedAt: number; day: string };
 
@@ -221,64 +210,6 @@ function prevDailyBefore(daily: { date: string }[], date: string) {
 
 function endOf(bar: Bar): Date {
   return new Date(bar.t.getTime() + 5 * 60_000);
-}
-
-/** Stop entry fill: max(open, trigger) for longs, min(open, trigger) for shorts. Null if not touched. */
-export function stopFillPrice(o: Order, bar: Bar): number | null {
-  const trig = o.trigger!;
-  if (o.side === 'LONG') return bar.h >= trig ? Math.max(bar.o, trig) : null;
-  return bar.l <= trig ? Math.min(bar.o, trig) : null;
-}
-
-function openPosition(
-  o: Order,
-  rawFill: number,
-  slip: number,
-  bar: Bar,
-  i: number,
-  tradeDate: string,
-  checkEntryBar: boolean,
-  entryTime: Date = bar.t,
-): Position | null {
-  const entry = o.side === 'LONG' ? rawFill + slip : rawFill - slip;
-  const stop = 'price' in o.stop ? o.stop.price : o.side === 'LONG' ? entry - o.stop.distance : entry + o.stop.distance;
-  const risk = o.side === 'LONG' ? entry - stop : stop - entry;
-  if (!(risk > 0)) return null; // slippage pushed the fill through the stop: no valid trade
-  const target = o.side === 'LONG' ? entry + o.targetR * risk : entry - o.targetR * risk;
-  return { side: o.side, entry, stop, target, risk, entryTime, entryIndex: i, checkEntryBar, tradeDate };
-}
-
-/** Stop first: if a bar touches both, it is a stop. Gaps through a level fill at the open. */
-export function checkExit(
-  pos: { side: Side; stop: number; target: number },
-  bar: Bar,
-  slip: number,
-  isEntryBar: boolean,
-): { price: number; reason: ExitReason } | null {
-  if (pos.side === 'LONG') {
-    const hitStop = bar.l <= pos.stop;
-    const hitTarget = bar.h >= pos.target;
-    if (hitStop) {
-      const lvl = !isEntryBar && bar.o < pos.stop ? bar.o : pos.stop;
-      return { price: lvl - slip, reason: 'stop' };
-    }
-    if (hitTarget) {
-      const lvl = !isEntryBar && bar.o > pos.target ? bar.o : pos.target;
-      return { price: lvl - slip, reason: 'target' };
-    }
-  } else {
-    const hitStop = bar.h >= pos.stop;
-    const hitTarget = bar.l <= pos.target;
-    if (hitStop) {
-      const lvl = !isEntryBar && bar.o > pos.stop ? bar.o : pos.stop;
-      return { price: lvl + slip, reason: 'stop' };
-    }
-    if (hitTarget) {
-      const lvl = !isEntryBar && bar.o < pos.target ? bar.o : pos.target;
-      return { price: lvl + slip, reason: 'target' };
-    }
-  }
-  return null;
 }
 
 function closeTrade(

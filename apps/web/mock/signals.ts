@@ -5,10 +5,21 @@ export type SignalStatus =
 
 export type ExitReason = "TARGET" | "STOP" | "TIME"
 
+/** spec 0023: evidence for a guru rule signal, pinned when it fired. */
+export type GuruEvidence = {
+  ruleId: string
+  symbol: string
+  runId: string | null
+  oosProfitFactor: number | null
+  oosYearsPositive: string
+  definitionsVersion: string
+}
+
 export type Signal = {
   id: string
   symbol: string
-  exchange: "NSE"
+  exchange: "NSE" | "BSE"
+  guru?: GuruEvidence | null
   direction: "LONG" | "SHORT"
   setup: string
   status: SignalStatus

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpException, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AdminGuard } from '../auth/admin.guard.js';
 import { CurrentUser } from '../auth/decorators.js';
 import type { AuthUser } from '../auth/decorators.js';
@@ -8,6 +8,7 @@ import { GATE_V1 } from './engine/gate.js';
 import { BacktestService } from './backtest.service.js';
 import { latestDoneRuns, RULE_IDS, SYMBOLS } from './runner.js';
 import { RULE_DEFINITIONS_V1 } from './definitions.js';
+import { listToggles, LiveStatusRegistry, setToggle } from './live/liveToggles.js';
 
 const MAX_PAGE = 200;
 
@@ -15,7 +16,22 @@ const MAX_PAGE = 200;
 @Controller('api/v1/backtest')
 @UseGuards(AdminGuard)
 export class BacktestController {
-  constructor(private readonly svc: BacktestService) {}
+  constructor(private readonly svc: BacktestService, private readonly liveStatus: LiveStatusRegistry) {}
+
+  /** spec 0023 AC-8: every guru rule and symbol pair with its live state. */
+  @Get('toggles')
+  toggles() {
+    return this.wrap(() => listToggles(this.svc.db(), this.liveStatus));
+  }
+
+  /** spec 0023 AC-1: switch a passing rule live for one index. */
+  @Patch('toggles/:ruleId/:symbol')
+  async setToggle(@Param('ruleId') ruleId: string, @Param('symbol') symbol: string, @Body() body: { enabled?: unknown }, @CurrentUser() user: AuthUser) {
+    if (typeof body?.enabled !== 'boolean') throw new HttpException('enabled must be a boolean', 422);
+    await this.wrap(() => setToggle(this.svc.db(), ruleId, symbol.toUpperCase(), body.enabled as boolean, user?.id ?? null));
+    const all = await this.wrap(() => listToggles(this.svc.db(), this.liveStatus));
+    return all.find((t) => t.ruleId === ruleId && t.symbol === symbol.toUpperCase());
+  }
 
   @Post('runs')
   @HttpCode(202)

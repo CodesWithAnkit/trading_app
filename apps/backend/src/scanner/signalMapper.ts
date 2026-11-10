@@ -28,6 +28,8 @@ export function toApiSignal(signal: any) {
     exitPrice: signal.exit_price === null || signal.exit_price === undefined ? null : Number(signal.exit_price),
     exitAt: signal.exit_at ?? null,
     exitReason: signal.exit_reason ?? null,
+    // spec 0023: guru rule evidence (null for other strategies).
+    guru: snap.guru ?? null,
   };
 }
 

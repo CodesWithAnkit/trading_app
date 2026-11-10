@@ -93,6 +93,10 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
   };
 
   private aggregator = new CandleAggregator();
+  /** spec 0023: the live Angel feed (null on the mock provider), index token → symbol, and the guru tick hook. */
+  private angel: AngelOneMarketDataProvider | null = null;
+  private readonly indexTokens = new Map<string, string>();
+  private indexTickListener: ((tick: MarketTick) => void) | null = null;
   private universe: UniverseService | null = null;
   /** Stocks whose history is still being backfilled; they skip strategy checks. */
   private readonly warming = new Set<string>();
@@ -142,13 +146,14 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
         totpSecret: config.angelOne.totpSecret
       });
       this.provider = angel;
+      this.angel = angel;
       this.universe = new UniverseService({
         client: this.supabase.client,
         download: () => downloadFnoStocks(),
         subscribe: tokens => angel.subscribe([{ exchangeType: '1', tokens }]), // 1 = NSE cash
         onAdded: async stocks => this.warmUp(stocks)
       });
-      angel.setSymbolResolver(token => this.universe?.resolveSymbol(token));
+      angel.setSymbolResolver(token => this.indexTokens.get(token) ?? this.universe?.resolveSymbol(token));
       // Volume gathered while disconnected must not land in one candle.
       angel.onConnected(() => this.aggregator.resetVolumeBaselines());
     } else {
@@ -327,6 +332,22 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     return this.topGainers.symbols.has(symbol);
   }
 
+  /**
+   * spec 0023: subscribe index feeds (NIFTY on NSE, SENSEX on BSE) for the live guru engine. Their ticks
+   * skip the stock universe and stock strategies, but still update latest prices and run plan exits.
+   * Returns false when no live Angel One feed is running (mock provider).
+   */
+  async subscribeIndices(indices: { symbol: string; token: string; exchangeType: string }[], onTick: (tick: MarketTick) => void): Promise<boolean> {
+    this.indexTickListener = onTick;
+    const fresh = indices.filter((i) => !this.indexTokens.has(i.token));
+    for (const i of fresh) this.indexTokens.set(i.token, i.symbol);
+    if (!this.angel) return false;
+    const byType = new Map<string, string[]>();
+    for (const i of fresh) byType.set(i.exchangeType, [...(byType.get(i.exchangeType) ?? []), i.token]);
+    for (const [exchangeType, tokens] of byType) await this.angel.subscribe([{ exchangeType, tokens }]);
+    return true;
+  }
+
   processTick(tick: MarketTick) {
     const sessionState = this.getSessionState(tick.timestamp);
     this.scannerMetrics.sessionState = sessionState;
@@ -336,8 +357,10 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    const indexSymbol = this.indexTokens.get(tick.instrumentToken);
+    if (indexSymbol) tick.symbol = indexSymbol;
     // After the daily reset the socket still carries yesterday's tokens; only today's universe counts.
-    if (this.universe && !this.universe.resolveSymbol(tick.instrumentToken)) return;
+    if (!indexSymbol && this.universe && !this.universe.resolveSymbol(tick.instrumentToken)) return;
     if (!tick.symbol) {
       tick.symbol = this.universe?.resolveSymbol(tick.instrumentToken) || tick.instrumentToken;
     }
@@ -373,6 +396,12 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
 
     this.latestTicks.set(tick.symbol, existing);
     this.checkPlans(tick);
+
+    // spec 0023: index ticks feed the guru engine only, never the stock aggregator or strategies.
+    if (indexSymbol) {
+      this.indexTickListener?.(tick);
+      return;
+    }
 
     // Only aggregate candles if OPEN or CLOSING grace period
     this.aggregator.processTick(tick);
@@ -488,7 +517,8 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
     return {
       signalId: row.id,
       symbol,
-      setup: row.setup_family,
+      // spec 0023: guru plans are keyed by rule id so two guru rules on one index never collide.
+      setup: row.setup_family === 'GURU' ? (row.snapshot_json?.setup ?? row.setup_family) : row.setup_family,
       direction: row.direction === 'SHORT' ? 'SHORT' : 'LONG',
       entry,
       stop: stopOf(row),

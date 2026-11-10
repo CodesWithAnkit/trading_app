@@ -71,6 +71,31 @@ export type BackfillState = {
   log: { at: string; type: string; message: string }[]
   error: string | null
 }
+/** spec 0023: live toggle per guru rule and index. */
+export type LiveToggle = {
+  ruleId: string
+  symbol: string
+  enabled: boolean
+  state: "off" | "no run" | "warming up" | "live" | "blocked"
+  reason: string | null
+  runId: string | null
+  updatedAt: string | null
+}
+
+export async function fetchToggles(): Promise<LiveToggle[]> {
+  return json<LiveToggle[]>(await apiFetch("/api/v1/backtest/toggles"))
+}
+
+export async function updateToggle(ruleId: string, symbol: string, enabled: boolean): Promise<LiveToggle> {
+  return json<LiveToggle>(
+    await apiFetch(`/api/v1/backtest/toggles/${encodeURIComponent(ruleId)}/${encodeURIComponent(symbol)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled }),
+    }),
+  )
+}
+
 export type HistoryCounts = Record<string, { count: number; first: string | null; last: string | null }>
 
 async function json<T>(res: Response): Promise<T> {

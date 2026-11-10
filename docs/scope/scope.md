@@ -22,7 +22,7 @@
 | Sign In and Access Control | in-progress |
 | Guru Strategy Backtest Lab | in-progress |
 | Backtest History Provider | in-progress |
-| Guru Strategy Live Promotion | planned |
+| Guru Strategy Live Promotion | in-progress |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -326,9 +326,16 @@
 
 ---
 
-## Guru Strategy Live Promotion `planned` · needs a decision
+## Guru Strategy Live Promotion `in-progress`
 
 **Intent**: Let an admin switch on, per rule and symbol, only the guru rules whose latest backtest passed the gate, so they appear as normal signal cards through the existing risk gates. No automatic orders. From spec 0020.
 **Done when**: A passing rule toggled on in Settings emits live signals from `multiStrategyEngine` on closed bars, and a rule whose newer run fails is blocked automatically.
 
-- [ ] Design it (spec): /architect Guru Strategy Live Promotion
+- [x] Design it (spec): [0023](../specs/0023-guru-strategy-live-promotion/index.md) · code in `apps/backend/src/scanner/guru-live/`, `apps/backend/src/backtest/live/`, `apps/backend/src/backtest/engine/fills.ts`, `apps/web/components/domain/backtest/LiveToggle.tsx`
+- [x] Build it: /develop Guru Strategy Live Promotion
+  - [x] Toggles table and admin API with gate checks and states (AC-1, AC-8)
+  - [x] GuruLiveService: index feeds, 5m bars, warm up, UP_ORB on NIFTY end to end to a GURU signal (AC-2, AC-3, AC-5)
+  - [x] Shared fill and exit function, stop entries and OCO, all rules, plan book and 15:15 exit (AC-4, AC-6)
+  - [x] Gate cache with blocked and resume, Live switches in the lab, Settings list, GURU card tag (AC-7, AC-8, AC-9)
+- [ ] Verify it: /check verify Guru Strategy Live Promotion
+- [ ] Test it: /test Guru Strategy Live Promotion

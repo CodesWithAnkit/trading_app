@@ -8,6 +8,8 @@ const state: any = {}
 vi.mock('@/lib/hooks/useBacktest', () => ({
   useBacktest: () => state,
   fetchTrades: vi.fn(),
+  fetchToggles: () => Promise.resolve([]),
+  updateToggle: vi.fn(),
 }))
 
 import { BacktestLab } from './BacktestLab'

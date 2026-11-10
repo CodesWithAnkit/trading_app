@@ -4,6 +4,7 @@ import { useBacktest, type RunRow, type Definitions, type BackfillState, type Hi
 import { ALL_RULE_IDS, SYMBOLS, fmtDateTime, gateScopeNote, isBaseline, isMarketHours, pct, signedPct, signedR, yearsPositive } from "./format"
 import { Badge, GateBadge } from "./GateBadge"
 import { TradesDrawer } from "./TradesDrawer"
+import { LiveToggle } from "./LiveToggle"
 
 type SymFilter = "BOTH" | "NIFTY" | "SENSEX"
 
@@ -11,7 +12,10 @@ type SymFilter = "BOTH" | "NIFTY" | "SENSEX"
 export function BacktestLab() {
   const { board, defs, backfill, history, error, notice, setNotice, startRuns, startBackfill } = useBacktest()
   const [sym, setSym] = React.useState<SymFilter>("BOTH")
-  const [selected, setSelected] = React.useState<string | null>(null)
+  // spec 0023: a GURU signal's evidence link opens the lab on its run (?run=<id>).
+  const [selected, setSelected] = React.useState<string | null>(() =>
+    typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("run"),
+  )
   const [drawer, setDrawer] = React.useState<RunRow | null>(null)
 
   const done = React.useMemo(() => board?.done ?? [], [board])
@@ -364,6 +368,7 @@ function Detail({ run, name, defs, onTrades }: { run: RunRow; name: string; defs
           {gate.reasons?.join(" · ")}
         </div>
       )}
+      {!isBaseline(run.rule_id) && !o?.unavailable && <LiveToggle ruleId={run.rule_id} symbol={run.symbol} />}
       {!isBh && (
         <button type="button" onClick={onTrades} className="h-11 rounded-md border border-border-strong text-sm font-semibold text-primary">
           View all trades

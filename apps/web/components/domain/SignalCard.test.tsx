@@ -54,3 +54,13 @@ describe('SignalCard expiry countdown', () => {
     expect(screen.getByText('Expires in 3m').parentElement).toHaveAttribute('title', expect.stringMatching(/Time left to enter/))
   })
 })
+
+describe('GURU signals (spec 0023 AC-5)', () => {
+  it('shows the GURU rule tag and an evidence link to its backtest run', () => {
+    const guru = { ruleId: 'UP_ORB', symbol: 'NIFTY', runId: 'run-9', oosProfitFactor: 1.24, oosYearsPositive: '2 / 3', definitionsVersion: 'v1' }
+    render(<SignalCard signal={{ ...signal(18 * 60_000), direction: 'SHORT', guru }} />)
+    expect(screen.getByText('GURU · UP_ORB')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /OOS PF 1.24/ })).toHaveAttribute('href', '/dashboard/backtest?run=run-9')
+    expect(screen.getByText('▼ SHORT')).toBeInTheDocument()
+  })
+})

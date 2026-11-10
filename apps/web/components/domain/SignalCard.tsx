@@ -80,9 +80,21 @@ export function SignalCard({
                 {isLong ? "▲ LONG" : "▼ SHORT"}
               </span>
             </div>
-            <span className="font-body-xs text-body-xs text-text-secondary truncate max-w-[230px] mt-0.5">
-              {signal.setup || "VWAP Pullback + Volume Surge"}
-            </span>
+            {signal.guru ? (
+              <span className="flex flex-wrap items-center gap-1.5 mt-1">
+                <span className="px-1.5 py-0.5 rounded bg-on-surface text-surface text-[10px] font-bold tracking-wider">GURU · {signal.guru.ruleId}</span>
+                <a
+                  href={signal.guru.runId ? `/dashboard/backtest?run=${encodeURIComponent(signal.guru.runId)}` : "/dashboard/backtest"}
+                  className="px-1.5 py-0.5 rounded bg-surface-container text-on-primary-fixed-variant text-[10px] font-semibold hover:underline"
+                >
+                  OOS PF {signal.guru.oosProfitFactor ?? "·"} · years + {signal.guru.oosYearsPositive}
+                </a>
+              </span>
+            ) : (
+              <span className="font-body-xs text-body-xs text-text-secondary truncate max-w-[230px] mt-0.5">
+                {signal.setup || "VWAP Pullback + Volume Surge"}
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col items-end gap-1 shrink-0">

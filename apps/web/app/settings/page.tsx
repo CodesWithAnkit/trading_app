@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { useSessionUser } from "@/lib/contexts/AuthContext"
+import { LiveGuruRulesList } from "@/components/domain/backtest/LiveToggle"
 import { useSettings } from "@/lib/contexts/SettingsContext"
 import { 
   ShieldCheck, 
@@ -16,6 +18,7 @@ import {
 } from "lucide-react"
 
 export default function SettingsPage() {
+  const isAdmin = useSessionUser()?.isAdmin === true
   const { dailyRiskBudget, theme, brokerConnected, updateSettings } = useSettings()
 
   const [maxLoss, setMaxLoss] = React.useState(dailyRiskBudget || 6000)
@@ -325,6 +328,9 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* spec 0023 AC-8: admins see which guru rules are live (read only). */}
+      {isAdmin && <LiveGuruRulesList />}
     </div>
   )
 }
