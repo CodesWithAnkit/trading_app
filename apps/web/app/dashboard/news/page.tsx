@@ -162,7 +162,7 @@ export default function NewsIntelligencePage() {
   })
 
   return (
-    <div className="flex flex-col gap-margin w-full">
+    <div className="flex flex-col gap-3 sm:gap-margin px-gutter sm:px-gutter-md lg:px-margin-lg py-2 sm:py-space-md lg:py-margin w-full">
       {/* Top Banner / Hero */}
       <div className="bg-surface border border-border-subtle rounded-xl p-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
         <div className="flex items-center gap-space-md">
@@ -416,7 +416,7 @@ export default function NewsIntelligencePage() {
         </div>
 
         {/* Right Details Drawer (Cols 9-12) */}
-        <aside className="xl:col-span-4 bg-surface border border-border-subtle rounded-xl p-space-md flex flex-col gap-space-md sticky top-28 shadow-sm">
+        <aside className="xl:col-span-4 bg-surface border border-border-subtle rounded-xl p-space-md flex flex-col gap-space-md xl:sticky xl:top-28 xl:max-h-[calc(100dvh-8rem)] xl:overflow-y-auto shadow-sm">
           <div className="flex items-center justify-between pb-space-sm border-b border-border-subtle">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded font-metric-md text-metric-md font-bold bg-primary text-on-primary">

@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import { SectorAlphaTable, type SectorRow } from "@/components/domain/SectorAlphaTable"
 import { InstitutionalFlowCard } from "@/components/domain/InstitutionalFlowCard"
 import { NewsFilingsTimeline } from "@/components/domain/NewsFilingsTimeline"
 import { MarketRegimeStrip } from "@/components/domain/MarketRegimeStrip"
@@ -21,24 +22,26 @@ export default function MarketIntelligencePage() {
   const [selectedSource, setSelectedSource] = React.useState<"ALL" | "FILINGS" | "ACTIONS" | "MACRO">("ALL")
   const { data: context, refresh, isStale, feedLatencyMs, isLoading } = useMarketIntelligence()
 
-  const sectors = (context?.sectors && context.sectors.length > 0)
+  // Live sector metrics when available; otherwise a clearly static sample so the layout is visible.
+  const sectors: SectorRow[] = (context?.sectors && context.sectors.length > 0)
     ? context.sectors.map(s => ({
         name: s.name,
-        ltp: s.ltp.toLocaleString("en-IN", { minimumFractionDigits: 2 }),
-        change: `${s.changePct >= 0 ? "+" : ""}${s.changePct.toFixed(2)}%`,
-        alpha: `${s.alphaVsNifty >= 0 ? "+" : ""}${s.alphaVsNifty.toFixed(2)}%`,
-        leader: `${s.leaderSymbol} (${s.leaderChangePct >= 0 ? "+" : ""}${s.leaderChangePct.toFixed(2)}%)`,
-        breadth: `${s.advances} / ${s.declines}`,
-        bias: s.bias === "LONG" ? "▲ Long Bias Confirmed" : s.bias === "SHORT" ? "▼ Short Bias Confirmed" : "Neutral / Congested",
-        biasType: s.bias,
+        ltp: s.ltp,
+        changePct: s.changePct,
+        alphaVsNifty: s.alphaVsNifty,
+        leaderSymbol: s.leaderSymbol,
+        leaderChangePct: s.leaderChangePct,
+        advances: s.advances,
+        declines: s.declines,
+        bias: s.bias,
       }))
     : [
-        { name: "Nifty Metals", ltp: "9,240.50", change: "+1.82%", alpha: "+1.18%", leader: "TATASTEEL (+2.10%)", breadth: "12 / 3 (80%)", bias: "▲ Long Bias Confirmed", biasType: "LONG" },
-        { name: "Nifty Auto", ltp: "23,110.15", change: "+1.24%", alpha: "+0.60%", leader: "M&M (+1.95%)", breadth: "11 / 4 (73%)", bias: "▲ Long Bias Confirmed", biasType: "LONG" },
-        { name: "Nifty Bank", ltp: "52,380.40", change: "+0.38%", alpha: "-0.26%", leader: "HDFCBANK (+0.45%)", breadth: "7 / 5 (58%)", bias: "Neutral / Congested", biasType: "NEUTRAL" },
-        { name: "Nifty FMCG", ltp: "58,410.20", change: "+0.15%", alpha: "-0.49%", leader: "ITC (+0.30%)", breadth: "8 / 7 (53%)", bias: "Neutral / Defensive", biasType: "NEUTRAL" },
-        { name: "Nifty IT", ltp: "37,620.80", change: "-0.42%", alpha: "-1.06%", leader: "INFY (-0.60%)", breadth: "3 / 7 (30%)", bias: "Corrective Pullback", biasType: "SHORT" },
-        { name: "Nifty Realty", ltp: "1,012.30", change: "-1.14%", alpha: "-1.78%", leader: "DLF (-1.80%)", breadth: "2 / 8 (20%)", bias: "▼ Short Bias Confirmed", biasType: "SHORT" },
+        { name: "Nifty Metal", ltp: 9240.5, changePct: 1.82, alphaVsNifty: 1.18, leaderSymbol: "TATASTEEL", leaderChangePct: 2.1, advances: 12, declines: 3, bias: "LONG" },
+        { name: "Nifty Auto", ltp: 23110.15, changePct: 1.24, alphaVsNifty: 0.6, leaderSymbol: "M&M", leaderChangePct: 1.95, advances: 11, declines: 4, bias: "LONG" },
+        { name: "Nifty Bank", ltp: 52380.4, changePct: 0.38, alphaVsNifty: -0.26, leaderSymbol: "HDFCBANK", leaderChangePct: 0.45, advances: 7, declines: 5, bias: "NEUTRAL" },
+        { name: "Nifty FMCG", ltp: 58410.2, changePct: 0.15, alphaVsNifty: -0.49, leaderSymbol: "ITC", leaderChangePct: 0.3, advances: 8, declines: 7, bias: "NEUTRAL" },
+        { name: "Nifty IT", ltp: 37620.8, changePct: -0.42, alphaVsNifty: -1.06, leaderSymbol: "INFY", leaderChangePct: -0.6, advances: 3, declines: 7, bias: "SHORT" },
+        { name: "Nifty Realty", ltp: 1012.3, changePct: -1.14, alphaVsNifty: -1.78, leaderSymbol: "DLF", leaderChangePct: -1.8, advances: 2, declines: 8, bias: "SHORT" },
       ]
 
   const totalBreadth = (context?.advanceCount || 142) + (context?.declineCount || 56) + (context?.unchangedCount || 32)
@@ -47,7 +50,7 @@ export default function MarketIntelligencePage() {
   const unchPct = (((context?.unchangedCount || 32) / totalBreadth) * 100).toFixed(1)
 
   return (
-    <div className="flex flex-col gap-margin w-full">
+    <div className="flex flex-col gap-3 sm:gap-margin px-gutter sm:px-gutter-md lg:px-margin-lg py-2 sm:py-space-md lg:py-margin w-full">
       {/* Top Banner / Hero */}
       <div className="bg-surface border border-border-subtle rounded-xl p-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
         <div className="flex items-center gap-space-md">
@@ -213,73 +216,16 @@ export default function MarketIntelligencePage() {
               <div className="flex items-center gap-space-sm">
                 <Layers className="w-4 h-4 text-primary" />
                 <h2 className="font-headline-sm text-headline-sm text-text-primary font-bold">
-                  NSE Sector Relative Strength & Alpha Matrix
+                  Sector strength vs NIFTY
                 </h2>
-                <span className="px-1.5 py-0.5 rounded bg-surface-container text-primary font-label-code text-[10px] font-semibold">
-                  11 Sector Baskets
+                <span className="px-1.5 py-0.5 rounded bg-surface-container text-primary text-body-xs font-semibold tabular-nums">
+                  {sectors.length} sectors
                 </span>
               </div>
-              <span className="font-label-code text-body-xs text-text-secondary">
-                Rule Gate: Setups restricted to sectors with &gt;= +0.50% alpha
-              </span>
+              <span className="text-body-xs text-text-secondary">Sorted by alpha, strongest first</span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-surface-container-low border-b border-border-subtle font-label-code text-label-code text-text-secondary uppercase">
-                    <th className="py-2.5 px-space-md font-semibold">Sector Index</th>
-                    <th className="py-2.5 px-space-sm font-semibold text-right">LTP / Change</th>
-                    <th className="py-2.5 px-space-sm font-semibold text-right">Alpha vs Nifty</th>
-                    <th className="py-2.5 px-space-sm font-semibold">Leading Component</th>
-                    <th className="py-2.5 px-space-sm font-semibold text-center">Breadth (Adv/Dec)</th>
-                    <th className="py-2.5 px-space-md font-semibold text-right">Regime Bias</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-subtle font-body-sm text-text-primary">
-                  {sectors.map(sector => (
-                    <tr key={sector.name} className="hover:bg-surface-bright transition-colors">
-                      <td className="py-2.5 px-space-md font-medium flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${
-                          sector.biasType === "LONG" ? "bg-accent-bullish" :
-                          sector.biasType === "SHORT" ? "bg-accent-danger" : "bg-border-strong"
-                        }`} />
-                        <span>{sector.name}</span>
-                      </td>
-                      <td className={`py-2.5 px-space-sm text-right font-metric-sm font-semibold ${
-                        sector.biasType === "LONG" ? "text-accent-bullish" :
-                        sector.biasType === "SHORT" ? "text-accent-danger" : "text-text-primary"
-                      }`}>
-                        {sector.ltp} <span className="text-body-xs font-normal">({sector.change})</span>
-                      </td>
-                      <td className={`py-2.5 px-space-sm text-right font-metric-sm font-bold ${
-                        sector.biasType === "LONG" ? "text-accent-bullish" :
-                        sector.biasType === "SHORT" ? "text-accent-danger" : "text-text-secondary"
-                      }`}>
-                        {sector.alpha}
-                      </td>
-                      <td className="py-2.5 px-space-sm font-label-code">
-                        <span className="font-semibold text-text-primary">{sector.leader}</span>
-                      </td>
-                      <td className="py-2.5 px-space-sm text-center">
-                        <span className="font-label-code text-body-xs px-1.5 py-0.5 rounded bg-surface-container font-semibold">
-                          {sector.breadth}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-space-md text-right">
-                        <span className={`px-2 py-0.5 rounded font-label-code text-label-code font-bold uppercase ${
-                          sector.biasType === "LONG" ? "bg-status-live-bg text-status-live-text border border-accent-bullish/30" :
-                          sector.biasType === "SHORT" ? "bg-status-disconnected-bg text-status-disconnected-text border border-accent-danger/30" :
-                          "bg-surface-high text-text-secondary border border-border-subtle"
-                        }`}>
-                          {sector.bias}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <SectorAlphaTable rows={sectors} />
           </div>
 
           {/* Panel B: News & Corporate Event Intelligence Timeline */}

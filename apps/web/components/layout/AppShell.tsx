@@ -10,7 +10,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Topbar />
       <Sidebar />
       <div className="lg:pl-64">
-        <main className="relative pt-14 lg:pt-24 min-h-screen bg-canvas overflow-x-hidden">
+        <main className="relative pt-14 lg:pt-24 min-h-screen bg-canvas overflow-x-clip">
           <div className="flex flex-col w-full">
             {/* System Status & Data Freshness Utility Strip (Desktop only) */}
             <div className="hidden lg:flex w-full bg-surface-container-low px-gutter-md py-space-xs flex-wrap items-center justify-between gap-space-md text-text-secondary border-b border-border-subtle">

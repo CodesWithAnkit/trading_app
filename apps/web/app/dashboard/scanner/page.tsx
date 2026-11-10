@@ -40,7 +40,7 @@ export default function SignalScannerPage() {
   })
 
   return (
-    <div className="flex flex-col gap-margin w-full">
+    <div className="flex flex-col gap-3 sm:gap-margin px-gutter sm:px-gutter-md lg:px-margin-lg py-2 sm:py-space-md lg:py-margin w-full">
       {/* Top Banner / Hero Title */}
       <div className="bg-surface border border-border-subtle rounded-xl p-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
         <div className="flex items-center gap-space-md">
