@@ -5,6 +5,9 @@ import type { Direction, EventType, Impact } from './news.types.js';
 export const RULES_VERSION = 'rules-v1';
 export const RULE_CONFIDENCE = 0.9;
 
+/** The rules v1 board meeting pattern; spec 0025's news gate reuses it (never copy it). */
+export const BOARD_MEETING_PATTERN = /board meeting|trading window|\bAGM\b|annual general meeting|record date/i;
+
 type Rule = {
   pattern: RegExp;
   eventType: EventType;
@@ -30,7 +33,7 @@ export const RULES_V1: Rule[] = [
     direction: text => (/upgrade/i.test(text) ? 'BULLISH' : /downgrade/i.test(text) ? 'BEARISH' : null),
   },
   { pattern: /block deal|bulk deal/i, eventType: 'OFFICIAL_FILING', impact: 'MEDIUM', direction: null },
-  { pattern: /board meeting|trading window|\bAGM\b|annual general meeting|record date/i, eventType: 'OFFICIAL_FILING', impact: 'LOW', direction: 'NEUTRAL' },
+  { pattern: BOARD_MEETING_PATTERN, eventType: 'OFFICIAL_FILING', impact: 'LOW', direction: 'NEUTRAL' },
   { pattern: MACRO_PATTERN(), eventType: 'MACRO', impact: 'HIGH', direction: null },
 ];
 

@@ -218,3 +218,23 @@ export async function fetchTrades(runId: string, oos: "true" | "false" | "all", 
   if (cursor) p.set("cursor", cursor)
   return json<TradesPage>(await apiFetch(`/api/v1/backtest/runs/${runId}/trades?${p}`))
 }
+
+/** spec 0025: with and without the live news gate, on covered trades only. */
+export type NewsComparisonMetrics = { trades: number; winRate: number; netR: number; profitFactor: number; maxDrawdownR: number }
+export type NewsComparison = {
+  runId: string
+  symbol: string
+  gateVersion: string
+  coveredDays: number
+  coveredTrades: number
+  totalTrades: number
+  sampleTooSmall: boolean
+  without: NewsComparisonMetrics
+  with: NewsComparisonMetrics
+  blocked: { tradeDate: string; side: "LONG" | "SHORT"; rNet: number; itemIds: string[]; reason: string }[]
+  warnedTrades: number
+}
+
+export async function fetchNewsComparison(runId: string): Promise<NewsComparison> {
+  return json<NewsComparison>(await apiFetch(`/api/v1/backtest/runs/${runId}/news-comparison`))
+}

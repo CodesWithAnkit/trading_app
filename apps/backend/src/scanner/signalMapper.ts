@@ -30,6 +30,15 @@ export function toApiSignal(signal: any) {
     exitReason: signal.exit_reason ?? null,
     // spec 0023: guru rule evidence (null for other strategies).
     guru: snap.guru ?? null,
+    // spec 0025: entry news verdict (fixed at insert) and after entry verdict (only escalates).
+    newsGate: signal.news_gate ?? null,
+    newsGateReason: signal.news_gate_reason ?? null,
+    newsGateItems: signal.news_gate_items ?? [],
+    newsGateCheckedAt: signal.news_gate_checked_at ?? null,
+    newsAfterGate: signal.news_after_gate ?? null,
+    newsAfterReason: signal.news_after_reason ?? null,
+    newsAfterItems: signal.news_after_items ?? [],
+    newsAfterCheckedAt: signal.news_after_checked_at ?? null,
   };
 }
 

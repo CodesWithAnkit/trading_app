@@ -1,7 +1,8 @@
 // Spec 0024: real news ingestion. One fetch run at a time, triggered by the API button
 // (AC-1) or the weekday schedule (AC-2). Each source runs on its own (AC-3), items map to
 // the watched universe (AC-4), are stored once (AC-5), and classified (AC-6).
-import { ConflictException, HttpException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable, Logger, NotFoundException, Optional, ServiceUnavailableException } from '@nestjs/common';
+import { NewsGateService } from './news-gate.service.js';
 import { Cron } from '@nestjs/schedule';
 import { SupabaseService } from '../../supabase/supabase.service.js';
 import { ScannerService } from '../../scanner/scanner.service.js';
@@ -73,6 +74,7 @@ export class NewsIngestionService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly scanner: ScannerService,
+    @Optional() private readonly newsGate?: NewsGateService,
   ) {}
 
   setGemini(call: GeminiCall | null) {
@@ -370,6 +372,10 @@ export class NewsIngestionService {
     if (updateError) ({ data: updated, error: updateError } = await saveVerdict());
     if (updateError) this.logger.warn(`Classification update failed for ${id}: ${updateError.message}`);
     if (updated) this.scanner.events$.next({ type: 'intelligence:news', data: rowToNewsItem(updated) });
+    // Spec 0025 AC-3: a new HIGH or MEDIUM item re-checks today's ACTIVE signals (after entry verdict).
+    if (!updateError && (verdict.impactLevel === 'HIGH' || verdict.impactLevel === 'MEDIUM')) {
+      void this.newsGate?.recheckForItem({ symbol, impactLevel: verdict.impactLevel }, e => this.scanner.events$.next(e));
+    }
     return true;
   }
 

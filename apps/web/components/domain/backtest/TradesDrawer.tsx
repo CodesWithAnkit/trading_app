@@ -1,6 +1,7 @@
 "use client"
 import * as React from "react"
 import { fetchTrades, type RunRow, type TradesPage } from "@/lib/hooks/useBacktest"
+import { NewsComparisonPanel } from "./NewsComparisonPanel"
 import { fmtIst, num } from "./format"
 import { GateBadge } from "./GateBadge"
 
@@ -86,6 +87,8 @@ export function TradesDrawer({ run, name, onClose }: { run: RunRow; name: string
             <span className="material-symbols-outlined" aria-hidden="true">close</span>
           </button>
         </div>
+
+        <NewsComparisonPanel runId={run.id} status={run.status} />
 
         <div className="px-5 py-3 border-b border-border-subtle flex flex-wrap items-center gap-2">
           <div role="group" aria-label="Sample" className="flex bg-surface-high rounded-md p-0.5 gap-0.5">

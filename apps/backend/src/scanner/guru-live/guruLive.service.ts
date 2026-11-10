@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy, Optional } from '@nestjs/common';
+import { NewsGateService } from '../../intelligence/news/news-gate.service.js';
 import { SupabaseService } from '../../supabase/supabase.service.js';
 import { ScannerService } from '../scanner.service.js';
 import { CandleAggregator } from '../market-data/CandleAggregator.js';
@@ -31,6 +32,7 @@ export class GuruLiveService implements OnApplicationBootstrap, OnModuleDestroy 
     private readonly scanner: ScannerService,
     private readonly supabase: SupabaseService,
     private readonly status: LiveStatusRegistry,
+    @Optional() private readonly newsGate?: NewsGateService,
   ) {
     this.engine = new GuruLiveEngine({
       liveRules: (symbol) => [...(this.enabled.get(symbol) ?? [])].filter((r) => this.runs.get(`${r}|${symbol}`)?.passed_gate === true),
@@ -125,6 +127,7 @@ export class GuruLiveService implements OnApplicationBootstrap, OnModuleDestroy 
     const { data: inserted, error } = await db
       .from('signals')
       .insert({
+        symbol,
         direction: p.side,
         setup_family: 'GURU',
         status: 'ACTIVE',
@@ -156,6 +159,8 @@ export class GuruLiveService implements OnApplicationBootstrap, OnModuleDestroy 
     }
     this.scanner.planBook.attach(symbol, ruleId, inserted.id);
     this.scanner.events$.next({ type: 'signal:new', data: toApiSignal(inserted) });
+    // Spec 0025 AC-1: entry news verdict at the candle time (created_at).
+    void this.newsGate?.checkNewSignal(inserted, e => this.scanner.events$.next(e));
     this.logger.log(`GURU ${ruleId} ${p.side} ${symbol} @ ${p.entry} stop ${p.stop} target ${p.target}`);
   }
 }

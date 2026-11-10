@@ -4,6 +4,7 @@ import { type Signal } from "@/mock/signals"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useNow } from "@/lib/useNow"
+import { NewsGateBadges } from "./NewsGateBadges"
 
 /** Whole minutes until the entry window closes (rounded up), or null before the client clock is known. */
 export function minutesLeft(expiresAt: string, now: number | null): number | null {
@@ -95,6 +96,7 @@ export function SignalCard({
                 {signal.setup || "VWAP Pullback + Volume Surge"}
               </span>
             )}
+            <NewsGateBadges signal={signal} />
           </div>
 
           <div className="flex flex-col items-end gap-1 shrink-0">

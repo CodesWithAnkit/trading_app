@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger, Optional } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { Subject } from 'rxjs';
 import { config } from './config.js';
@@ -24,6 +24,7 @@ import { buildBackfill, CandleRow } from './universe/backfill.js';
 import { downloadFnoStocks } from './universe/instrumentFile.js';
 import { isAtOrAfterTimeExit, isInExitWindow, isIstWeekday } from './universe/schedule.js';
 import { checkExit, EXIT_STATUS, ExitReason, pnlPct, Plan, PlanBook } from './plans/planBook.js';
+import { NewsGateEvent, NewsGateService, plainSymbol } from '../intelligence/news/news-gate.service.js';
 
 export type ApproachingSetup = {
   symbol: string;
@@ -44,7 +45,8 @@ export type ScannerEvent =
   | { type: 'signal:exit'; data: SignalExit }
   | { type: 'intelligence:regime'; data: any }
   | { type: 'intelligence:news'; data: any }
-  | { type: 'signal:evidence'; data: any };
+  | { type: 'signal:evidence'; data: any }
+  | NewsGateEvent;
 
 export type SignalExit = {
   id: string;
@@ -116,7 +118,10 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
   public readonly events$ = new Subject<ScannerEvent>();
   private pushTimer: NodeJS.Timeout | null = null;
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    @Optional() private readonly newsGate?: NewsGateService,
+  ) {}
 
   getSessionState(now: Date = new Date()): 'PRE_MARKET' | 'OPEN' | 'CLOSING' | 'CLOSED' {
     const istTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
@@ -672,6 +677,7 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
         if (!this.planBook.reserve(tracked)) continue;
 
         const { data: inserted, error: insertError } = await this.supabase.client.from('signals').insert({
+          symbol: plainSymbol(signal.symbol),
           direction: signal.direction,
           setup_family: signal.setupFamily,
           status: signal.state,
@@ -706,6 +712,8 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
         this.scannerMetrics.activeSignals++;
         this.logger.log(`Created new signal for ${symbol} (${signal.direction})`);
         this.events$.next({ type: 'signal:new', data: toApiSignal(inserted) });
+        // Spec 0025 AC-1: the entry news verdict, an update after the insert so it never blocks it.
+        void this.newsGate?.checkNewSignal(inserted, e => this.events$.next(e));
 
         // A price that moved past a level during the insert closes the plan now.
         const ltp = this.latestTicks.get(symbol)?.ltp;

@@ -1,7 +1,7 @@
 "use client"
 import { apiFetch, openAuthedStream } from "@/lib/api/apiFetch"
 import React, { createContext, useContext, useState } from "react"
-import type { ExitReason, Signal, SignalExit, SignalStatus } from "@/mock/signals"
+import type { ExitReason, NewsGateEvent, Signal, SignalExit, SignalStatus } from "@/mock/signals"
 import type { ApproachingSetup, MomentumStock } from "@/lib/scanner-types"
 
 export type StreamStatus = "connecting" | "live" | "reconnecting"
@@ -96,6 +96,16 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
         toasted.current.add(exit.id)
         setExitAlerts(prev => [...prev, exit])
       }
+    })
+    // spec 0025 AC-4: a news verdict landed for a signal (entry, or an after entry escalation).
+    source.addEventListener("signal:news-gate", (e: MessageEvent) => {
+      const v = JSON.parse(e.data) as NewsGateEvent
+      setSignals(prev => prev.map(s => {
+        if (s.id !== v.signalId) return s
+        if (v.kind === "entry") return { ...s, newsGate: v.gate, newsGateReason: v.reason, newsGateItems: v.items, newsGateCheckedAt: v.checkedAt }
+        if (v.gate === "pass") return s
+        return { ...s, newsAfterGate: v.gate, newsAfterReason: v.reason, newsAfterItems: v.items, newsAfterCheckedAt: v.checkedAt }
+      }))
     })
     source.addEventListener("approaching:update", (e: MessageEvent) => {
       setApproachingSignals(JSON.parse(e.data) as ApproachingSetup[])

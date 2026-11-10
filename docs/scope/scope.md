@@ -358,7 +358,7 @@
   - [x] Admin controls: admin only fetch, cancel, schedule pause, HIGH news kept (AC-1, AC-10, AC-11)
   - [x] News sources: official exchange RSS via config (off until confirmed), honest requests, skipped handling, Alpha Vantage disabled, company names file, universe query fix (AC-3, AC-4, AC-12)
 - [ ] Verify it: /check verify Real News Ingestion
-- [ ] Test it: /test Real News Ingestion
+- [x] Test it: /test Real News Ingestion
 
 ---
 
@@ -368,9 +368,9 @@
 **Done when**: Every new signal carries a stored entry verdict with linked news, late news shows as a separate after entry verdict, and each backtest run shows a with/without news comparison over covered trades with its sample size.
 
 - [x] Design it (spec): [0025](../specs/0025-news-aware-trade-analysis/index.md) · code in `apps/backend/src/intelligence/news/`, `apps/backend/src/backtest/`, signal cards and backtest run view in `apps/web/`
-- [ ] Build it: /develop News Aware Trade Analysis
-  - [ ] Shared `news-gate-v1` function, `signals` migration (symbol, entry and after entry verdicts), entry check on scanner and guru inserts (umbrella AC-1, AC-2, AC-4; live AC-1, AC-2, AC-7)
-  - [ ] After entry re-check, `signal:news-gate` SSE, signal API fields, Gate 06 rewrite, signal card badges (live AC-3 to AC-6)
-  - [ ] Backtest news comparison service, admin endpoint, run view panel (backtest AC-1 to AC-6)
+- [x] Build it: /develop News Aware Trade Analysis
+  - [x] Shared `news-gate-v1` function, `signals` migration (symbol, entry and after entry verdicts), entry check on scanner and guru inserts (umbrella AC-1, AC-2, AC-4; live AC-1, AC-2, AC-7)
+  - [x] After entry re-check, `signal:news-gate` SSE, signal API fields, Gate 06 rewrite, signal card badges (live AC-3 to AC-6)
+  - [x] Backtest news comparison service, admin endpoint, run view panel (backtest AC-1 to AC-6)
 - [ ] Verify it: /check verify News Aware Trade Analysis
 - [ ] Test it: /test News Aware Trade Analysis

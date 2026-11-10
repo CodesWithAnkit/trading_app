@@ -4,6 +4,8 @@ import { SupabaseService } from '../supabase/supabase.service.js';
 import { ScannerService } from '../scanner/scanner.service.js';
 import { MarketBreadthService } from './market-breadth.service.js';
 import { OfficialFilingsAndNewsService } from './official-filings-news.service.js';
+import { NewsGateService } from './news/news-gate.service.js';
+import type { GateVerdict } from './news/news-gate.js';
 import {
   ContradictoryFactorContract,
   EvidenceFactorContract,
@@ -21,7 +23,20 @@ export class ExplainableAnalysisService {
     private readonly marketBreadth: MarketBreadthService,
     private readonly newsService: OfficialFilingsAndNewsService,
     @Optional() private readonly scanner?: ScannerService,
+    @Optional() private readonly newsGate?: NewsGateService,
   ) {}
+
+  /** Spec 0025 AC-6: `news-gate-v1` computed fresh now (never the stored verdict); side from today's latest ACTIVE signal. */
+  private async gate06(symbol: string): Promise<{ verdict: GateVerdict | null; side: string | null }> {
+    if (!this.newsGate) return { verdict: null, side: null };
+    try {
+      const side = await this.newsGate.latestActiveSide(symbol);
+      return { verdict: await this.newsGate.evaluate(symbol, side, this.newsGate.now()), side };
+    } catch (err) {
+      this.logger.warn(`Gate 06 news check failed for ${symbol}: ${(err as Error).message}`);
+      return { verdict: null, side: null };
+    }
+  }
 
   /**
    * Generates a deterministic, explainable analysis snapshot for the requested symbol.
@@ -30,6 +45,7 @@ export class ExplainableAnalysisService {
     const symbol = rawSymbol.toUpperCase();
     const marketContext = this.marketBreadth.getMarketContext();
     const newsResponse = await this.newsService.getNews(symbol);
+    const news = await this.gate06(symbol);
 
     // Look for active signal or tick in scanner
     const tick = this.scanner?.latestTicks.get(symbol);
@@ -105,10 +121,13 @@ export class ExplainableAnalysisService {
       {
         id: 'GATE-06',
         title: 'GATE 06 // EVENT RISK EMBARGO CLEARANCE',
-        status: newsResponse.highImpactCount === 0 || newsResponse.events[0]?.isOfficialFiling ? 'PASS' : 'WARNING',
-        description: 'Zero unpriced scheduled earnings or emergency regulatory halt embargoes within session.',
-        measuredValue: 'Provenance Verified Clean',
-        thresholdValue: 'Zero Embargo Overhang',
+        // block maps to FAIL, warn to WARNING, pass to PASS; an unreadable check is a WARNING, never PASS.
+        status: !news.verdict ? 'WARNING' : news.verdict.result === 'block' ? 'FAIL' : news.verdict.result === 'warn' ? 'WARNING' : 'PASS',
+        description: news.verdict ? news.verdict.reason : 'News unavailable',
+        measuredValue: news.verdict
+          ? `${news.verdict.items.length} deciding item${news.verdict.items.length === 1 ? '' : 's'}, side ${news.side ?? 'unknown'}`
+          : 'News check unavailable',
+        thresholdValue: 'news-gate-v1: past 60 min, no HIGH news against the side',
       },
     ];
 

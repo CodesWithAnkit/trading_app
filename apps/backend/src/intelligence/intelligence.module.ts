@@ -7,9 +7,10 @@ import { InstitutionalContextService } from './institutional-context.service.js'
 import { ExplainableAnalysisService } from './explainable-analysis.service.js';
 import { NewsIngestionService } from './news/news-ingestion.service.js';
 import { IntelligenceController } from './intelligence.controller.js';
+import { NewsGateModule } from './news/news-gate.module.js';
 
 @Module({
-  imports: [SupabaseModule, ScannerModule],
+  imports: [SupabaseModule, ScannerModule, NewsGateModule],
   controllers: [IntelligenceController],
   providers: [
     MarketBreadthService,

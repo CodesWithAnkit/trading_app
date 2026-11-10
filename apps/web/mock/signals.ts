@@ -15,11 +15,34 @@ export type GuruEvidence = {
   definitionsVersion: string
 }
 
+/** spec 0025: one news item that decided a gate verdict, embedded on the signal. */
+export type NewsGateItem = { id: string; symbol?: string; headline: string; sourceUrl: string | null; publishedAt: string }
+
+/** spec 0025: the `signal:news-gate` SSE payload. */
+export type NewsGateEvent = {
+  signalId: string
+  kind: "entry" | "after"
+  gate: "pass" | "warn" | "block"
+  reason: string
+  items: NewsGateItem[]
+  checkedAt: string
+}
+
 export type Signal = {
   id: string
   symbol: string
   exchange: "NSE" | "BSE"
   guru?: GuruEvidence | null
+  /** spec 0025: entry news verdict (fixed at insert); null for signals from before the feature. */
+  newsGate?: "pass" | "warn" | "block" | null
+  newsGateReason?: string | null
+  newsGateItems?: NewsGateItem[]
+  newsGateCheckedAt?: string | null
+  /** spec 0025: after entry verdict, only escalates. */
+  newsAfterGate?: "warn" | "block" | null
+  newsAfterReason?: string | null
+  newsAfterItems?: NewsGateItem[]
+  newsAfterCheckedAt?: string | null
   direction: "LONG" | "SHORT"
   setup: string
   status: SignalStatus

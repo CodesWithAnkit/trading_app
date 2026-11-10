@@ -1,7 +1,7 @@
 # 0025. News Aware Trade Analysis
 
 **Date**: 2026-11-10
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 

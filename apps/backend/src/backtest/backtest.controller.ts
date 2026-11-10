@@ -9,6 +9,8 @@ import { BacktestService } from './backtest.service.js';
 import { latestDoneRuns, RULE_IDS, SYMBOLS } from './runner.js';
 import { RULE_DEFINITIONS_V1 } from './definitions.js';
 import { listToggles, LiveStatusRegistry, setToggle } from './live/liveToggles.js';
+import { compareWithNews, TradeRow } from './newsComparison.js';
+import { GATE_ITEM_COLUMNS, GATE_WINDOW_MS, rowToGateItem, STALE_AFTER_MS } from '../intelligence/news/news-gate.js';
 
 const MAX_PAGE = 200;
 
@@ -71,6 +73,57 @@ export class BacktestController {
       .order('created_at', { ascending: false })
       .limit(20);
     return { done: [...latest.values()], active: active ?? [], recentFailures: failed ?? [] };
+  }
+
+  /**
+   * spec 0025 backtest news comparison: with and without the live news gate, on covered
+   * trades only. Computed on request; nothing is written.
+   */
+  @Get('runs/:id/news-comparison')
+  async newsComparison(@Param('id') id: string) {
+    const db = this.svc.db();
+    const { data: run } = await db.from('backtest_runs').select('id, symbol, status').eq('id', id).maybeSingle();
+    if (!run) throw new HttpException('Run not found', 404);
+    if (run.status !== 'done') throw new HttpException(`Run is ${run.status}, not done`, 409);
+
+    // A trade is covered only after news collection began, so only those trades are loaded.
+    const { data: runs, error: runsError } = await db
+      .from('news_fetch_runs')
+      .select('finished_at')
+      .in('status', ['done', 'partial'])
+      .not('finished_at', 'is', null)
+      .order('finished_at', { ascending: true });
+    if (runsError) throw new HttpException(runsError.message, 500);
+    const goodRunFinishes = (runs ?? []).map(r => new Date(r.finished_at).getTime());
+
+    const { count: totalTrades } = await db.from('backtest_trades').select('id', { count: 'exact', head: true }).eq('run_id', id);
+    let trades: TradeRow[] = [];
+    if (goodRunFinishes.length) {
+      const { data, error } = await db
+        .from('backtest_trades')
+        .select('trade_date, side, entry_time, exit_time, entry, stop, target, exit, exit_reason, r_gross, cost_r, r_net')
+        .eq('run_id', id)
+        .gte('entry_time', new Date(goodRunFinishes[0]).toISOString())
+        .lte('entry_time', new Date(goodRunFinishes[goodRunFinishes.length - 1] + STALE_AFTER_MS).toISOString())
+        .order('entry_time', { ascending: true });
+      if (error) throw new HttpException(error.message, 500);
+      trades = (data ?? []) as TradeRow[];
+    }
+
+    let items: ReturnType<typeof rowToGateItem>[] = [];
+    if (trades.length) {
+      const { data, error } = await db
+        .from('news_and_events')
+        .select(GATE_ITEM_COLUMNS)
+        .eq('symbol', 'MARKET')
+        .eq('is_seed', false)
+        .gte('published_at', new Date(new Date(trades[0].entry_time).getTime() - GATE_WINDOW_MS).toISOString())
+        .lte('published_at', trades[trades.length - 1].entry_time);
+      if (error) throw new HttpException(error.message, 500);
+      items = (data ?? []).map(rowToGateItem);
+    }
+
+    return compareWithNews({ runId: id, symbol: run.symbol, totalTrades: totalTrades ?? 0, trades, goodRunFinishes, items });
   }
 
   @Get('runs/:id/trades')

@@ -1,10 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { NewsGateService } from './news/news-gate.service.js';
 import { ExplainableAnalysisService } from './explainable-analysis.service.js';
 import { MarketBreadthService } from './market-breadth.service.js';
 import { OfficialFilingsAndNewsService } from './official-filings-news.service.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
 import { ScannerService } from '../scanner/scanner.service.js';
+
+const passVerdict = { result: 'pass', reason: 'No relevant news', itemIds: [], items: [], marketWideOnly: false, ruleVersion: 'news-gate-v1' };
+const mockNewsGate = {
+  now: () => new Date('2026-11-10T05:30:00.000Z'),
+  latestActiveSide: async () => 'LONG',
+  evaluate: async (): Promise<any> => passVerdict,
+};
 
 describe('ExplainableAnalysisService', () => {
   let service: ExplainableAnalysisService;
@@ -88,6 +96,7 @@ describe('ExplainableAnalysisService', () => {
         { provide: MarketBreadthService, useValue: mockMarketBreadth },
         { provide: OfficialFilingsAndNewsService, useValue: mockNewsService },
         { provide: ScannerService, useValue: mockScanner },
+        { provide: NewsGateService, useValue: mockNewsGate },
       ],
     }).compile();
 
@@ -105,6 +114,18 @@ describe('ExplainableAnalysisService', () => {
     expect(analysis.riskGates.length).toBe(6);
     expect(analysis.riskGates.every(g => ['PASS', 'FAIL', 'WARNING'].includes(g.status))).toBe(true);
     expect(analysis.qualificationStatus).toBe('QUALIFIED');
+  });
+
+  // covers: 0025 live AC-6
+  it('Gate 06 maps news-gate-v1: block to FAIL with the reason, warn to WARNING', async () => {
+    const original = mockNewsGate.evaluate;
+    mockNewsGate.evaluate = async () => ({ ...passVerdict, result: 'block', reason: 'HIGH Bearish (Rule): SEBI order, 10:40', items: [{ id: 'n1' }] });
+    let g = (await service.getAnalysis('TATASTEEL')).riskGates.find(r => r.id === 'GATE-06')!;
+    expect(g).toMatchObject({ status: 'FAIL', description: 'HIGH Bearish (Rule): SEBI order, 10:40' });
+    mockNewsGate.evaluate = async () => ({ ...passVerdict, result: 'warn', reason: 'News stale' });
+    g = (await service.getAnalysis('TATASTEEL')).riskGates.find(r => r.id === 'GATE-06')!;
+    expect(g.status).toBe('WARNING');
+    mockNewsGate.evaluate = original;
   });
 
   it('includes positive evidence categories and contradictory friction factors', async () => {

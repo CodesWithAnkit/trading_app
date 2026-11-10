@@ -17,10 +17,12 @@ import {
 } from "lucide-react"
 
 import { useMarketIntelligence } from "@/lib/hooks/useMarketIntelligence"
+import { useNewsFilings } from "@/lib/hooks/useNewsFilings"
 
 export default function MarketIntelligencePage() {
   const [selectedSource, setSelectedSource] = React.useState<"ALL" | "FILINGS" | "ACTIONS" | "MACRO">("ALL")
   const { data: context, refresh, isStale, feedLatencyMs, isLoading } = useMarketIntelligence()
+  const news = useNewsFilings()
 
   // Live sector metrics when available; otherwise a clearly static sample so the layout is visible.
   const sectors: SectorRow[] = (context?.sectors && context.sectors.length > 0)
@@ -229,7 +231,7 @@ export default function MarketIntelligencePage() {
           </div>
 
           {/* Panel B: News & Corporate Event Intelligence Timeline */}
-          <NewsFilingsTimeline />
+          <NewsFilingsTimeline events={news.events} isLoading={news.isLoading} hasLoaded={news.hasLoaded} error={news.error} />
         </div>
 
         {/* Right 4 Columns */}
