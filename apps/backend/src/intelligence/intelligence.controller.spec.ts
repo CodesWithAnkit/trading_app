@@ -5,6 +5,8 @@ import { MarketBreadthService } from './market-breadth.service.js';
 import { OfficialFilingsAndNewsService } from './official-filings-news.service.js';
 import { InstitutionalContextService } from './institutional-context.service.js';
 import { ExplainableAnalysisService } from './explainable-analysis.service.js';
+import { NewsIngestionService } from './news/news-ingestion.service.js';
+import { AdminGuard } from '../auth/admin.guard.js';
 
 describe('IntelligenceController', () => {
   let controller: IntelligenceController;
@@ -56,8 +58,12 @@ describe('IntelligenceController', () => {
         { provide: OfficialFilingsAndNewsService, useValue: mockNewsService },
         { provide: InstitutionalContextService, useValue: mockInstitutional },
         { provide: ExplainableAnalysisService, useValue: mockExplainable },
+        { provide: NewsIngestionService, useValue: { requestManualFetch: vi.fn().mockResolvedValue({ runId: 'r1', status: 'running', started: true }), getLatestRun: vi.fn().mockResolvedValue(null) } },
       ],
-    }).compile();
+    })
+      .overrideGuard(AdminGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<IntelligenceController>(IntelligenceController);
   });
@@ -78,6 +84,20 @@ describe('IntelligenceController', () => {
     const result = await controller.getNews('TATASTEEL');
     expect(mockNewsService.getNews).toHaveBeenCalledWith('TATASTEEL');
     expect(result.totalCount).toBe(0);
+  });
+
+  // covers: 0024 AC-1, AC-10, AC-11
+  it('guards fetch, cancel and schedule changes with AdminGuard, not the schedule read', () => {
+    const guards = (name: keyof IntelligenceController) => Reflect.getMetadata('__guards__', IntelligenceController.prototype[name]) ?? [];
+    for (const name of ['fetchNews', 'cancelFetch', 'setNewsSchedule'] as const) expect(guards(name)).toContain(AdminGuard);
+    expect(guards('getNewsSchedule')).toEqual([]);
+    expect(guards('latestFetchRun')).toEqual([]);
+  });
+
+  // covers: 0024 AC-1
+  it('fetchNews returns only the run id and status', async () => {
+    const result = await controller.fetchNews({ id: 'u1', email: null, exp: 0 });
+    expect(result).toEqual({ runId: 'r1', status: 'running' });
   });
 
   // covers: 0017 AC-15, 0018 AC-2

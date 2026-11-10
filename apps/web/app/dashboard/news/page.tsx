@@ -19,7 +19,11 @@ import {
 interface EventItem {
   id: string
   symbol: string
-  source: "NSE" | "BSE" | "RBI" | "MEDIA"
+  source: string
+  isOfficial: boolean
+  isMacro: boolean
+  sourceUrl?: string
+  classifiedBy: "rules" | "gemini" | "default"
   sourceType: "OFFICIAL_FILING" | "MEDIA_WIRE" | "REGULATORY_CIRCULAR"
   factType: "CONFIRMED_FACT" | "INFERRED_INTERPRETATION"
   impact: "HIGH" | "MEDIUM" | "LOW"
@@ -36,119 +40,196 @@ interface EventItem {
   keyTerms: { label: string; value: string }[]
 }
 
-const mockEvents: EventItem[] = [
-  {
-    id: "evt-1",
-    symbol: "TATASTEEL",
-    source: "NSE",
-    sourceType: "OFFICIAL_FILING",
-    factType: "CONFIRMED_FACT",
-    impact: "HIGH",
-    linkedSetup: true,
-    pubTime: "10:15:00 IST",
-    ingestTime: "10:16:12 IST",
-    clockSkew: "+72s (Optimal)",
-    refId: "#NSE-CORP-2024-884102",
-    headline: "Tata Steel signs 25-year long-term power purchase agreement for 379 MW clean energy at Kalinganagar facility",
-    summary: "Long-term arrangement expected to reduce operating cost volatility by ₹140 Cr annually and mitigate steel power tariff escalations starting Q1 FY26.",
-    confirmedFacts: "Official filing: Captive green power unit commissioning slated for Q4 FY25. Capex funded via internal accruals. Contract valid till 2049.",
-    inferredModel: "Algorithmic inference: Structurally bullish for mid-term gross margins. Energy input inflation hedge established.",
-    keyTerms: [
-      { label: "Capacity", value: "379 MW Hybrid" },
-      { label: "Annual Savings", value: "₹140 Cr / year" },
-      { label: "Commercial COD", value: "Q4 FY25" },
-      { label: "Site", value: "Kalinganagar" }
-    ]
-  },
-  {
-    id: "evt-2",
-    symbol: "RELIANCE",
-    source: "NSE",
-    sourceType: "OFFICIAL_FILING",
-    factType: "CONFIRMED_FACT",
-    impact: "HIGH",
-    embargoed: true,
-    linkedSetup: true,
-    pubTime: "11:30:12 IST",
-    ingestTime: "11:32:05 IST",
-    clockSkew: "+113s (Normal)",
-    refId: "#NSE-REL-2024-Q3-0941",
-    headline: "Board Meeting Scheduled for October 24 to Consider Q3 Unaudited Financial Results and Interim Dividend",
-    summary: "Statutory notice under SEBI LODR Regulation 29. Trading window for designated persons closed until 48 hours post results disclosure.",
-    confirmedFacts: "Board meeting date set for Oct 24, 2024. Dividend consideration formally agenda item 2.",
-    inferredModel: "Event Dislocation Guard: Potential volatility surge on dividend speculation. Risk embargo active during session.",
-    keyTerms: [
-      { label: "Event Type", value: "Board Meeting" },
-      { label: "Board Date", value: "Oct 24, 2024" },
-      { label: "Window Status", value: "Closed (SEBI)" },
-      { label: "Agenda", value: "Results & Dividend" }
-    ]
-  },
-  {
-    id: "evt-3",
-    symbol: "HDFCBANK",
-    source: "RBI",
-    sourceType: "REGULATORY_CIRCULAR",
-    factType: "CONFIRMED_FACT",
-    impact: "MEDIUM",
-    pubTime: "09:40:00 IST",
-    ingestTime: "09:41:20 IST",
-    clockSkew: "+80s (Optimal)",
-    refId: "#RBI-DOR-2024-CIR-11",
-    headline: "RBI issues updated prudential norms on liquidity coverage ratio (LCR) run-off factor adjustments",
-    summary: "LCR guidelines tweaked for retail internet and mobile banking deposit lines, granting 12-month glidepath for implementation.",
-    confirmedFacts: "Draft norm converted to final guideline with phased implementation date beginning April 1 next financial year.",
-    inferredModel: "Model classification: Short-term margin overhang mitigated by 12-month transition relief.",
-    keyTerms: [
-      { label: "Regulator", value: "RBI Banking Dept" },
-      { label: "Glidepath", value: "12 Months" },
-      { label: "Impact Sector", value: "Nifty Bank" },
-      { label: "Readiness", value: "Compliant" }
-    ]
-  }
-]
-
 import { useNewsFilings } from "@/lib/hooks/useNewsFilings"
+import { useSessionUser } from "@/lib/contexts/AuthContext"
+import type { NewsFetchRunContract, NewsScheduleContract } from "@/lib/contracts/intelligence"
+
+/** Spec 0024 AC-6: how each item's impact and direction were decided. */
+const CLASSIFIED_LABEL: Record<EventItem["classifiedBy"], string> = { rules: "Rule", gemini: "AI", default: "Unclassified" }
+const SOURCE_LABEL: Record<string, string> = { nse: "NSE", bse: "BSE", rss: "RSS", alphavantage: "Alpha Vantage" }
+
+function timeAgo(iso: string, now: number): string {
+  const s = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000))
+  if (s < 60) return `${s}s ago`
+  if (s < 3600) return `${Math.round(s / 60)}m ago`
+  return `${Math.round(s / 3600)}h ago`
+}
+
+type FeedTone = "live" | "paused" | "busy" | "error" | "idle"
+
+/** Spec 0024 AC-8, AC-10, AC-11: one plain status line for the news feed. */
+function feedStatus(
+  run: NewsFetchRunContract | null,
+  schedule: NewsScheduleContract | null,
+  fetchError: string | null,
+  now: number,
+): { tone: FeedTone; text: string } {
+  if (fetchError) return { tone: "error", text: fetchError }
+  if (run?.status === "running") return { tone: "busy", text: `Fetching now, started ${timeAgo(run.startedAt, now)}` }
+
+  const parts: string[] = []
+  if (run) {
+    const results = Object.entries(run.perSource)
+    const fresh = results.reduce((n, [, r]) => n + (r?.new ?? 0), 0)
+    const failed = results.filter(([, r]) => r?.error).map(([k]) => SOURCE_LABEL[k] ?? k)
+    const when = timeAgo(run.finishedAt ?? run.startedAt, now)
+    if (run.status === "cancelled") parts.push(`Last fetch cancelled ${when}`)
+    else if (run.status === "failed") parts.push(`Last fetch failed ${when}`)
+    else parts.push(`Last fetch ${when}, ${fresh} new`)
+    if (failed.length && run.status !== "failed") parts.push(`${failed.join(" and ")} unavailable`)
+  } else {
+    parts.push("No fetch has run yet")
+  }
+
+  if (schedule?.paused) {
+    const since = schedule.pausedAt ? ` ${timeAgo(schedule.pausedAt, now)}` : ""
+    return { tone: "paused", text: [`Schedule paused${since}`, ...parts].join(". ") }
+  }
+  if (run?.status === "failed") return { tone: "error", text: parts.join(". ") }
+  return { tone: run ? "live" : "idle", text: ["Updates every 5 min in market hours", ...parts].join(". ") }
+}
+
+const TONE_DOT: Record<FeedTone, string> = {
+  live: "bg-accent-bullish",
+  paused: "bg-accent-bearish",
+  busy: "bg-primary animate-pulse",
+  error: "bg-accent-danger",
+  idle: "bg-text-secondary",
+}
+
+interface FeedControlsProps {
+  isAdmin: boolean
+  running: boolean
+  isFetching: boolean
+  retryAfter: number | null
+  fetchError: string | null
+  latestRun: NewsFetchRunContract | null
+  schedule: NewsScheduleContract | null
+  now: number
+  onFetch: () => void
+  onCancel: () => void
+  onTogglePause: () => void
+}
+
+/** Header cluster: status line for everyone, one non wrapping button group for admins. */
+function FeedControls(p: FeedControlsProps) {
+  const status = feedStatus(p.latestRun, p.schedule, p.fetchError, p.now)
+  const paused = p.schedule?.paused === true
+  const btn = "h-9 px-3 inline-flex items-center gap-1.5 font-label-code text-label-code font-bold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 disabled:cursor-not-allowed"
+
+  return (
+    <div className="flex flex-col items-start md:items-end gap-2 md:max-w-md">
+      <p className="flex items-start gap-2 font-body-xs text-body-xs text-text-secondary md:text-right" aria-live="polite">
+        <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TONE_DOT[status.tone]}`} aria-hidden="true" />
+        <span>{status.text}</span>
+      </p>
+
+      {p.isAdmin && (
+        <div className="flex flex-nowrap items-center gap-2">
+          <div className="inline-flex rounded-lg overflow-hidden border border-primary shadow-xs" role="group" aria-label="Fetch news">
+            <button
+              type="button"
+              onClick={p.onFetch}
+              disabled={p.isFetching || p.retryAfter != null}
+              aria-busy={p.isFetching}
+              className={`${btn} bg-primary text-on-primary hover:bg-primary-container disabled:opacity-70`}
+            >
+              <span className={`material-symbols-outlined text-[18px] ${p.isFetching ? "animate-spin" : ""}`} aria-hidden="true">
+                {p.isFetching ? "progress_activity" : "refresh"}
+              </span>
+              {p.isFetching ? "Fetching" : p.retryAfter != null ? `Wait ${p.retryAfter}s` : "Fetch now"}
+            </button>
+            {p.running && (
+              <button
+                type="button"
+                onClick={p.onCancel}
+                className={`${btn} border-l border-on-primary/30 bg-surface text-accent-danger hover:bg-status-disconnected-bg`}
+              >
+                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">stop</span>
+                Cancel
+              </button>
+            )}
+          </div>
+
+          {p.schedule && (
+            <button
+              type="button"
+              onClick={p.onTogglePause}
+              aria-pressed={paused}
+              title={paused ? "Resume the 5 minute schedule" : "Pause the 5 minute schedule"}
+              className={`${btn} rounded-lg border ${
+                paused
+                  ? "border-accent-bearish/40 bg-status-stale-bg text-accent-bearish hover:bg-status-stale-bg/70"
+                  : "border-border-subtle bg-surface text-text-primary hover:bg-surface-high"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">{paused ? "play_arrow" : "pause"}</span>
+              {paused ? "Resume" : "Pause"}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const IST_TIME: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Asia/Kolkata" }
 
 export default function NewsIntelligencePage() {
   const [filterType, setFilterType] = React.useState<"ALL" | "OFFICIAL" | "HIGH_IMPACT" | "LINKED">("ALL")
   const [searchQuery, setSearchQuery] = React.useState("")
-  const { events: liveEvents, totalCount, officialCount, highImpactCount, isLoading, refresh } = useNewsFilings()
+  const {
+    events: liveEvents, totalCount, officialCount, highImpactCount, hasLoaded,
+    latestRun, isFetching, retryAfter, fetchError, fetchLatest, cancelFetch, schedule, setSchedulePaused,
+  } = useNewsFilings()
+  // Spec 0024 AC-1, AC-10, AC-11: fetch, cancel and pause are admin only.
+  const isAdmin = useSessionUser()?.isAdmin === true
+  const running = latestRun?.status === "running"
+  const [now, setNow] = React.useState(() => Date.now())
+  React.useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 15_000)
+    return () => clearInterval(t)
+  }, [])
 
-  // Map backend contracts into UI EventItem shape if present, falling back to mockEvents
-  const combinedEvents = React.useMemo(() => {
-    if (!liveEvents || liveEvents.length === 0) return mockEvents
-    const mappedLive: EventItem[] = liveEvents.map(e => ({
+  // Only real stored items (spec 0024 AC-7): no sample or invented entries.
+  const combinedEvents = React.useMemo<EventItem[]>(() => {
+    return liveEvents.map(e => ({
       id: e.id,
       symbol: e.symbol,
-      source: e.source.includes("BSE") ? "BSE" : e.source.includes("RBI") ? "RBI" : e.isOfficialFiling ? "NSE" : "MEDIA",
+      source: e.source,
+      isOfficial: e.isOfficialFiling,
+      isMacro: e.isMacro,
+      sourceUrl: e.sourceUrl,
+      classifiedBy: e.classifiedBy ?? "default",
       sourceType: e.eventType === "OFFICIAL_FILING" ? "OFFICIAL_FILING" : e.eventType === "MACRO" ? "REGULATORY_CIRCULAR" : "MEDIA_WIRE",
       factType: e.isOfficialFiling ? "CONFIRMED_FACT" : "INFERRED_INTERPRETATION",
       impact: e.impactLevel,
-      linkedSetup: e.symbol === "TATASTEEL" || e.symbol === "RELIANCE",
-      pubTime: new Date(e.publishedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " IST",
-      ingestTime: new Date(e.ingestedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " IST",
-      clockSkew: `+${e.clockSkewMs}ms (Optimal)`,
+      linkedSetup: false,
+      pubTime: new Date(e.publishedAt).toLocaleTimeString("en-IN", IST_TIME) + " IST",
+      ingestTime: new Date(e.ingestedAt).toLocaleTimeString("en-IN", IST_TIME) + " IST",
+      clockSkew: `+${Math.round(e.clockSkewMs / 1000)}s lag`,
       refId: `#${e.source.substring(0, 3).toUpperCase()}-${e.symbol}-${e.id.substring(0, 6)}`,
       headline: e.headline,
       summary: e.excerpt,
-      confirmedFacts: e.isOfficialFiling ? `Verified disclosure from ${e.source} with certified cryptographic provenance.` : "Unverified media wire statement.",
-      inferredModel: e.sentimentInterpretation || `Automated sentiment score: ${e.direction} (Confidence ${(e.confidence * 100).toFixed(0)}%).`,
-      keyTerms: e.extractedKeyTerms && e.extractedKeyTerms.length > 0
-        ? e.extractedKeyTerms.map((k, idx) => ({ label: `Item ${idx + 1}`, value: k }))
-        : [
-            { label: "Direction", value: e.direction },
-            { label: "Confidence", value: `${(e.confidence * 100).toFixed(0)}%` },
-          ],
+      confirmedFacts: e.isOfficialFiling
+        ? `Official ${e.source} exchange announcement. Read the linked document for the full filing.`
+        : `General news from ${e.source}. Not an exchange filing.`,
+      inferredModel:
+        e.classifiedBy === "rules" ? `Keyword rule (${e.eventType}): ${e.direction}, ${e.impactLevel} impact.`
+        : e.classifiedBy === "gemini" ? `AI classification: ${e.direction}, ${e.impactLevel} impact (confidence ${(e.confidence * 100).toFixed(0)}%).`
+        : "Unclassified: no rule matched and AI was unavailable, so it defaults to Low / Neutral.",
+      keyTerms: [
+        { label: "Direction", value: e.direction },
+        { label: "Impact", value: e.impactLevel },
+        { label: "Classified by", value: CLASSIFIED_LABEL[e.classifiedBy ?? "default"] },
+        { label: "Confidence", value: `${(e.confidence * 100).toFixed(0)}%` },
+      ],
     }))
-
-    // Merge and deduplicate by headline
-    const existingHeadlines = new Set(mappedLive.map(m => m.headline))
-    const uniqueMocks = mockEvents.filter(m => !existingHeadlines.has(m.headline))
-    return [...mappedLive, ...uniqueMocks]
   }, [liveEvents])
 
-  const [selectedEvent, setSelectedEvent] = React.useState<EventItem>(combinedEvents[0])
+  const [selectedId, setSelectedId] = React.useState<string | null>(null)
+  const selectedEvent = combinedEvents.find(e => e.id === selectedId) ?? combinedEvents[0]
+  const setSelectedEvent = (evt: EventItem) => setSelectedId(evt.id)
 
   const filteredEvents = combinedEvents.filter(evt => {
     if (filterType === "OFFICIAL" && evt.sourceType !== "OFFICIAL_FILING") return false
@@ -179,16 +260,24 @@ export default function NewsIntelligencePage() {
               </span>
             </div>
             <p className="font-body-xs text-body-xs text-text-secondary mt-0.5">
-              Strictly exchange-verified corporate announcements (NSE NEAPS, BSE) and RBI circulars with clock-skew auditing.
+              NSE and BSE announcements plus market news (RSS, Alpha Vantage) for watched F&amp;O stocks, fetched every 5 minutes in market hours.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-space-sm">
-          <div className="px-3 py-1 bg-surface-high rounded font-label-code text-label-code text-text-secondary border border-border-subtle">
-            Social Media Policy: <strong className="text-accent-danger">Strictly Excluded</strong>
-          </div>
-        </div>
+        <FeedControls
+          isAdmin={isAdmin}
+          running={running}
+          isFetching={isFetching}
+          retryAfter={retryAfter}
+          fetchError={fetchError}
+          latestRun={latestRun}
+          schedule={schedule}
+          now={now}
+          onFetch={fetchLatest}
+          onCancel={cancelFetch}
+          onTogglePause={() => schedule && setSchedulePaused(!schedule.paused)}
+        />
       </div>
 
       {/* 3 Telemetry Summary Cards */}
@@ -259,7 +348,7 @@ export default function NewsIntelligencePage() {
               filterType === "ALL" ? "bg-primary text-on-primary" : "text-text-secondary hover:text-text-primary hover:bg-surface-high"
             }`}
           >
-            All Events ({mockEvents.length})
+            All Events ({combinedEvents.length})
           </button>
           <button
             onClick={() => setFilterType("OFFICIAL")}
@@ -284,9 +373,6 @@ export default function NewsIntelligencePage() {
             }`}
           >
             <span>Linked Setups</span>
-            <span className="w-4 h-4 rounded-full bg-accent-primary text-on-primary text-[10px] flex items-center justify-center font-bold">
-              2
-            </span>
           </button>
         </div>
 
@@ -316,8 +402,27 @@ export default function NewsIntelligencePage() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-gutter items-start">
         {/* Event Cards Stream (Cols 1-8) */}
         <div className="xl:col-span-8 flex flex-col gap-space-md">
+          {hasLoaded && combinedEvents.length === 0 && (
+            <div className="bg-surface border border-border-subtle rounded-xl p-margin flex flex-col items-center text-center gap-space-sm shadow-sm">
+              <span className="material-symbols-outlined text-[32px] text-text-secondary" aria-hidden="true">inbox</span>
+              <h2 className="font-headline-md text-headline-md text-text-primary font-bold">No news fetched yet</h2>
+              <p className="font-body-sm text-body-sm text-text-secondary max-w-md">
+                {isAdmin
+                  ? "Fetch the latest exchange announcements and market news for your watched stocks."
+                  : "News arrives every 5 minutes during market hours. An admin can also fetch it now."}
+              </p>
+              {isAdmin && <button
+                type="button"
+                onClick={fetchLatest}
+                disabled={isFetching || retryAfter != null}
+                className="h-9 px-4 rounded bg-primary text-on-primary font-label-code text-label-code font-bold disabled:opacity-60"
+              >
+                {isFetching ? "Fetching…" : "Fetch latest news"}
+              </button>}
+            </div>
+          )}
           {filteredEvents.map(evt => {
-            const isSelected = selectedEvent.id === evt.id
+            const isSelected = selectedEvent?.id === evt.id
 
             return (
               <article
@@ -332,10 +437,16 @@ export default function NewsIntelligencePage() {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-surface-container text-primary border border-primary/20 flex items-center gap-1">
                       <span className="material-symbols-outlined text-[13px]">verified</span>
-                      {evt.source} FILING
+                      {evt.isOfficial ? `${evt.source} FILING` : evt.source}
                     </span>
                     <span className="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-status-live-bg text-status-live-text border border-accent-bullish/30">
-                      CONFIRMED FACT
+                      {evt.isOfficial ? "OFFICIAL FILING" : "GENERAL NEWS"}
+                    </span>
+                    <span
+                      className="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-surface-high text-text-secondary border border-border-subtle"
+                      title="How impact and direction were decided"
+                    >
+                      {CLASSIFIED_LABEL[evt.classifiedBy]}
                     </span>
                     {evt.impact === "HIGH" && (
                       <span className="px-1.5 py-0.5 rounded font-label-code text-label-code font-bold uppercase bg-status-disconnected-bg text-status-disconnected-text border border-accent-danger/20">
@@ -363,9 +474,21 @@ export default function NewsIntelligencePage() {
                     <span className="px-2 py-0.5 rounded font-metric-md text-metric-md font-bold bg-surface-high text-text-primary">
                       {evt.symbol}
                     </span>
-                    <span className="font-label-code text-label-code text-text-secondary">NSE Cash Equities</span>
+                    <span className="font-label-code text-label-code text-text-secondary">{evt.isMacro ? "Market wide" : "NSE Cash Equities"}</span>
                   </div>
-                  <span className="font-label-code text-[11px] text-text-secondary font-mono">Ref: {evt.refId}</span>
+                  {evt.sourceUrl ? (
+                    <a
+                      href={evt.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="font-label-code text-label-code text-primary hover:underline flex items-center gap-1"
+                    >
+                      Source <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                    </a>
+                  ) : (
+                    <span className="font-label-code text-[11px] text-text-secondary font-mono">Ref: {evt.refId}</span>
+                  )}
                 </div>
 
                 <h2 className="font-headline-md text-headline-md text-text-primary leading-tight font-bold">
@@ -390,7 +513,7 @@ export default function NewsIntelligencePage() {
                   <div className="bg-status-stale-bg/50 border-l-2 border-accent-bearish p-space-sm rounded-r">
                     <div className="flex items-center gap-1 font-label-code text-label-code text-accent-bearish uppercase font-bold mb-1">
                       <BrainCircuit className="w-3.5 h-3.5" />
-                      NLP Interpretation (Fallible)
+                      {CLASSIFIED_LABEL[evt.classifiedBy]} classification (fallible)
                     </div>
                     <p className="font-body-xs text-body-xs text-text-primary leading-relaxed">
                       {evt.inferredModel}
@@ -416,14 +539,14 @@ export default function NewsIntelligencePage() {
         </div>
 
         {/* Right Details Drawer (Cols 9-12) */}
-        <aside className="xl:col-span-4 bg-surface border border-border-subtle rounded-xl p-space-md flex flex-col gap-space-md xl:sticky xl:top-28 xl:max-h-[calc(100dvh-8rem)] xl:overflow-y-auto shadow-sm">
+        {selectedEvent && <aside className="xl:col-span-4 bg-surface border border-border-subtle rounded-xl p-space-md flex flex-col gap-space-md xl:sticky xl:top-28 xl:max-h-[calc(100dvh-8rem)] xl:overflow-y-auto shadow-sm">
           <div className="flex items-center justify-between pb-space-sm border-b border-border-subtle">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded font-metric-md text-metric-md font-bold bg-primary text-on-primary">
                 {selectedEvent.symbol}
               </span>
               <span className="px-1.5 py-0.5 rounded font-label-code text-label-code font-semibold bg-surface-container text-primary">
-                {selectedEvent.source} DISCLOSURE
+                {selectedEvent.isOfficial ? `${selectedEvent.source} DISCLOSURE` : selectedEvent.source}
               </span>
             </div>
             <span className="font-label-code text-body-xs text-text-secondary">Detail Inspector</span>
@@ -510,7 +633,7 @@ export default function NewsIntelligencePage() {
               <strong>SEBI Mandate:</strong> Disclosures are for decision support only. Zero automated trade placement. All orders must be evaluated and entered manually in Angel One.
             </span>
           </div>
-        </aside>
+        </aside>}
       </div>
     </div>
   )

@@ -23,6 +23,8 @@
 | Guru Strategy Backtest Lab | in-progress |
 | Backtest History Provider | in-progress |
 | Guru Strategy Live Promotion | in-progress |
+| Real News Ingestion | in-progress |
+| News Aware Trade Analysis | in-progress |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -339,3 +341,36 @@
   - [x] Gate cache with blocked and resume, Live switches in the lab, Settings list, GURU card tag (AC-7, AC-8, AC-9)
 - [ ] Verify it: /check verify Guru Strategy Live Promotion
 - [ ] Test it: /test Guru Strategy Live Promotion
+
+---
+
+## Real News Ingestion `in-progress`
+
+**Intent**: Replace the seed and invented items on `/dashboard/news` with real NSE and BSE announcements, market news RSS, and Alpha Vantage news for the watched F&O universe, fetched on demand and every 5 minutes, and classified by rules, then Gemini, then a neutral default.
+**Done when**: The page shows only real, linked items with how each was classified, the Fetch button and schedule both bring in new items without duplicates, and no seed item is ever served.
+
+- [x] Design it (spec): [0024](../specs/0024-real-news-ingestion/index.md) · code in `apps/backend/src/intelligence/news/`, `apps/web/app/dashboard/news/`
+- [ ] Build it: /develop Real News Ingestion
+  - [x] Migration, BSE adapter, symbol mapper, rules v1, dedup storage, fetch API, seed removal: real items end to end (AC-1, AC-4, AC-5, AC-6, AC-7, AC-9)
+  - [x] NSE, RSS and Alpha Vantage adapters with independent failure (AC-3, AC-9)
+  - [x] Gemini step with the atomic daily cap, the cron schedule, concurrency and pruning (AC-2, AC-6)
+  - [x] Page: Fetch button, last fetch line, classification labels, empty state, SSE refresh (AC-1, AC-6, AC-8)
+  - [x] Admin controls: admin only fetch, cancel, schedule pause, HIGH news kept (AC-1, AC-10, AC-11)
+  - [ ] News sources: official exchange RSS via config (off until confirmed), honest requests, skipped handling, Alpha Vantage disabled, company names file, universe query fix (AC-3, AC-4, AC-12)
+- [ ] Verify it: /check verify Real News Ingestion
+- [ ] Test it: /test Real News Ingestion
+
+---
+
+## News Aware Trade Analysis `in-progress`
+
+**Intent**: Use the real classified news to mark live signals (scanner stocks, guru index signals, analysis Gate 06) as pass, warn, or blocked, and show in the backtest lab whether that same news gate would have improved results.
+**Done when**: Every new signal carries a stored entry verdict with linked news, late news shows as a separate after entry verdict, and each backtest run shows a with/without news comparison over covered trades with its sample size.
+
+- [x] Design it (spec): [0025](../specs/0025-news-aware-trade-analysis/index.md) · code in `apps/backend/src/intelligence/news/`, `apps/backend/src/backtest/`, signal cards and backtest run view in `apps/web/`
+- [ ] Build it: /develop News Aware Trade Analysis
+  - [ ] Shared `news-gate-v1` function, `signals` migration (symbol, entry and after entry verdicts), entry check on scanner and guru inserts (umbrella AC-1, AC-2, AC-4; live AC-1, AC-2, AC-7)
+  - [ ] After entry re-check, `signal:news-gate` SSE, signal API fields, Gate 06 rewrite, signal card badges (live AC-3 to AC-6)
+  - [ ] Backtest news comparison service, admin endpoint, run view panel (backtest AC-1 to AC-6)
+- [ ] Verify it: /check verify News Aware Trade Analysis
+- [ ] Test it: /test News Aware Trade Analysis

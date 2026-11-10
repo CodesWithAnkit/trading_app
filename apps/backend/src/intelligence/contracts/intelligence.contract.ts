@@ -59,6 +59,10 @@ export interface NewsFilingItemContract {
   isOfficialFiling: boolean;
   extractedKeyTerms?: string[];
   sentimentInterpretation?: string;
+  /** Spec 0024 AC-6: how impact and direction were decided. */
+  classifiedBy: 'rules' | 'gemini' | 'default';
+  /** Spec 0024 AC-4: market wide macro item (symbol `MARKET`). */
+  isMacro: boolean;
 }
 
 export interface NewsFilingsResponseContract {

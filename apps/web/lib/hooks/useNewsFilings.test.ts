@@ -51,8 +51,8 @@ describe('useNewsFilings', () => {
   it('fetches symbol specific filings when symbol argument is provided', async () => {
     const { result } = renderHook(() => useNewsFilings('TATASTEEL'))
 
-    expect(result.current.events).toBeDefined()
-    expect(result.current.events.length).toBeGreaterThan(0)
+    // spec 0024 AC-7: no seed items before the first load.
+    expect(result.current.events).toEqual([])
 
     await waitFor(() => {
       expect(result.current.events[0].id).toBe('evt-test-1')
@@ -63,16 +63,17 @@ describe('useNewsFilings', () => {
     expect(result.current.officialCount).toBe(1)
   })
 
-  // covers: 0018 AC-5
-  it('falls back gracefully when fetch returns an error', async () => {
+  // covers: 0018 AC-5, 0024 AC-7
+  it('shows no invented items when fetch returns an error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Failed to fetch news')))
 
     const { result } = renderHook(() => useNewsFilings())
 
     await waitFor(() => {
-      expect(result.current.error).toBeDefined()
+      expect(result.current.error).toBeTruthy()
     })
 
-    expect(result.current.events.length).toBeGreaterThan(0)
+    expect(result.current.events).toEqual([])
+    expect(result.current.hasLoaded).toBe(true)
   })
 })

@@ -59,6 +59,36 @@ export interface NewsFilingItemContract {
   isOfficialFiling: boolean;
   extractedKeyTerms?: string[];
   sentimentInterpretation?: string;
+  /** Spec 0024 AC-6: how impact and direction were decided. */
+  classifiedBy: 'rules' | 'gemini' | 'default';
+  /** Spec 0024 AC-4: market wide macro item (symbol `MARKET`). */
+  isMacro: boolean;
+}
+
+/** Spec 0024: one news source's result within a fetch run. */
+export interface NewsSourceResultContract {
+  fetched: number;
+  kept: number;
+  new: number;
+  error: string | null;
+  skipped?: string;
+}
+
+/** Spec 0024 AC-11: whether the scheduled fetch is paused. */
+export interface NewsScheduleContract {
+  paused: boolean;
+  pausedAt: string | null;
+}
+
+/** Spec 0024 AC-8: a news fetch run (manual or scheduled). */
+export interface NewsFetchRunContract {
+  id: string;
+  trigger: 'manual' | 'schedule';
+  startedAt: string;
+  finishedAt: string | null;
+  status: 'running' | 'done' | 'partial' | 'failed' | 'cancelled';
+  perSource: Partial<Record<'nse' | 'bse' | 'rss' | 'alphavantage', NewsSourceResultContract>>;
+  geminiCalls: number;
 }
 
 export interface NewsFilingsResponseContract {

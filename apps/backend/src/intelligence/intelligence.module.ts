@@ -5,6 +5,7 @@ import { MarketBreadthService } from './market-breadth.service.js';
 import { OfficialFilingsAndNewsService } from './official-filings-news.service.js';
 import { InstitutionalContextService } from './institutional-context.service.js';
 import { ExplainableAnalysisService } from './explainable-analysis.service.js';
+import { NewsIngestionService } from './news/news-ingestion.service.js';
 import { IntelligenceController } from './intelligence.controller.js';
 
 @Module({
@@ -15,6 +16,7 @@ import { IntelligenceController } from './intelligence.controller.js';
     OfficialFilingsAndNewsService,
     InstitutionalContextService,
     ExplainableAnalysisService,
+    NewsIngestionService,
   ],
   exports: [
     MarketBreadthService,
