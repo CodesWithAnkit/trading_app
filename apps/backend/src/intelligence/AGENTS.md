@@ -6,6 +6,8 @@ Context and conventions for the backend market intelligence, official filings, i
 - [0017 Market Intelligence and Explainable Analysis](../../../docs/specs/0017-market-intelligence-and-explainable-analysis/index.md)
 - [0018 Reusable Components and API Integration Architecture](../../../docs/specs/0018-reusable-components-and-api-integration/index.md)
 - [0024 Real News Ingestion](../../../docs/specs/0024-real-news-ingestion/index.md): `news/` ingestion pipeline, admin fetch, cancel and pause controls
+- [0025 News Aware Trade Analysis](../../../docs/specs/0025-news-aware-trade-analysis/index.md): the shared news gate on signals, Gate 06, backtest comparison
+- [0026 Intelligence page real data](../../../docs/specs/0026-intelligence-page-real-data/index.md): NIFTY / India VIX from the feed, last real reading, no sample numbers
 
 ## Purpose and Key Services
 The intelligence module delivers explainable setup evidence, broad market breadth, corporate disclosures, and delayed institutional flow reporting to the trading terminal.
@@ -21,6 +23,10 @@ The intelligence module delivers explainable setup evidence, broad market breadt
 - News sources (spec 0024): NSE and BSE are read only from official exchange RSS feeds set in `NEWS_NSE_FEED_URLS` / `NEWS_BSE_FEED_URLS` (empty means skipped); market RSS from `NEWS_RSS_FEEDS`; Alpha Vantage only when `NEWS_ALPHAVANTAGE_ENABLED=true`. Every request goes through `FeedReader` in `news/news.adapters.ts`: only `User-Agent` (`NEWS_USER_AGENT`) and an XML `Accept`, no cookies, browser headers, or exchange website JSON APIs. A refusal (401, 403, 429, HTML page) is recorded as `skipped` and never worked around.
 - Company names for symbol matching come only from the committed `news/company-names.json` (`{ "SYMBOL": "Name" | ["Name", "Alias"] }`), read from the `src` folder at runtime.
 - `per_source` skipped reasons are a fixed list (`SKIP` in `news.adapters.ts`); the web status line matches on them, so change both together.
+- News gate (spec 0025): `news/news-gate.ts` holds the pure `evaluateNewsGate` (`news-gate-v1`, no I/O, no clock reads); live signals, Gate 06 and the backtest comparison all call it. A rule change is a new version (`news-gate-v2`), never an edit in place. `NewsGateService` lives in `NewsGateModule` (Supabase only) so the scanner and this module both import it without a cycle; it emits SSE through a `publish` callback.
+- Every new `signals` row sets `symbol` (plain NSE symbol, `-EQ` stripped, via `plainSymbol`) and then calls `NewsGateService.checkNewSignal` after the insert, never before it. The entry verdict is never rewritten (except "News unavailable"); the after entry verdict only escalates through the `news_gate_escalate` SQL function.
+- Market context (spec 0026): every market value is real or `null`, never a sample. `MarketBreadthService` reads NIFTY (`NIFTY`) and India VIX (`INDIAVIX`) from their own index ticks, keeps index ticks out of breadth, writes `market_context_snapshots` (with `session_date`) every 60s only while live, and serves today's last snapshot with `asOf` when ticks stop.
+- Institutional flows have no source yet: no seed data; the API returns `flows: null`, `connected: false` until rows exist. Analysis evidence lines need a real calculator, or they are left out.
 - Zero Automated Broker Execution: Intelligence and explainable analysis never submit automated orders. All trades require manual user confirmation through the terminal.
 - Feed Health and Safety Gating: If market feed latency exceeds five seconds, the terminal triggers a prominent NO TRADE banner and disables order entry.
 - Delayed Context Separation: Institutional flows must always carry the delayed regulatory disclaimer to prevent mistaking historical filings for live order book flow.

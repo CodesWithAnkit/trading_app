@@ -373,4 +373,4 @@
   - [x] After entry re-check, `signal:news-gate` SSE, signal API fields, Gate 06 rewrite, signal card badges (live AC-3 to AC-6)
   - [x] Backtest news comparison service, admin endpoint, run view panel (backtest AC-1 to AC-6)
 - [ ] Verify it: /check verify News Aware Trade Analysis
-- [ ] Test it: /test News Aware Trade Analysis
+- [x] Test it: /test News Aware Trade Analysis

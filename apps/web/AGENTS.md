@@ -14,4 +14,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Signed in areas render through `components/layout/ProtectedShell.tsx` (server `requireUser()`); data providers mount there, not in the root layout. Admin pages call `requireAdmin()` from `lib/supabase/server.ts`.
 - `isAdmin` on the web comes from the server verified user (`useSessionUser()`), never a client claim.
 - Unit tests get a pass through `apiFetch` mock from `vitest.setup.ts`; `lib/api/apiFetch.test.ts` tests the real one.
+- Market and institutional data (spec 0026): never render sample or fallback numbers; a missing value shows a dash and "No live data", and a last known value shows its "as of" time.
 - Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`, `BACKEND_API_URL`.

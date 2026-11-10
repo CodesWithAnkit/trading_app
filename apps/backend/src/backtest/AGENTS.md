@@ -9,6 +9,7 @@ Admin only backtests of the guru rules on NIFTY and SENSEX history. Governing sp
   - `runner.ts`: queue (all or nothing), atomic claim (`queued → running`), execute, store, recompute the gate across symbols.
   - `backtest.service.ts` / `backtest.controller.ts`: in process worker and the admin API under `/api/v1/backtest`.
   - `definitions.ts`: read only text of rule definitions v1 shown in the UI.
+  - `newsComparison.ts`: spec 0025 with and without the news gate on covered trades (pure; `GET /runs/:id/news-comparison` loads the rows, computed on request, writes nothing).
   - The rules themselves live in `scanner/strategy/guru/` (pure, reused by the future live promotion spec).
 
 - **Conventions:**
