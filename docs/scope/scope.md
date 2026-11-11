@@ -1,5 +1,9 @@
 # Project Scope
 
+**Build approach:** Tracer Bullet (each feature built end to end, data to API to page, working and narrow, before the next).
+**Workflow:** Beta (after `/develop`: `/check verify`, then `/test`). A feature can carry its own tag to do more or less.
+**Users:** a single trader for now; multi user data scoping is deferred.
+
 ## At a glance
 
 | Feature | Status |
@@ -25,6 +29,18 @@
 | Guru Strategy Live Promotion | in-progress |
 | Real News Ingestion | in-progress |
 | News Aware Trade Analysis | in-progress |
+| Market Intelligence Page Real Data | in-progress |
+| Signal Scorecard | in-progress |
+| Position Sizing and Risk Limits | in-progress |
+| Correlated Exposure Guard | planned |
+| Paper Trading Ledger | planned |
+| Regime Strategy Filters | planned |
+| Signal Alerts | planned |
+| Journal Tags and Patterns | planned |
+| Weekly AI Trade Debrief | planned |
+| Options Market Context | planned |
+| Market Hours Monitoring | planned |
+| Database Backups | planned |
 ---
 
 ## Strategy Engine Implementation (Phase 2) `done`
@@ -374,3 +390,148 @@
   - [x] Backtest news comparison service, admin endpoint, run view panel (backtest AC-1 to AC-6)
 - [ ] Verify it: /check verify News Aware Trade Analysis
 - [x] Test it: /test News Aware Trade Analysis
+
+---
+
+## Market Intelligence Page Real Data `in-progress`
+
+**Intent**: Every number on the Market Intelligence page and the dashboard regime strip comes from a real source, or shows a dash, never a sample value. Drift enrolled: spec 0026 was built before it had a row.
+**Done when**: NIFTY 50 and India VIX come from the live feed, the last real reading shows with its time when ticks stop, institutional data says "not connected" until a real source exists, and no sample number renders anywhere.
+
+- [x] Design it (spec): [0026](../specs/0026-intelligence-page-real-data/index.md) · code in `apps/backend/src/intelligence/`, `apps/web/app/dashboard/intelligence/`
+- [x] Build it: /develop Market Intelligence page real data
+  - [x] NIFTY and VIX index ticks, kept out of breadth (AC-1, AC-2, AC-6)
+  - [x] Last real reading saved and served with its time; nulls instead of samples (AC-3, AC-4, AC-5)
+  - [x] Institutional empty state and real provenance block (AC-7, AC-8)
+  - [x] Analysis Gate 03 and evidence from real 5m candles (AC-9, AC-10, AC-11)
+- [ ] Verify it: /check verify Market Intelligence page real data
+- [x] Test it: /test Market Intelligence page real data
+
+---
+
+# Next slice: measure, then protect, then act (planned 2026-11-11)
+
+Goal: be able to say, with numbers, which strategies to keep, and have every signal come with a size or a skip reason. Order follows "measure, then protect": the scorecard proves the edge, risk and paper trading protect capital, regime filters sharpen it, then alerts, learning and context, then reliability. Every feature stays decision support; orders are always placed by hand.
+
+## Slice A: Measure the edge
+
+## Signal Scorecard `in-progress`
+
+**Intent**: Turn the outcomes the system already reconciles into a per strategy report card, so you can keep what works and switch off what doesn't.
+**Done when**: A Scorecard page shows win rate, average R and expectancy per strategy, setup, time of day bucket, market regime and news verdict, with sample size on every number and a clear "too few trades" flag; numbers match the reconciled signal outcomes.
+
+code in `apps/backend/src/scorecard/`, `apps/web/app/dashboard/performance/` · **Spec**: [0027](../specs/0027-signal-scorecard/index.md) · **Design**: [Signal Scorecard canvas](https://claude.ai/artifact/XAPsBkouzLiEgLPmuLamuD)
+
+- [x] /architect Signal Scorecard (spec)
+- [x] Build it: /develop Signal Scorecard
+  - [x] Migration, insert stamping (strategy, version, regime) and backfill (AC-11)
+  - [x] Aggregation module and thin thread: API plus Scorecard page replacing the mock Performance page (AC-1 to AC-6, AC-13, AC-14)
+  - [x] All five cuts, filters and the cumulative R curve (AC-7, AC-9, AC-10)
+  - [x] Min sample setting and "too few trades" flag (AC-8, AC-12)
+- [ ] Verify it: /check verify Signal Scorecard
+- [ ] Test it: /test Signal Scorecard
+
+## Paper Trading Ledger `planned` · needs a decision
+
+**Intent**: Track every signal as if it were taken, with the cost model and sizing, so you can separate "the signals are weak" from "my execution is weak".
+**Done when**: Each new signal opens a paper position with entry, size, costs and exit from live prices; a paper equity curve and per strategy results sit beside your real journal results for the same period.
+
+- [ ] /architect Paper Trading Ledger
+
+## Slice B: Protect capital
+
+## Position Sizing and Risk Limits `in-progress`
+
+**Intent**: A risk engine that turns each signal into "take N shares" or "skip, reason", using limits you set in Settings.
+**Done when**: Settings hold risk per trade, daily loss limit and max open trades; every signal card shows a suggested quantity from its stop distance, or a skip reason once a limit is reached; limits are enforced from today's journal and open plans.
+
+**Spec**: [0028](../specs/0028-position-sizing-risk-limits/index.md) · **Design**: [Signal Scorecard canvas, Risk and Journal artboards](https://claude.ai/artifact/XAPsBkouzLiEgLPmuLamuD)
+
+- [x] /architect Position Sizing and Risk Limits (spec)
+- [ ] Build it: /develop Position Sizing and Risk Limits
+  - [ ] Migration, pure sizing function and risk settings API (AC-1 to AC-5, AC-11)
+  - [ ] Verdicts on signal endpoints and cards, user scoped (AC-6, AC-12)
+  - [ ] Journal: user scoping, quantity, direction, close with exit and P&L (AC-9, AC-11, AC-12)
+  - [ ] Live refresh, Take this trade prefill, Settings wired (AC-7, AC-8, AC-10, AC-1)
+- [ ] Verify it: /check verify Position Sizing and Risk Limits
+- [ ] Test it: /test Position Sizing and Risk Limits
+
+## Correlated Exposure Guard `planned` · needs a decision
+
+**Intent**: Stop several signals in the same sector or direction from stacking into one oversized bet.
+**Done when**: A signal that would push same sector or same direction exposure past your limit shows "skip, correlated exposure" with the trades it overlaps; the limit is editable in Settings.
+
+- [ ] /architect Correlated Exposure Guard
+
+## Regime Strategy Filters `planned` · needs a decision
+
+**Intent**: Use the market regime and VIX band to allow or block each strategy, and prove in the backtest that a filter helps before trusting it live.
+**Done when**: Each strategy has a regime and VIX rule that marks signals allowed or filtered (shown, never hidden); the backtest lab shows results with and without each filter over the same trades.
+
+- [ ] /architect Regime Strategy Filters
+
+## Slice C: Act and learn
+
+## Signal Alerts `planned` · needs a decision
+
+**Intent**: Get told about new signals, news blocks and exits without watching the screen.
+**Done when**: You receive an alert within seconds for a new signal (with size or skip reason), a news block, and a plan exit; you can switch each alert type on or off; alerts never place orders.
+
+- [ ] /architect Signal Alerts
+
+## Journal Tags and Patterns `planned` · needs a decision
+
+**Intent**: Tag each trade with why you took it and whether you followed the plan, then surface the patterns in your own behaviour.
+**Done when**: Each journal trade can carry setup, followed plan (yes or no) and mistake tags; a patterns view shows results by tag and time of day with sample sizes.
+
+- [ ] /architect Journal Tags and Patterns
+
+## Weekly AI Trade Debrief `planned` · needs a decision
+
+**Intent**: A short, plain weekly review of your trades, signals and news, written by AI from your own data.
+**Done when**: Once a week a debrief appears covering what worked, what didn't and one thing to change, citing the trades it draws on; it can be regenerated, and it states when data is thin.
+
+- [ ] /architect Weekly AI Trade Debrief
+
+## Options Market Context `planned` · needs a decision
+
+**Intent**: Add NIFTY options positioning (open interest, put call ratio, max pain) as intraday context next to breadth and news.
+**Done when**: The Market Intelligence page shows live put call ratio, max pain and the strikes with the biggest open interest change, from a real source with its time, or a dash when unavailable.
+
+- [ ] /architect Options Market Context
+
+## Slice D: Reliability
+
+## Market Hours Monitoring `planned` · needs a decision
+
+**Intent**: Be warned during market hours when the feed, the scanner or the news fetch stops working, instead of finding out later.
+**Done when**: A feed drop, a stalled scanner or repeated failed fetches during market hours raise an alert within a few minutes; a health page shows the last good time for each.
+
+- [ ] /architect Market Hours Monitoring
+
+## Database Backups `planned` · needs a decision
+
+**Intent**: Make sure signals, trades, journal and backtest results survive a mistake or an outage.
+**Done when**: The database is backed up on a schedule you can see, and a restore has been tested once and written down.
+
+- [ ] /architect Database Backups
+
+## Deferred
+
+- Multi user data scoping (only one trader for now).
+- A real FII/DII and bulk deal source (needs a source decision; website scraping is ruled out).
+- Automated order placement (out of scope: the app stays decision support until the scorecard has months of evidence).
+- Walk forward testing of the four scanner strategies on stock history (after the scorecard shows which ones deserve tuning).
+
+
+## References
+
+**Project sources**: the reconciled signal outcomes (spec 0009), the backtest lab and its gate (spec 0020), the news gate comparison pattern (spec 0025), market regime and VIX bands (specs 0017 and 0026), root `AGENTS.md` (decision support only, no automated orders).
+
+**Practices and standards**: judge a strategy by expectancy in R with its sample size (Signal Scorecard); size positions from a fixed risk per trade (Position Sizing and Risk Limits); prove a filter on out of sample data before trusting it live (Regime Strategy Filters, deferred walk forward testing); measure before you add surface (slice order).
+
+**Links** (web verified 2026-11-11):
+- R multiples and expectancy (secondary explainer): https://eliteforextrading.pages.dev/r-multiples-explained/
+- Fixed fractional position sizing (Adaptrade): https://www.adaptrade.com/MSA/fixfrac.htm
+- Walk forward optimization (Wikipedia): https://en.wikipedia.org/wiki/Walk_forward_optimization
+- SEBI circular on safer retail participation in algorithmic trading (4 Feb 2025; title and number verified only): https://www.sebi.gov.in/legal/circulars/feb-2025/safer-participation-of-retail-investors-in-algorithmic-trading_91614.html
