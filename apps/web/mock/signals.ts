@@ -1,3 +1,4 @@
+import type { RiskVerdict } from "@/lib/risk/types"
 export type SignalStatus =
   | "ACTIVE" | "EXPIRING" | "EXPIRED" | "INVALIDATED" | "SKIPPED" | "ENTERED"
   // Live exits (spec 0010)
@@ -67,6 +68,8 @@ export type Signal = {
   exitPrice?: number | null
   exitAt?: string | null
   exitReason?: ExitReason | null
+  /** spec 0028: the signed in user's verdict; absent until the API attaches it. */
+  risk?: RiskVerdict | null
 }
 
 /** The `signal:exit` stream event (spec 0010 AC-6). */

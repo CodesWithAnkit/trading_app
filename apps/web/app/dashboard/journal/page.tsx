@@ -2,11 +2,12 @@
 import * as React from "react"
 import { TradeTable } from "@/components/domain/TradeTable"
 import { MobilePositionCard } from "@/components/domain/MobilePositionCard"
-import { TradeExitModal } from "@/components/domain/TradeExitModal"
+import { CloseTradeDialog } from "@/components/domain/CloseTradeDialog"
 import { type Trade } from "@/mock/trades"
 import { TradeJournalAuditDrawer } from "@/components/domain/TradeJournalAuditDrawer"
 import { useTrades } from "@/lib/contexts/TradeContext"
 import { useSignals } from "@/lib/contexts/SignalContext"
+import { formatInr } from "@/lib/risk/labels"
 import { useDashboardState } from "@/lib/contexts/DashboardContext"
 import { useMarketIntelligence } from "@/lib/hooks/useMarketIntelligence"
 import { 
@@ -17,8 +18,8 @@ import {
 } from "lucide-react"
 
 export default function JournalPage() {
-  const { trades, openTrades, addTradeLeg } = useTrades()
-  const { signals } = useSignals()
+  const { trades, openTrades } = useTrades()
+  const { signals, riskContext } = useSignals()
   const { marketState } = useDashboardState()
   const { isStale, isDisconnected } = useMarketIntelligence()
   const [selectedTrade, setSelectedTrade] = React.useState<Trade | null>(null)
@@ -156,7 +157,7 @@ export default function JournalPage() {
             <span className="px-1.5 py-0.2 rounded bg-status-live-bg text-status-live-text font-label-code text-[10px] font-bold">SAFE</span>
           </div>
           <span className="font-metric-lg text-metric-lg font-bold text-text-primary">₹0.00 drawn</span>
-          <span className="font-body-xs text-body-xs text-text-secondary">Limit: ₹6,000.00 max loss</span>
+          <span className="font-body-xs text-body-xs text-text-secondary">Limit: {riskContext ? formatInr(riskContext.limits.dailyLossLimit) : "—"} max loss</span>
         </div>
       </div>
 
@@ -223,7 +224,7 @@ export default function JournalPage() {
               </div>
             </div>
 
-            <TradeTable trades={filteredTrades} onAuditClick={handleAuditClick} isLocked={isFeedLocked} />
+            <TradeTable trades={filteredTrades} onAuditClick={handleAuditClick} onCloseClick={t => setExitTrade(t)} isLocked={isFeedLocked} />
           </div>
         </div>
 
@@ -321,15 +322,7 @@ export default function JournalPage() {
         onClose={() => setSelectedTrade(null)}
       />
 
-      <TradeExitModal
-        trade={exitTrade}
-        isOpen={!!exitTrade}
-        onClose={() => setExitTrade(null)}
-        onSubmit={(qty, exitPrice, isFullExit) => {
-          if (!exitTrade) return
-          addTradeLeg(exitTrade.id, isFullExit ? "EXIT" : "PARTIAL_EXIT", exitPrice, qty)
-        }}
-      />
+      <CloseTradeDialog trade={exitTrade} onClose={() => setExitTrade(null)} />
     </div>
   )
 }

@@ -26,6 +26,10 @@ export type Trade = {
   notes: string
   createdAt: string
   closedAt?: string
+  /** spec 0028: the journal's own status and flags (real rows only). */
+  journalStatus?: "PENDING" | "WON" | "LOST" | "CANCELLED"
+  flags?: ("NO_QUANTITY" | "CHECK_DIRECTION")[]
+  strategyName?: string
 }
 
 const now = new Date()

@@ -3,6 +3,7 @@ import { apiFetch, openAuthedStream } from "@/lib/api/apiFetch"
 import React, { createContext, useContext, useState } from "react"
 import type { ExitReason, NewsGateEvent, Signal, SignalExit, SignalStatus } from "@/mock/signals"
 import type { ApproachingSetup, MomentumStock } from "@/lib/scanner-types"
+import type { RiskContext } from "@/lib/risk/types"
 
 export type StreamStatus = "connecting" | "live" | "reconnecting"
 
@@ -26,7 +27,14 @@ type SignalContextType = {
   /** False until the first snapshot arrives, so pages can tell "loading" from "empty". */
   hydrated: boolean
   updateSignalStatus: (id: string, status: Signal["status"]) => void
+  /** spec 0028: today's limits, loss room and open trades for the signed in user; null until loaded. */
+  riskContext: RiskContext | null
+  /** Refetch verdicts and the risk context now (e.g. right after a journal write). */
+  refreshRisk: () => void
 }
+
+/** spec 0028 AC-7: one refetch per burst of changes. */
+const RISK_REFRESH_DEBOUNCE_MS = 500
 
 const SignalContext = createContext<SignalContextType | undefined>(undefined)
 
@@ -43,6 +51,9 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
   const [exitAlerts, setExitAlerts] = useState<SignalExit[]>([])
   // Ids already toasted, so a replayed or duplicate event never toasts twice.
   const toasted = React.useRef(new Set<string>())
+  const [riskContext, setRiskContext] = useState<RiskContext | null>(null)
+  const refreshRiskRef = React.useRef<() => void>(() => {})
+  const refreshRisk = React.useCallback(() => refreshRiskRef.current(), [])
 
   React.useEffect(() => {
     let cancelled = false
@@ -61,7 +72,9 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
             const fresh = new Map((payload.data ?? []).map(s => [s.id, s]))
             const merged = prev.map(s => {
               const server = fresh.get(s.id)
-              return server && isClosedStatus(server.status) && !isClosedStatus(s.status) ? server : s
+              if (server && isClosedStatus(server.status) && !isClosedStatus(s.status)) return server
+              // spec 0028: verdicts always come from the latest server copy.
+              return server ? { ...s, risk: server.risk ?? s.risk } : s
             })
             const known = new Set(prev.map(s => s.id))
             return [...merged, ...(payload.data ?? []).filter(s => !known.has(s.id))]
@@ -69,6 +82,24 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
         })
         .catch(err => console.error("Failed to load scanner snapshot", err))
         .finally(() => !cancelled && setHydrated(true))
+
+    const loadRiskContext = () =>
+      apiFetch("/api/v1/risk/context")
+        .then(res => (res.ok ? res.json() : Promise.reject(res.status)))
+        .then((ctx: RiskContext) => !cancelled && setRiskContext(ctx))
+        .catch(err => console.error("Failed to load risk context", err))
+
+    // spec 0028 AC-7: debounce bursts (several cards, several events) into one refetch.
+    let riskTimer: ReturnType<typeof setTimeout> | null = null
+    refreshRiskRef.current = () => {
+      if (riskTimer) clearTimeout(riskTimer)
+      riskTimer = setTimeout(() => {
+        riskTimer = null
+        loadSnapshot()
+        loadRiskContext()
+      }, RISK_REFRESH_DEBOUNCE_MS)
+    }
+    loadRiskContext()
 
     // spec 0021 AC-6: ticket authenticated stream; reconnects with a fresh ticket on error or token expiry.
     const closeStream = openAuthedStream(STREAM_URL, source => {
@@ -83,7 +114,11 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
     source.addEventListener("signal:new", (e: MessageEvent) => {
       const signal = JSON.parse(e.data) as Signal
       setSignals(prev => [signal, ...prev.filter(s => s.id !== signal.id)])
+      // signal:new is global, so it never carries a verdict; fetch this user's.
+      refreshRiskRef.current()
     })
+    // spec 0028: this user's journal or limits changed; verdicts may differ now.
+    source.addEventListener("risk:changed", () => refreshRiskRef.current())
     source.addEventListener("signal:exit", (e: MessageEvent) => {
       const exit = JSON.parse(e.data) as SignalExit
       let alreadyClosed = false
@@ -120,6 +155,7 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       cancelled = true
+      if (riskTimer) clearTimeout(riskTimer)
       closeStream()
     }
   }, [])
@@ -138,7 +174,7 @@ export function SignalProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <SignalContext.Provider
-      value={{ signals, activeSignals, expiredSignals, closedSignals, exitAlerts, dismissExitAlert, approachingSignals, momentum, watchingCount, streamStatus, hydrated, updateSignalStatus }}
+      value={{ signals, activeSignals, expiredSignals, closedSignals, exitAlerts, dismissExitAlert, approachingSignals, momentum, watchingCount, streamStatus, hydrated, updateSignalStatus, riskContext, refreshRisk }}
     >
       {children}
     </SignalContext.Provider>

@@ -1,6 +1,7 @@
 "use client"
 import * as React from "react"
 import Link from "next/link"
+import { RiskVerdict } from "@/components/domain/RiskVerdict"
 import { useSignals } from "@/lib/contexts/SignalContext"
 import { useTrades } from "@/lib/contexts/TradeContext"
 import { useDashboardState } from "@/lib/contexts/DashboardContext"
@@ -228,6 +229,10 @@ export default function SignalScannerPage() {
                       </span>
                       <span className="block font-label-code text-label-code text-text-secondary">Post Charges</span>
                     </div>
+                    {/* spec 0028 AC-6: this user's size or skip reason. */}
+                    {(signal.status === "ACTIVE" || signal.status === "EXPIRING") && (
+                      <RiskVerdict verdict={signal.risk} compact className="col-span-full border-t border-border-subtle pt-2" />
+                    )}
                   </div>
 
                   {/* Col 3: Quality Score (Cols 9-10) */}

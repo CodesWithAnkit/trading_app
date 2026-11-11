@@ -445,14 +445,14 @@ code in `apps/backend/src/scorecard/`, `apps/web/app/dashboard/performance/` · 
 **Intent**: A risk engine that turns each signal into "take N shares" or "skip, reason", using limits you set in Settings.
 **Done when**: Settings hold risk per trade, daily loss limit and max open trades; every signal card shows a suggested quantity from its stop distance, or a skip reason once a limit is reached; limits are enforced from today's journal and open plans.
 
-**Spec**: [0028](../specs/0028-position-sizing-risk-limits/index.md) · **Design**: [Signal Scorecard canvas, Risk and Journal artboards](https://claude.ai/artifact/XAPsBkouzLiEgLPmuLamuD)
+code in `apps/backend/src/risk/`, `apps/web/components/domain/` (RiskVerdict, TakeTradeDialog, CloseTradeDialog, RiskLimitsSettings) · **Spec**: [0028](../specs/0028-position-sizing-risk-limits/index.md) · **Design**: [Signal Scorecard canvas, Risk and Journal artboards](https://claude.ai/artifact/XAPsBkouzLiEgLPmuLamuD)
 
 - [x] /architect Position Sizing and Risk Limits (spec)
-- [ ] Build it: /develop Position Sizing and Risk Limits
-  - [ ] Migration, pure sizing function and risk settings API (AC-1 to AC-5, AC-11)
-  - [ ] Verdicts on signal endpoints and cards, user scoped (AC-6, AC-12)
-  - [ ] Journal: user scoping, quantity, direction, close with exit and P&L (AC-9, AC-11, AC-12)
-  - [ ] Live refresh, Take this trade prefill, Settings wired (AC-7, AC-8, AC-10, AC-1)
+- [x] Build it: /develop Position Sizing and Risk Limits
+  - [x] Migration, pure sizing function and risk settings API (AC-1 to AC-5, AC-11)
+  - [x] Verdicts on signal endpoints and cards, user scoped (AC-6, AC-12)
+  - [x] Journal: user scoping, quantity, direction, close with exit and P&L (AC-9, AC-11, AC-12)
+  - [x] Live refresh, Take this trade prefill, Settings wired (AC-7, AC-8, AC-10, AC-1)
 - [ ] Verify it: /check verify Position Sizing and Risk Limits
 - [ ] Test it: /test Position Sizing and Risk Limits
 

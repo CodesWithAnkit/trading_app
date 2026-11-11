@@ -2,6 +2,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SignalsController } from './signals.controller.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { Subject } from 'rxjs';
+import { RiskService } from '../risk/risk.service.js';
+
+const USER = { id: 'user-1', email: null, exp: Math.floor(Date.now() / 1000) + 3600 } as any;
+const riskServiceMock = {
+  changes$: new Subject<{ userId: string }>(),
+  contextFor: vi.fn().mockResolvedValue({ limits: { riskPerTrade: 1500, dailyLossLimit: 6000, maxOpenTrades: 3, maxCapitalPerTrade: 50000 }, realizedLossToday: 0, openRisk: 0, openCount: 0, dailyRoom: 6000 }),
+  withRisk: (signals: any[]) => signals,
+  notify: vi.fn(),
+};
+
 
 describe('SignalsController', () => {
   let controller: SignalsController;
@@ -37,6 +48,7 @@ describe('SignalsController', () => {
       controllers: [SignalsController],
       providers: [
         { provide: SupabaseService, useValue: mockSupabaseService },
+        { provide: RiskService, useValue: riskServiceMock },
       ],
     }).compile();
 
@@ -46,7 +58,7 @@ describe('SignalsController', () => {
   describe('getSignals', () => {
     it('returns empty array if no signals', async () => {
       mockQueryBuilder.then.mockImplementationOnce((resolve) => resolve({ data: [], error: null }));
-      const result = await controller.getSignals();
+      const result = await controller.getSignals(USER);
       expect(mockFrom).toHaveBeenCalledWith('signals');
       expect(mockSelect).toHaveBeenCalledWith('*');
       expect(result).toEqual({ data: [], meta: { total: 0 } });
@@ -54,7 +66,7 @@ describe('SignalsController', () => {
 
     it('filters by status if provided', async () => {
       mockQueryBuilder.then.mockImplementationOnce((resolve) => resolve({ data: [{ id: '1', status: 'ACTIVE' }], error: null }));
-      const result = await controller.getSignals('ACTIVE');
+      const result = await controller.getSignals(USER, 'ACTIVE');
       expect(mockQueryBuilder.eq).toHaveBeenCalledWith('status', 'ACTIVE');
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
@@ -62,31 +74,33 @@ describe('SignalsController', () => {
 
     it('throws 500 on db error', async () => {
       mockQueryBuilder.then.mockImplementationOnce((resolve) => resolve({ data: null, error: { message: 'db error' } }));
-      await expect(controller.getSignals()).rejects.toThrow(HttpException);
+      await expect(controller.getSignals(USER)).rejects.toThrow(HttpException);
     });
 
     it('throws 500 if database not configured', async () => {
       (mockSupabaseService as any).client = null;
-      await expect(controller.getSignals()).rejects.toThrow(HttpException);
+      await expect(controller.getSignals(USER)).rejects.toThrow(HttpException);
     });
   });
 
   describe('getSignalById', () => {
     it('returns single signal', async () => {
       mockQueryBuilder.single.mockResolvedValueOnce({ data: { id: 'test-1' }, error: null });
-      const result = await controller.getSignalById('test-1');
+      const result = await controller.getSignalById(USER, 'test-1');
       expect(mockQueryBuilder.eq).toHaveBeenCalledWith('id', 'test-1');
-      expect(result).toEqual({ id: 'test-1' });
+      // spec 0028 AC-6: the caller's verdict is attached; a row with no stop is skipped.
+      expect(result).toMatchObject({ id: 'test-1', risk: { verdict: 'SKIP', skipReason: 'STOP_INVALID' } });
+      expect(riskServiceMock.contextFor).toHaveBeenCalledWith('user-1');
     });
 
     it('throws 404 on db error', async () => {
       mockQueryBuilder.single.mockResolvedValueOnce({ data: null, error: { message: 'not found' } });
-      await expect(controller.getSignalById('test-1')).rejects.toThrow(HttpException);
+      await expect(controller.getSignalById(USER, 'test-1')).rejects.toThrow(HttpException);
     });
 
     it('throws 500 if database not configured', async () => {
       (mockSupabaseService as any).client = null;
-      await expect(controller.getSignalById('test-1')).rejects.toThrow(HttpException);
+      await expect(controller.getSignalById(USER, 'test-1')).rejects.toThrow(HttpException);
     });
   });
 });

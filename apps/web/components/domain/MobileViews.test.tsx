@@ -90,13 +90,14 @@ describe("SignalCard mobile 3-column grid, evidence chips, and stale lock (AC-4,
     expect(screen.getByText("RVOL 2.8x (10d 15m)")).toBeInTheDocument()
     expect(screen.getByText("VWAP Held ₹155.90")).toBeInTheDocument()
     expect(screen.getByText("Metals +1.8%")).toBeInTheDocument()
-    expect(screen.getByText("Risk Gate: PASS")).toBeInTheDocument()
+    // spec 0028: the fixed "Risk Gate: PASS" chip is gone; the real verdict renders instead.
+    expect(screen.queryByText("Risk Gate: PASS")).not.toBeInTheDocument()
   })
 
-  it("locks I Entered button and applies degraded border when isLocked is true (AC-9)", () => {
+  it("locks the Take this trade button and applies degraded border when isLocked is true (AC-9)", () => {
     const onEnter = vi.fn()
     render(<SignalCard signal={sampleSignal} isLocked={true} onEnterClick={onEnter} />)
-    const enterBtn = screen.getByRole("button", { name: /I Entered/i })
+    const enterBtn = screen.getByRole("button", { name: /Take this trade/i })
     expect(enterBtn).toBeDisabled()
     fireEvent.click(enterBtn)
     expect(onEnter).not.toHaveBeenCalled()

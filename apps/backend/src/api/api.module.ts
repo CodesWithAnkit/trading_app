@@ -7,9 +7,10 @@ import { CandlesController } from './candles.controller.js';
 import { ScannerController } from './scanner.controller.js';
 import { JournalController } from './journal.controller.js';
 import { ScannerModule } from '../scanner/scanner.module.js';
+import { RiskModule } from '../risk/risk.module.js';
 
 @Module({
-  imports: [ScannerModule],
+  imports: [ScannerModule, RiskModule],
   controllers: [SignalsController, TradesController, MarketController, ScannerDiagnosticsController, CandlesController, ScannerController, JournalController],
 })
 export class ApiModule {}

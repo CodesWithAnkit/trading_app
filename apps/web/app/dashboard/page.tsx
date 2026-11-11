@@ -18,17 +18,20 @@ import { RiskCapitalGuard } from "@/components/domain/RiskCapitalGuard"
 import { MobilePositionCard } from "@/components/domain/MobilePositionCard"
 import { MobileSectorHeatGrid } from "@/components/domain/MobileSectorHeatGrid"
 import { PreTradeDisciplineGate } from "@/components/domain/PreTradeDisciplineGate"
-import { TradeEntryModal } from "@/components/domain/TradeEntryModal"
-import { TradeExitModal } from "@/components/domain/TradeExitModal"
+import { TakeTradeDialog } from "@/components/domain/TakeTradeDialog"
+import { CloseTradeDialog } from "@/components/domain/CloseTradeDialog"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { type Signal } from "@/mock/signals"
 import { type Trade } from "@/mock/trades"
 
 export default function DashboardPage() {
-  const { activeSignals, closedSignals, approachingSignals, momentum, watchingCount, streamStatus, hydrated } = useSignals()
-  const { openTrades, addTrade, addTradeLeg, updateTradeStopLoss } = useTrades()
+  const { activeSignals, closedSignals, approachingSignals, momentum, watchingCount, streamStatus, hydrated, riskContext } = useSignals()
+  const { openTrades, updateTradeStopLoss } = useTrades()
   const { marketState, marketStatus, instruments } = useDashboardState()
-  const { dailyRiskBudget, brokerConnected } = useSettings()
+  const { brokerConnected } = useSettings()
+  // spec 0028: limits and today's loss come from the risk API, never a local default.
+  const dailyLossLimit = riskContext?.limits.dailyLossLimit
+  const realizedLossToday = riskContext?.realizedLossToday ?? 0
   const { data: intelData, isStale, isDisconnected, refresh: refreshIntelligence } = useMarketIntelligence()
   const watching = watchingCount || instruments.length
 
@@ -67,37 +70,8 @@ export default function DashboardPage() {
     setTimeout(() => setIsRescanning(false), 800)
   }
 
-  const handleConfirmEntry = (quantity: number, entryPrice: number) => {
-    if (!entrySignal) return
-    const nowIso = new Date().toISOString()
-    addTrade({
-      id: `trd_${Date.now()}`,
-      signalId: entrySignal.id,
-      symbol: entrySignal.symbol,
-      direction: entrySignal.direction,
-      status: "OPEN",
-      quantity,
-      entryPrice,
-      stopLoss: entrySignal.stop,
-      target1: entrySignal.targets.t1,
-      legs: [
-        {
-          id: `leg_${Date.now()}`,
-          action: "ENTRY",
-          price: entryPrice,
-          quantity,
-          timestamp: nowIso,
-        },
-      ],
-      notes: `Logged from ${entrySignal.setup}`,
-      createdAt: nowIso,
-    })
-  }
 
-  const handleConfirmExit = (quantity: number, exitPrice: number, isFullExit: boolean) => {
-    if (!exitTrade) return
-    addTradeLeg(exitTrade.id, isFullExit ? "EXIT" : "PARTIAL_EXIT", exitPrice, quantity)
-  }
+
 
   const handleOpenAdjustSl = (trade: Trade) => {
     const isLong = trade.direction === "LONG"
@@ -175,7 +149,7 @@ export default function DashboardPage() {
           <MarketRegimeStrip data={regimePropData} />
         </div>
         <div className="xl:col-span-5">
-          <RiskCapitalGuard maxDailyLoss={dailyRiskBudget || 6000} />
+          {dailyLossLimit !== undefined && <RiskCapitalGuard maxDailyLoss={dailyLossLimit} />}
         </div>
       </div>
 
@@ -553,27 +527,17 @@ export default function DashboardPage() {
       {/* MOBILE SECTION 8: Pre-Trade Discipline Gate & Checklist — Stitch 5780553391039865460 */}
       <div className="lg:hidden">
         <PreTradeDisciplineGate
-          maxDailyLoss={dailyRiskBudget || 6000}
-          lossDrawn={0}
+          maxDailyLoss={dailyLossLimit ?? 0}
+          lossDrawn={realizedLossToday}
           brokerConnected={brokerConnected !== false && !isFeedLocked}
           providerLabel={isAngelOne ? "Angel One SmartAPI connected" : "Angel One SmartAPI connected"}
         />
       </div>
 
       {/* Modals / Bottom Sheets */}
-      <TradeEntryModal
-        signal={entrySignal}
-        isOpen={!!entrySignal}
-        onClose={() => setEntrySignal(null)}
-        onSubmit={handleConfirmEntry}
-      />
+      <TakeTradeDialog signal={entrySignal} onClose={() => setEntrySignal(null)} />
 
-      <TradeExitModal
-        trade={exitTrade}
-        isOpen={!!exitTrade}
-        onClose={() => setExitTrade(null)}
-        onSubmit={handleConfirmExit}
-      />
+      <CloseTradeDialog trade={exitTrade} onClose={() => setExitTrade(null)} />
 
       <Dialog open={!!adjustSlTrade} onOpenChange={open => !open && setAdjustSlTrade(null)}>
         <DialogContent className="bg-surface border-border-subtle text-text-primary">

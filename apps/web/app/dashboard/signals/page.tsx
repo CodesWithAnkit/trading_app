@@ -2,17 +2,15 @@
 
 import * as React from "react"
 import { useSignals } from "@/lib/contexts/SignalContext"
-import { useTrades } from "@/lib/contexts/TradeContext"
 import { useDashboardState } from "@/lib/contexts/DashboardContext"
 import { useMarketIntelligence } from "@/lib/hooks/useMarketIntelligence"
 import { SignalCard } from "@/components/domain/SignalCard"
-import { TradeEntryModal } from "@/components/domain/TradeEntryModal"
+import { TakeTradeDialog } from "@/components/domain/TakeTradeDialog"
 import { type Signal } from "@/mock/signals"
 import { Bell, Inbox } from "lucide-react"
 
 export default function SignalsPage() {
   const { activeSignals, expiredSignals } = useSignals()
-  const { addTrade } = useTrades()
   const { marketState } = useDashboardState()
   const { isStale, isDisconnected } = useMarketIntelligence()
   const [activeTab, setActiveTab] = React.useState<"all" | "long" | "short">("all")
@@ -25,32 +23,6 @@ export default function SignalsPage() {
 
   const signalsToRender = activeTab === "long" ? longSignals : activeTab === "short" ? shortSignals : activeSignals
 
-  const handleConfirmEntry = (quantity: number, entryPrice: number) => {
-    if (!entrySignal) return
-    const nowIso = new Date().toISOString()
-    addTrade({
-      id: `trd_${Date.now()}`,
-      signalId: entrySignal.id,
-      symbol: entrySignal.symbol,
-      direction: entrySignal.direction,
-      status: "OPEN",
-      quantity,
-      entryPrice,
-      stopLoss: entrySignal.stop,
-      target1: entrySignal.targets.t1,
-      legs: [
-        {
-          id: `leg_${Date.now()}`,
-          action: "ENTRY",
-          price: entryPrice,
-          quantity,
-          timestamp: nowIso,
-        },
-      ],
-      notes: `Logged from ${entrySignal.setup}`,
-      createdAt: nowIso,
-    })
-  }
 
   return (
     <div className="flex flex-col gap-3 sm:gap-margin px-gutter sm:px-gutter-md py-2 sm:py-space-md w-full">
@@ -156,13 +128,7 @@ export default function SignalsPage() {
           </div>
         </div>
       )}
-
-      <TradeEntryModal
-        signal={entrySignal}
-        isOpen={!!entrySignal}
-        onClose={() => setEntrySignal(null)}
-        onSubmit={handleConfirmEntry}
-      />
+      <TakeTradeDialog signal={entrySignal} onClose={() => setEntrySignal(null)} />
     </div>
   )
 }

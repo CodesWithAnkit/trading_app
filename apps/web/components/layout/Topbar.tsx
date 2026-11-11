@@ -7,6 +7,8 @@ import { useMarketIntelligence } from "@/lib/hooks/useMarketIntelligence"
 import { SymbolSearch } from "@/components/domain/SymbolSearch"
 import { useNow } from "@/lib/useNow"
 import { AccountMenu } from "@/components/layout/AccountMenu"
+import { useSignals } from "@/lib/contexts/SignalContext"
+import { formatInr } from "@/lib/risk/labels"
 
 function resolveRouteTitle(pathname: string): string {
   if (pathname === "/dashboard" || pathname === "/") return "Dashboard"
@@ -50,6 +52,11 @@ export function Topbar() {
   const { marketState, marketStatus, instruments } = useDashboardState()
   const { data: intelData, feedLatencyMs, isStale, isDisconnected } = useMarketIntelligence()
   const nowMs = useNow(1_000)
+  // spec 0028: today's used loss room (realized loss + open risk) out of the daily limit.
+  const { riskContext } = useSignals()
+  const riskUsed = riskContext ? riskContext.realizedLossToday + riskContext.openRisk : null
+  const riskLimit = riskContext?.limits.dailyLossLimit ?? null
+  const riskPct = riskUsed !== null && riskLimit ? Math.round((riskUsed / riskLimit) * 1000) / 10 : null
 
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false)
   const [isMenuSheetOpen, setIsMenuSheetOpen] = React.useState(false)
@@ -65,6 +72,16 @@ export function Topbar() {
   const isConnected = (marketState === "LIVE" || marketStatus?.sessionState === "OPEN") && !isDisconnected && marketState !== "DISCONNECTED"
   const isDelayed = marketState === "DELAYED" || isStale
   const isAngelOne = marketStatus?.providerType === "ANGEL_ONE"
+  // The data is real (signals, outcomes, journal); this badge says how fresh the market feed is.
+  const feedBadge = !marketStatus
+    ? { label: "Connecting…", title: "Waiting for the market feed status", className: "bg-surface-container text-text-secondary border-border-subtle" }
+    : isDisconnected || marketState === "DISCONNECTED"
+      ? { label: "Feed offline", title: "No live market ticks; prices may be old", className: "bg-status-disconnected-bg text-status-disconnected-text border-border-subtle" }
+      : isStale || marketState === "DELAYED"
+        ? { label: "Feed delayed", title: "Market ticks are arriving late", className: "bg-status-delayed-bg text-status-delayed-text border-border-subtle" }
+        : isAngelOne
+          ? { label: "Live · Angel One", title: "Live ticks from Angel One SmartAPI", className: "bg-status-live-bg text-status-live-text border-accent-bullish/30" }
+          : { label: "No live feed", title: `Market data provider: ${marketStatus.providerType}`, className: "bg-surface-container text-text-secondary border-border-subtle" }
 
   const displayLatencyMs = Math.min(999, Math.max(8, intelData?.feedLatencyMs ?? Math.min(feedLatencyMs, 42)))
   const routeTitle = resolveRouteTitle(pathname)
@@ -255,12 +272,11 @@ export function Topbar() {
                 <span className="font-headline-sm text-headline-sm text-text-primary tracking-tight font-bold">
                   Intraday Stock Tracker
                 </span>
-                <span className={`px-1.5 py-0.5 rounded font-label-code text-label-code font-semibold uppercase border ${
-                  isAngelOne
-                    ? "bg-status-live-bg text-status-live-text border-accent-bullish/30"
-                    : "bg-surface-container text-primary border-border-subtle"
-                }`}>
-                  {isAngelOne ? "LIVE SMARTAPI" : "SIMULATED DATA (PHASE 1-3)"}
+                <span
+                  className={`px-1.5 py-0.5 rounded font-label-code text-label-code font-semibold uppercase border ${feedBadge.className}`}
+                  title={feedBadge.title}
+                >
+                  {feedBadge.label}
                 </span>
               </div>
             </div>
@@ -358,11 +374,13 @@ export function Topbar() {
           <div className="flex items-center gap-space-sm bg-surface px-space-md py-1 rounded border border-border-subtle">
             <span className="material-symbols-outlined text-[16px] text-accent-bearish">shield_with_heart</span>
             <span className="font-label-code text-label-code uppercase text-text-secondary">Daily Risk:</span>
-            <span className="font-metric-sm text-metric-sm font-semibold text-text-primary">₹2,450</span>
-            <span className="font-label-code text-label-code text-text-secondary">/ ₹6,000</span>
-            <span className="font-label-code text-label-code font-bold text-accent-bearish bg-status-stale-bg px-1 rounded">
-              (40.8%)
-            </span>
+            <span className="font-metric-sm text-metric-sm font-semibold text-text-primary">{riskUsed !== null ? formatInr(riskUsed) : "—"}</span>
+            <span className="font-label-code text-label-code text-text-secondary">/ {riskLimit !== null ? formatInr(riskLimit) : "—"}</span>
+            {riskPct !== null && (
+              <span className="font-label-code text-label-code font-bold text-accent-bearish bg-status-stale-bg px-1 rounded">
+                ({riskPct}%)
+              </span>
+            )}
           </div>
         </div>
       </div>

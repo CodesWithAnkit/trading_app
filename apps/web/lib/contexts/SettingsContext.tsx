@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react"
 
+/** Local UI settings only. Risk limits live in the API (spec 0028, `/api/v1/settings/risk`). */
 export interface SettingsState {
-  dailyRiskBudget: number
   theme: "light" | "dark" | "system"
   brokerConnected: boolean
 }
@@ -16,7 +16,6 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<SettingsState>({
-    dailyRiskBudget: 3000,
     theme: "system",
     brokerConnected: true,
   })

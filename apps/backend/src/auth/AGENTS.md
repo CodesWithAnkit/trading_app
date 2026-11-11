@@ -17,6 +17,7 @@ Supabase sign in, enforced on every NestJS route. Governing spec: [0021](../../.
   - Import `AuthUser` with `import type` in decorated signatures (`isolatedModules` + `emitDecoratorMetadata`).
   - CORS allows only `WEB_ORIGIN` (comma separated) with `Authorization, Content-Type` headers (`main.ts`).
   - Internal callers (scheduler, CLIs) do not go through HTTP, so the guard does not affect them.
+  - The backend's Supabase client uses the service role, which bypasses RLS. Any route reading or writing per user rows (journal, settings) takes `@CurrentUser()` and filters by `user.id` in code; set `user_id` from the token, never from the request body.
 
 - **Env:** `SUPABASE_URL`, `SUPABASE_JWKS_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `WEB_ORIGIN`.
 

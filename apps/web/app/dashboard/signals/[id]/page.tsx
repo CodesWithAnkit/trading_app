@@ -6,7 +6,8 @@ import { ExpiryTimer } from "@/components/domain/ExpiryTimer"
 import { CandlestickChart } from "@/components/domain/CandlestickChart"
 import { ArrowUpRight, ArrowDownRight, ArrowLeft, Clock, ShieldAlert, BookOpen, AlertTriangle } from "lucide-react"
 import Link from "next/link"
-import { TradeEntryModal } from "@/components/domain/TradeEntryModal"
+import { TakeTradeDialog } from "@/components/domain/TakeTradeDialog"
+import { RiskVerdict } from "@/components/domain/RiskVerdict"
 
 export default function SignalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
@@ -22,23 +23,6 @@ export default function SignalDetailPage({ params }: { params: Promise<{ id: str
   const isLong = signal.direction === "LONG"
   const isExpiredOrInvalidated = signal.status === "EXPIRED" || signal.status === "INVALIDATED"
   const isActionable = signal.status === "ACTIVE" || signal.status === "EXPIRING"
-
-  const handleTradeEntrySubmit = (quantity: number, entryPrice: number) => {
-    // Handled in modal or via context update in a real flow.
-    // For now we just close and mock alert.
-    alert(`Mock Journal Recorded: ${quantity} shares at ₹${entryPrice}`)
-    setIsEntryModalOpen(false)
-  }
-
-  const validateRisk = (qty: number) => {
-    const riskPerShare = Math.abs(signal.price - signal.stop)
-    const calculatedRisk = qty * riskPerShare
-    const budget = 3000
-    if (calculatedRisk > budget) {
-      return { valid: false, calculatedRisk, safeQuantity: Math.floor(budget / riskPerShare) }
-    }
-    return { valid: true, calculatedRisk, safeQuantity: qty }
-  }
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
@@ -152,6 +136,9 @@ export default function SignalDetailPage({ params }: { params: Promise<{ id: str
                 </div>
               )}
               
+              {/* spec 0028 AC-6: this user's size or skip reason. */}
+              {isActionable && <RiskVerdict verdict={signal.risk} />}
+
               <div className="mt-2 p-3 rounded-md bg-info-soft border border-info/20 flex items-start gap-2 text-info">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span className="text-xs font-medium leading-tight">
@@ -211,13 +198,7 @@ export default function SignalDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {isEntryModalOpen && (
-        <TradeEntryModal 
-          signal={signal} 
-          isOpen={isEntryModalOpen} 
-          onClose={() => setIsEntryModalOpen(false)} 
-          onSubmit={handleTradeEntrySubmit}
-          onValidateRisk={validateRisk}
-        />
+        <TakeTradeDialog signal={isEntryModalOpen ? signal : null} onClose={() => setIsEntryModalOpen(false)} />
       )}
     </div>
   )

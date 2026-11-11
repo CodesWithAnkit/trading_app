@@ -5,6 +5,16 @@ import { ScannerService } from '../scanner/scanner.service.js';
 import { Subject, firstValueFrom, take, toArray } from 'rxjs';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { RiskService } from '../risk/risk.service.js';
+
+const USER = { id: 'user-1', email: null, exp: Math.floor(Date.now() / 1000) + 3600 } as any;
+const riskServiceMock = {
+  changes$: new Subject<{ userId: string }>(),
+  contextFor: vi.fn().mockResolvedValue({ limits: { riskPerTrade: 1500, dailyLossLimit: 6000, maxOpenTrades: 3, maxCapitalPerTrade: 50000 }, realizedLossToday: 0, openRisk: 0, openCount: 0, dailyRoom: 6000 }),
+  withRisk: (signals: any[]) => signals,
+  notify: vi.fn(),
+};
+
 
 describe('ScannerController', () => {
   let controller: ScannerController;
@@ -38,6 +48,7 @@ describe('ScannerController', () => {
           useValue: supabaseServiceMock,
         },
         { provide: ScannerService, useValue: scannerServiceMock },
+        { provide: RiskService, useValue: riskServiceMock },
       ],
     }).compile();
 
@@ -84,7 +95,7 @@ describe('ScannerController', () => {
 
     supabaseServiceMock.client.gte.mockResolvedValue({ data: mockData, error: null });
 
-    const result = await controller.getTopSetups();
+    const result = await controller.getTopSetups(USER);
 
     expect(result.data).toHaveLength(2);
     // Assert sorting by confidence descending
@@ -101,15 +112,15 @@ describe('ScannerController', () => {
   it('handles database errors gracefully', async () => {
     supabaseServiceMock.client.gte.mockResolvedValue({ data: null, error: { message: 'DB Error' } });
 
-    await expect(controller.getTopSetups()).rejects.toThrow(HttpException);
-    await expect(controller.getTopSetups()).rejects.toThrow('DB Error');
+    await expect(controller.getTopSetups(USER)).rejects.toThrow(HttpException);
+    await expect(controller.getTopSetups(USER)).rejects.toThrow('DB Error');
   });
 
   it('throws when database is not configured', async () => {
     supabaseServiceMock.client = null;
     
-    await expect(controller.getTopSetups()).rejects.toThrow(HttpException);
-    await expect(controller.getTopSetups()).rejects.toThrow('Database not configured');
+    await expect(controller.getTopSetups(USER)).rejects.toThrow(HttpException);
+    await expect(controller.getTopSetups(USER)).rejects.toThrow('Database not configured');
   });
 
   it('lists every open plan first, then closed plans newest exit first, with exit fields (covers 0010 AC-8)', async () => {
@@ -128,7 +139,7 @@ describe('ScannerController', () => {
       error: null
     });
 
-    const result = await controller.getTopSetups();
+    const result = await controller.getTopSetups(USER);
 
     expect(result.data.map(s => s.id)).toEqual(['open-high', 'open-low', 'closed-late', 'closed-early']);
     expect(result.data[2]).toMatchObject({ status: 'TARGET_HIT', exitReason: 'TARGET', exitPrice: 102.1, exitAt: '2026-09-30T06:00:00Z' });
@@ -142,7 +153,7 @@ describe('ScannerController', () => {
     }));
     supabaseServiceMock.client.gte.mockResolvedValue({ data: rows, error: null });
 
-    const result = await controller.getTopSetups();
+    const result = await controller.getTopSetups(USER);
 
     expect(result.data).toHaveLength(12);
   });
@@ -150,7 +161,7 @@ describe('ScannerController', () => {
   it('includes approaching setups when requested (covers 0009 AC-3)', async () => {
     supabaseServiceMock.client.gte.mockResolvedValue({ data: [], error: null });
 
-    const result: any = await controller.getTopSetups('approaching');
+    const result: any = await controller.getTopSetups(USER, 'approaching');
 
     expect(result.data).toEqual([]);
     expect(result.approaching).toEqual([{ symbol: 'TCS', closestDistancePct: 0.4 }]);
@@ -189,7 +200,7 @@ describe('ScannerController', () => {
       limit: vi.fn().mockResolvedValue({ data: [], error: null }),
     };
 
-    await expect(controller.getAnalysis('reliance')).rejects.toMatchObject({ status: 404 });
+    await expect(controller.getAnalysis(USER, 'reliance')).rejects.toMatchObject({ status: 404 });
     expect(supabaseServiceMock.client.eq).toHaveBeenCalledWith('snapshot_json->>symbol', 'RELIANCE');
   });
 

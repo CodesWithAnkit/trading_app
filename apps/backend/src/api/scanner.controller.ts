@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpException, HttpStatus, MessageEvent, Param, Post, Query, Sse } from '@nestjs/common';
-import { interval, map, merge, Observable, of, takeUntil, timer } from 'rxjs';
+import { filter, interval, map, merge, Observable, of, takeUntil, timer } from 'rxjs';
 import { CurrentUser, SseAuth } from '../auth/decorators.js';
 import type { AuthUser } from '../auth/decorators.js';
 import { SupabaseService } from '../supabase/supabase.service.js';
@@ -7,6 +7,7 @@ import { ScannerService } from '../scanner/scanner.service.js';
 import { toApiSignal } from '../scanner/signalMapper.js';
 import { reconcileOutcomes } from '../scanner/outcomes/reconcileOutcomes.js';
 import { istDateString, istDayRange, isValidDateString } from '../scanner/time/ist.js';
+import { RiskService } from '../risk/risk.service.js';
 
 const SSE_HEARTBEAT_MS = 25_000;
 
@@ -15,10 +16,11 @@ export class ScannerController {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly scanner: ScannerService,
+    private readonly risk: RiskService,
   ) {}
 
   @Get('top-setups')
-  async getTopSetups(@Query('include') include?: string) {
+  async getTopSetups(@CurrentUser() user: AuthUser, @Query('include') include?: string) {
     const client = this.requireClient();
     const { dayStart } = istDayRange(istDateString());
 
@@ -40,7 +42,9 @@ export class ScannerController {
       data = [...open, ...closed].slice(0, 200);
     }
 
-    const signals = (data || []).map(toApiSignal);
+    // spec 0028 AC-6: each signal carries the caller's verdict (one context load per request).
+    const rows = data || [];
+    const signals = this.risk.withRisk(rows.map(toApiSignal), rows, await this.risk.contextFor(user.id));
     if (include === 'approaching') {
       return { data: signals, approaching: this.scanner.getApproachingSetups() };
     }
@@ -74,14 +78,19 @@ export class ScannerController {
       { type: 'momentum:update', data: { watching: this.scanner.latestTicks.size, stocks: this.scanner.getMomentumRanking() } },
     );
     const live = this.scanner.events$.pipe(map((event): MessageEvent => ({ type: event.type, data: event.data })));
+    // spec 0028 AC-7: risk changes go only to this user's streams, with no data (the web refetches).
+    const riskChanged = this.risk.changes$.pipe(
+      filter(e => e.userId === user.id),
+      map((): MessageEvent => ({ type: 'risk:changed', data: {} })),
+    );
     const heartbeat = interval(SSE_HEARTBEAT_MS).pipe(map((): MessageEvent => ({ type: 'heartbeat', data: '' })));
     // spec 0021 AC-6: end the stream when the user's token expires; the web reconnects with a new ticket.
     const untilExpiry = timer(Math.max(0, user.exp * 1000 - Date.now()));
-    return merge(snapshot, live, heartbeat).pipe(takeUntil(untilExpiry));
+    return merge(snapshot, live, riskChanged, heartbeat).pipe(takeUntil(untilExpiry));
   }
 
   @Get('analysis/:symbol')
-  async getAnalysis(@Param('symbol') rawSymbol: string) {
+  async getAnalysis(@CurrentUser() user: AuthUser, @Param('symbol') rawSymbol: string) {
     const client = this.requireClient();
     const symbol = rawSymbol.toUpperCase();
     const { dayStart } = istDayRange(istDateString());
@@ -98,7 +107,9 @@ export class ScannerController {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    const signal = data?.[0] ? toApiSignal(data[0]) : undefined;
+    const signal = data?.[0]
+      ? this.risk.withRisk([toApiSignal(data[0])], [data[0]], await this.risk.contextFor(user.id))[0]
+      : undefined;
     const approaching = this.scanner.getApproachingSetup(symbol);
     if (!signal && !approaching) {
       throw new HttpException(`No signal or approaching setup for ${symbol} today`, HttpStatus.NOT_FOUND);

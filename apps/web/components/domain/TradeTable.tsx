@@ -2,19 +2,20 @@
 import * as React from "react"
 import { type Trade } from "@/mock/trades"
 import Link from "next/link"
-import { useTrades } from "@/lib/contexts/TradeContext"
 import { MobilePositionCard } from "./MobilePositionCard"
 
 export function TradeTable({
   trades,
   onAuditClick,
+  onCloseClick,
   isLocked = false,
 }: {
   trades: Trade[]
   onAuditClick?: (trade: Trade) => void
+  /** spec 0028: opens the close dialog (real exit price, server side P&L). */
+  onCloseClick?: (trade: Trade) => void
   isLocked?: boolean
 }) {
-  const { addTradeLeg } = useTrades()
   const [selectedTradeIds, setSelectedTradeIds] = React.useState<string[]>([])
   const [toast, setToast] = React.useState<{ message: string; type: "success" | "error" } | null>(null)
 
@@ -37,34 +38,14 @@ export function TradeTable({
     }
   }
 
+  // spec 0028: every close needs the real exit price, so a bulk close can no longer invent one
+  // (it used entry × 1.01). Close each selected trade with its own exit price instead.
   const handleBulkClose = () => {
-    let successCount = 0
-    let failedCount = 0
-    const failedIds: string[] = []
-
-    selectedTradeIds.forEach(id => {
-      const trade = trades.find(t => t.id === id)
-      if (trade && trade.status === "OPEN") {
-        try {
-          const ltp = trade.entryPrice * 1.01 // Mock LTP
-          addTradeLeg(id, "EXIT", ltp, trade.quantity)
-          successCount++
-        } catch (error) {
-          failedCount++
-          failedIds.push(id)
-        }
-      }
+    setToast({
+      message: `Close each trade with its real exit price (${selectedTradeIds.length} selected). Use the Close button on each row.`,
+      type: "error",
     })
-
-    setSelectedTradeIds(failedIds)
-    
-    if (failedCount > 0) {
-      setToast({ message: `Closed ${successCount} trades. ${failedCount} failed.`, type: "error" })
-    } else {
-      setToast({ message: `Successfully closed ${successCount} trades.`, type: "success" })
-    }
-    
-    setTimeout(() => setToast(null), 3000)
+    setTimeout(() => setToast(null), 4000)
   }
 
   if (trades.length === 0) {
@@ -163,6 +144,11 @@ export function TradeTable({
                       <span className="text-xs text-text-secondary font-medium">
                         NSE Cash · {trade.notes ? "Has Notes" : "Standard Setup"}
                       </span>
+                      {(trade.flags ?? []).map(f => (
+                        <span key={f} className="mt-1 self-start rounded-full border border-status-stale-text/40 bg-status-stale-bg px-2 py-0.5 text-[11px] font-semibold text-status-stale-text">
+                          {f === "NO_QUANTITY" ? "No quantity" : "Check direction"}
+                        </span>
+                      ))}
                     </div>
                   </td>
                   <td className="py-3 px-3 text-center">
@@ -190,7 +176,9 @@ export function TradeTable({
                     {isOpen ? (
                       <span className="text-[10px] uppercase font-bold tracking-wider text-primary border border-primary bg-primary-fixed/40 px-1.5 py-0.5 rounded">Open</span>
                     ) : (
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-text-secondary border border-border-subtle bg-surface-high px-1.5 py-0.5 rounded">Closed</span>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-text-secondary border border-border-subtle bg-surface-high px-1.5 py-0.5 rounded">
+                        {trade.journalStatus === "WON" ? "Won" : trade.journalStatus === "LOST" ? "Lost" : trade.journalStatus === "CANCELLED" ? "Cancelled" : "Closed"}
+                      </span>
                     )}
                   </td>
                   <td className="py-3 px-3 text-right tabular-nums">
@@ -220,6 +208,15 @@ export function TradeTable({
                           onClick={() => onAuditClick(trade)}
                           className="h-8 px-3 rounded-md bg-surface border border-border-subtle hover:bg-surface-high text-text-primary text-xs font-bold transition-colors">
                           Audit
+                        </button>
+                      )}
+ {isOpen && onCloseClick && (
+                        <button
+                          type="button"
+                          disabled={isLocked}
+                          onClick={() => onCloseClick(trade)}
+                          className="h-8 px-3 rounded-md bg-surface border border-border-subtle hover:bg-surface-high text-text-primary text-xs font-bold transition-colors disabled:opacity-50">
+                          Close
                         </button>
                       )}
                       {isOpen ? (

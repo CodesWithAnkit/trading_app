@@ -5,6 +5,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useNow } from "@/lib/useNow"
 import { NewsGateBadges } from "./NewsGateBadges"
+import { RiskVerdict } from "./RiskVerdict"
 
 /** Whole minutes until the entry window closes (rounded up), or null before the client clock is known. */
 export function minutesLeft(expiresAt: string, now: number | null): number | null {
@@ -142,6 +143,9 @@ export function SignalCard({
           </div>
         </div>
 
+        {/* spec 0028 AC-6: take N shares, or skip with the reason. */}
+        {isActive && <RiskVerdict verdict={signal.risk} className="mb-space-sm" />}
+
         {/* Deterministic Validated Evidence Chips */}
         <div className="bg-canvas p-2 rounded-lg space-y-1.5 mb-space-sm">
           <div className="flex items-center justify-between">
@@ -168,9 +172,6 @@ export function SignalCard({
             )}>
               {sectorChip}
             </span>
-            <span className="font-label-code text-label-code bg-status-live-bg text-status-live-text font-bold px-1.5 py-0.5 rounded">
-              Risk Gate: PASS
-            </span>
           </div>
         </div>
       </div>
@@ -188,11 +189,11 @@ export function SignalCard({
           type="button"
           disabled={!isActive}
           onClick={() => onEnterClick?.(signal)}
-          title={isLocked ? "Execution locked while market feed is delayed or disconnected" : "Mark that you took this trade in Angel One"}
+          title={isLocked ? "Execution locked while market feed is delayed or disconnected" : "Record in your journal that you took this trade in Angel One"}
           className="min-h-[36px] px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-high text-text-primary font-headline-sm text-headline-sm font-semibold shadow-sm flex items-center justify-center gap-1 border border-border-subtle transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
         >
           <span className="material-symbols-outlined text-[15px] text-accent-bullish" aria-hidden="true">check_circle</span>
-          <span>I Entered</span>
+          <span>Take this trade</span>
         </button>
       </div>
     </article>

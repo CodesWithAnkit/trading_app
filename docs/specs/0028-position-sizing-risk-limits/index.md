@@ -1,7 +1,7 @@
 # 0028. Position sizing and risk limits
 
 **Date**: 2026-11-11
-**Status**: Proposed
+**Status**: In Progress
 
 ## Summary
 
@@ -123,13 +123,13 @@ Reasoning and options: see [rationale.md](rationale.md).
 
 Tracer Bullet: settings to verdict to card first, then real P&L, then live refresh.
 
-1. Migration: settings columns and checks, journal columns, backfill, the index. Satisfies **AC-1**, **AC-9**, **AC-11**
-2. Pure `sizeSignal(signal, ctx)` in `apps/backend/src/risk/sizing.ts` with unit tests for every rule and skip order. Satisfies **AC-2**, **AC-3**, **AC-4**, **AC-5**
-3. Thin thread: `RiskModule` (settings GET/PATCH with merged row validation and upsert, `RiskService.contextFor(userId)`, `/risk/context`); `@CurrentUser` on signals list, detail and `top-setups`, with `risk` attached; signal cards show Take or Skip. Satisfies **AC-1**, **AC-6**, **AC-12**
-4. Journal: scope GET and POST by JWT `user_id`; direction, quantity, signal id on POST; new PATCH close with the conditional update, exit price and server P&L; "no quantity" and "check direction" flags in the journal list. Satisfies **AC-9**, **AC-11**, **AC-12**
-5. Context from journal: realized loss today (net, IST day) and open risk feed the verdicts; daily reset by IST. Satisfies **AC-4**, **AC-5**, **AC-8**
-6. Live refresh: per user `risk$` subject merged into `stream()` filtered by ticket user; `risk:changed` after journal and settings writes; web refetch debounced 500 ms. Satisfies **AC-7**
-7. "Take this trade" prefill from cards; Settings page wired to `/settings/risk`, `SettingsContext.dailyRiskBudget` removed, mock gates removed. Satisfies **AC-1**, **AC-10**
+1. [x] Migration: settings columns and checks, journal columns, backfill, the index. Satisfies **AC-1**, **AC-9**, **AC-11**
+2. [x] Pure `sizeSignal(signal, ctx)` in `apps/backend/src/risk/sizing.ts` with unit tests for every rule and skip order. Satisfies **AC-2**, **AC-3**, **AC-4**, **AC-5**
+3. [x] Thin thread: `RiskModule` (settings GET/PATCH with merged row validation and upsert, `RiskService.contextFor(userId)`, `/risk/context`); `@CurrentUser` on signals list, detail and `top-setups`, with `risk` attached; signal cards show Take or Skip. Satisfies **AC-1**, **AC-6**, **AC-12**
+4. [x] Journal: scope GET and POST by JWT `user_id`; direction, quantity, signal id on POST; new PATCH close with the conditional update, exit price and server P&L; "no quantity" and "check direction" flags in the journal list. Satisfies **AC-9**, **AC-11**, **AC-12**
+5. [x] Context from journal: realized loss today (net, IST day) and open risk feed the verdicts; daily reset by IST. Satisfies **AC-4**, **AC-5**, **AC-8**
+6. [x] Live refresh: per user `risk$` subject merged into `stream()` filtered by ticket user; `risk:changed` after journal and settings writes; web refetch debounced 500 ms. Satisfies **AC-7**
+7. [x] "Take this trade" prefill from cards; Settings page wired to `/settings/risk`, `SettingsContext.dailyRiskBudget` removed, mock gates removed. Satisfies **AC-1**, **AC-10**
 
 ## Consequences
 

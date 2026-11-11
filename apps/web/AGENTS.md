@@ -15,6 +15,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - `isAdmin` on the web comes from the server verified user (`useSessionUser()`), never a client claim.
 - Unit tests get a pass through `apiFetch` mock from `vitest.setup.ts`; `lib/api/apiFetch.test.ts` tests the real one.
 - Market and institutional data (spec 0026): never render sample or fallback numbers; a missing value shows a dash and "No live data", and a last known value shows its "as of" time.
+- Risk (spec 0028): sizes, skip reasons and limits come only from the API (`signal.risk`, `useSignals().riskContext`, `/api/v1/settings/risk`); never compute a share count or a limit in the web. Journal reads and writes go through `TradeContext` (`createEntry`, `closeEntry`), never local mock trades.
 - Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`, `BACKEND_API_URL`.
 
 ## Components (coding rules)

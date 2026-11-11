@@ -5,7 +5,7 @@ import { useTrades } from "@/lib/contexts/TradeContext"
 import { useSignals } from "@/lib/contexts/SignalContext"
 import { ArrowUpRight, ArrowDownRight, ArrowLeft, TrendingUp, History, CheckCircle2, ChevronRight, Activity } from "lucide-react"
 import Link from "next/link"
-import { TradeExitModal } from "@/components/domain/TradeExitModal"
+import { CloseTradeDialog } from "@/components/domain/CloseTradeDialog"
 
 export default function TradeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
@@ -28,12 +28,6 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
   const unrealizedPnl = (ltp - trade.entryPrice) * trade.quantity * (isLong ? 1 : -1)
   const pnlPercent = ((ltp - trade.entryPrice) / trade.entryPrice) * 100 * (isLong ? 1 : -1)
   const isProfitable = unrealizedPnl > 0
-
-  const handleTradeExitSubmit = (quantity: number, exitPrice: number, isFullExit: boolean) => {
-    // In a real app this would call Context/API to record the exit
-    alert(`Mock Journal: ${isFullExit ? 'Full' : 'Partial'} Exit Recorded - ${quantity} shares at ₹${exitPrice}`)
-    setIsExitModalOpen(false)
-  }
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
@@ -190,14 +184,7 @@ export default function TradeDetailPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
 
-      {isExitModalOpen && (
-        <TradeExitModal 
-          trade={trade} 
-          isOpen={isExitModalOpen} 
-          onClose={() => setIsExitModalOpen(false)} 
-          onSubmit={handleTradeExitSubmit}
-        />
-      )}
+      <CloseTradeDialog trade={isExitModalOpen ? trade : null} onClose={() => setIsExitModalOpen(false)} />
     </div>
   )
 }
