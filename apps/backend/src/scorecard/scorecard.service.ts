@@ -17,8 +17,9 @@ export type ScorecardQuery = {
   from: string;
   to: string;
   direction: 'LONG' | 'SHORT' | null;
-  strategyId: string | null;
-  strategyVersion: string | null;
+  /** Empty means all. Several values match any of them. */
+  strategyIds: string[];
+  strategyVersions: string[];
 };
 
 const SIGNAL_COLUMNS =
@@ -124,7 +125,7 @@ export class ScorecardService {
     return count ?? 0;
   }
 
-  private applyFilters<T extends { gte: any; lt: any; eq: any }>(query: T, q: ScorecardQuery): T {
+  private applyFilters<T extends { gte: any; lt: any; eq: any; in: any }>(query: T, q: ScorecardQuery): T {
     let out: any = query;
     if (!q.all) {
       out = out
@@ -132,8 +133,8 @@ export class ScorecardService {
         .lt('created_at', istDayRange(q.to).dayEnd.toISOString());
     }
     if (q.direction) out = out.eq('direction', q.direction);
-    if (q.strategyId) out = out.eq('strategy_id', q.strategyId);
-    if (q.strategyVersion) out = out.eq('strategy_version', q.strategyVersion);
+    if (q.strategyIds.length) out = out.in('strategy_id', q.strategyIds);
+    if (q.strategyVersions.length) out = out.in('strategy_version', q.strategyVersions);
     return out;
   }
 

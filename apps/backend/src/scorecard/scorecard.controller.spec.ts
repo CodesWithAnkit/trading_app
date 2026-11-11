@@ -9,9 +9,10 @@ describe('parseScorecardQuery (spec 0027 AC-9)', () => {
     expect(parseScorecardQuery({}, now)).toMatchObject({ all: false, from: '2026-10-12', to: '2026-11-11', direction: null });
   });
 
-  it('accepts range=all and the optional filters', () => {
-    expect(parseScorecardQuery({ range: 'all', direction: 'SHORT', strategyId: 'guru:orb', strategyVersion: 'v1' }, now))
-      .toMatchObject({ all: true, direction: 'SHORT', strategyId: 'guru:orb', strategyVersion: 'v1' });
+  it('accepts range=all and the optional filters, several values comma separated', () => {
+    expect(parseScorecardQuery({ range: 'all', direction: 'SHORT', strategyId: 'guru:orb, scalping,,scalping', strategyVersion: 'v1' }, now))
+      .toMatchObject({ all: true, direction: 'SHORT', strategyIds: ['guru:orb', 'scalping'], strategyVersions: ['v1'] });
+    expect(parseScorecardQuery({}, now)).toMatchObject({ strategyIds: [], strategyVersions: [] });
   });
 
   it('rejects from after to, bad dates, bad direction and bad range', () => {

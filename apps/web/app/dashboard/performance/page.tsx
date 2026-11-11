@@ -10,6 +10,8 @@ import {
   ScorecardRow,
   useScorecard,
 } from "@/lib/hooks/useScorecard"
+import { rowLabel, strategyLabel, versionLabel } from "@/lib/scorecard/labels"
+import { CheckboxFilter, type CheckboxFilterOption } from "@/components/ui/checkbox-filter"
 
 // spec 0027: the Signal Scorecard. Reconciled outcomes only, measured in R.
 // Design: https://claude.ai/artifact/XAPsBkouzLiEgLPmuLamuD
@@ -30,8 +32,9 @@ const PRESETS: { key: ScorecardFilters["preset"]; label: string }[] = [
 ]
 
 // Distinct in lightness as well as hue, so lines stay apart without colour vision.
-const LINE_COLORS = ["#1D4ED8", "#C2410C", "#0F766E", "#6B21A8", "#0369A1", "#A16207", "#BE185D", "#374151"]
-const LINE_DASHES = ["0", "0", "6 4", "2 4", "0", "6 4", "2 4", "8 3"]
+// Every line also gets its own dash pattern, so no two lines share colour family AND style.
+const LINE_COLORS = ["#1D4ED8", "#C2410C", "#0F766E", "#6B21A8", "#0891B2", "#A16207", "#BE185D", "#374151"]
+const LINE_DASHES = ["0", "0", "6 4", "2 4", "12 4 2 4", "10 3", "1 3", "8 3 2 3 2 3"]
 
 function fmtR(v: number | null): string {
   if (v === null) return "—"
@@ -51,9 +54,9 @@ export default function ScorecardPage() {
     preset: "30d",
     from: istToday(-30),
     to: istToday(),
-    direction: "",
-    strategyId: "",
-    strategyVersion: "",
+    directions: [],
+    strategyIds: [],
+    strategyVersions: [],
   })
   const [cut, setCut] = React.useState<CutKey>("strategy")
   const { data, error, loading, retry } = useScorecard(filters)
@@ -126,29 +129,33 @@ export default function ScorecardPage() {
             </label>
           </div>
         )}
-        <FilterSelect
+        <CheckboxFilter
           label="Direction"
-          value={filters.direction}
-          onChange={(v) => set({ direction: v as ScorecardFilters["direction"] })}
-          options={[["", "All"], ["LONG", "Long"], ["SHORT", "Short"]]}
+          allLabel="Both directions"
+          selected={filters.directions}
+          onChange={(v) => set({ directions: v as ScorecardFilters["directions"] })}
+          options={[
+            { value: "LONG", label: "Long" },
+            { value: "SHORT", label: "Short" },
+          ]}
         />
-        <FilterSelect
+        <CheckboxFilter
           label="Strategy"
-          value={filters.strategyId}
-          onChange={(v) => set({ strategyId: v })}
-          options={[["", "All strategies"], ...(data?.filterOptions.strategies ?? []).map((s) => [s, s] as [string, string])]}
+          allLabel="All strategies"
+          selected={filters.strategyIds}
+          onChange={(v) => set({ strategyIds: v })}
+          options={(data?.filterOptions.strategies ?? []).map((s): CheckboxFilterOption => ({ value: s, label: strategyLabel(s) }))}
         />
-        <FilterSelect
+        <CheckboxFilter
           label="Version"
-          value={filters.strategyVersion}
-          onChange={(v) => set({ strategyVersion: v })}
-          options={[["", "All versions"], ...(data?.filterOptions.versions ?? []).map((s) => [s, s] as [string, string])]}
+          allLabel="All versions"
+          selected={filters.strategyVersions}
+          onChange={(v) => set({ strategyVersions: v })}
+          options={(data?.filterOptions.versions ?? []).map((s): CheckboxFilterOption => ({ value: s, label: versionLabel(s) }))}
         />
-        {data && (
-          <span className="ml-auto text-body-xs text-text-secondary">
-            {data.range.all ? "All time" : `${data.range.from} to ${data.range.to} (IST)`}
-          </span>
-        )}
+        <span className="ml-auto text-body-xs text-text-secondary" aria-live="polite">
+          {loading && data ? "Updating…" : data ? (data.range.all ? "All time" : `${data.range.from} to ${data.range.to} (IST)`) : ""}
+        </span>
       </section>
 
       {error ? (
@@ -172,7 +179,7 @@ export default function ScorecardPage() {
           </p>
         </div>
       ) : (
-        <div className={`flex flex-col gap-4 ${loading ? "opacity-60" : ""}`}>
+        <div className={`flex flex-col gap-4 transition-opacity ${loading ? "opacity-40 pointer-events-none" : ""}`} aria-busy={loading}>
           <Overall data={data} />
           <Curve data={data} />
           <Breakdown rows={data.cuts[cut]} cut={cut} setCut={setCut} riskAssumed={data.settings.riskBudgetAssumed} />
@@ -182,34 +189,14 @@ export default function ScorecardPage() {
   )
 }
 
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  options: [string, string][]
-}) {
-  return (
-    <label className="flex items-center gap-2 text-body-sm text-text-secondary">
-      {label}
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-10 rounded-lg border border-border-strong bg-surface px-2 text-text-primary"
-      >
-        {options.map(([v, l]) => (
-          <option key={v} value={v}>
-            {l}
-          </option>
-        ))}
-      </select>
-    </label>
-  )
-}
+const tradeTime = new Intl.DateTimeFormat("en-IN", {
+  timeZone: "Asia/Kolkata",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+})
 
 function Overall({ data }: { data: ScorecardData }) {
   const o = data.overall
@@ -257,8 +244,10 @@ function Curve({ data }: { data: ScorecardData }) {
         <ul className="flex flex-wrap gap-3 text-body-xs text-text-primary">
           {data.curve.map((l, i) => (
             <li key={l.strategyId} className="flex items-center gap-1.5">
-              <span aria-hidden="true" className="inline-block w-4 h-[3px] rounded" style={{ background: LINE_COLORS[i] }} />
-              <span className="font-label-code">{l.strategyId}</span>
+              <svg aria-hidden="true" width="22" height="6" className="shrink-0">
+                <line x1="0" y1="3" x2="22" y2="3" stroke={LINE_COLORS[i]} strokeWidth="2.5" strokeDasharray={LINE_DASHES[i]} />
+              </svg>
+              <span>{strategyLabel(l.strategyId)}</span>
             </li>
           ))}
         </ul>
@@ -271,12 +260,15 @@ function Curve({ data }: { data: ScorecardData }) {
             <YAxis tickFormatter={(v: number) => `${v}R`} width={44} tick={{ fontSize: 11 }} />
             <ReferenceLine y={0} stroke="var(--color-outline)" strokeDasharray="4 4" />
             <Tooltip
-              labelFormatter={(at) => new Date(String(at)).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
-              formatter={(v) => fmtR(Number(v))}
+              labelFormatter={(at) => `${tradeTime.format(new Date(String(at)))} IST`}
+              formatter={(v, name) => [fmtR(Number(v)), String(name)]}
+              itemSorter={(item) => -Number(item.value)}
+              contentStyle={{ borderRadius: 8, fontSize: 13 }}
             />
             {data.curve.map((l, i) => (
               <Line
                 key={l.strategyId}
+                name={strategyLabel(l.strategyId)}
                 type="stepAfter"
                 dataKey={l.strategyId}
                 stroke={LINE_COLORS[i]}
@@ -291,7 +283,7 @@ function Curve({ data }: { data: ScorecardData }) {
         </ResponsiveContainer>
       </div>
       {data.curveOmitted.length > 0 && (
-        <p className="text-body-xs text-text-secondary">Not charted (smaller samples): {data.curveOmitted.join(", ")}</p>
+        <p className="text-body-xs text-text-secondary">Not charted (smaller samples): {data.curveOmitted.map(strategyLabel).join(", ")}</p>
       )}
     </section>
   )
@@ -347,7 +339,7 @@ function Breakdown({
               <tr key={r.key} className={`border-t border-border-subtle ${r.tooFew ? "opacity-60 bg-surface-container-low" : ""}`}>
                 <th scope="row" className="text-left px-4 py-3.5 font-medium">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-label-code text-text-primary">{r.label}</span>
+                    <span className="text-text-primary" title={r.key}>{rowLabel(cut, r.key, r.label)}</span>
                     {r.tooFew && (
                       <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-status-stale-bg text-status-stale-text">
                         Too few trades

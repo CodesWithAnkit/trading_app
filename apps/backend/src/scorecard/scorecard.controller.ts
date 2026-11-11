@@ -51,7 +51,12 @@ export function parseScorecardQuery(raw: Record<string, string | undefined>, now
     from,
     to,
     direction,
-    strategyId: raw.strategyId || null,
-    strategyVersion: raw.strategyVersion || null,
+    strategyIds: list(raw.strategyId),
+    strategyVersions: list(raw.strategyVersion),
   };
+}
+
+/** Comma separated filter values; blanks dropped, duplicates removed. */
+function list(v: string | undefined): string[] {
+  return [...new Set((v ?? '').split(',').map(s => s.trim()).filter(Boolean))];
 }

@@ -25,3 +25,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - [apps/backend/src/intelligence/AGENTS.md](apps/backend/src/intelligence/AGENTS.md): Market breadth, official disclosures, delayed institutional flow, and explainable evidence engine
 - [apps/backend/src/auth/AGENTS.md](apps/backend/src/auth/AGENTS.md): Supabase JWT guard on every route, AdminGuard, SSE tickets
 - [apps/backend/src/backtest/AGENTS.md](apps/backend/src/backtest/AGENTS.md): guru strategy backtest lab, history provider, runner, and admin API
+- [apps/backend/src/scorecard/AGENTS.md](apps/backend/src/scorecard/AGENTS.md): Signal Scorecard aggregation in R, and the strategy, version and regime stamping every signal insert must do

@@ -39,9 +39,11 @@ export type ScorecardFilters = {
   preset: RangePreset
   from: string
   to: string
-  direction: "" | "LONG" | "SHORT"
-  strategyId: string
-  strategyVersion: string
+  /** Checked directions; none or both means all. */
+  directions: ("LONG" | "SHORT")[]
+  /** Checked strategies and versions; empty means all. */
+  strategyIds: string[]
+  strategyVersions: string[]
 }
 
 /** Today's date in IST as YYYY-MM-DD, matching the backend's day boundaries. */
@@ -58,9 +60,9 @@ export function queryFor(f: ScorecardFilters): string {
     if (f.from) p.set("from", f.from)
     if (f.to) p.set("to", f.to)
   }
-  if (f.direction) p.set("direction", f.direction)
-  if (f.strategyId) p.set("strategyId", f.strategyId)
-  if (f.strategyVersion) p.set("strategyVersion", f.strategyVersion)
+  if (f.directions.length === 1) p.set("direction", f.directions[0])
+  if (f.strategyIds.length) p.set("strategyId", [...f.strategyIds].sort().join(","))
+  if (f.strategyVersions.length) p.set("strategyVersion", [...f.strategyVersions].sort().join(","))
   const s = p.toString()
   return s ? `?${s}` : ""
 }
