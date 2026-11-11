@@ -8,9 +8,10 @@ import { ApiModule } from './api/api.module.js';
 import { IntelligenceModule } from './intelligence/intelligence.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BacktestModule } from './backtest/backtest.module.js';
+import { ScorecardModule } from './scorecard/scorecard.module.js';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), SupabaseModule, AuthModule, ScannerModule, ApiModule, IntelligenceModule, BacktestModule],
+  imports: [ScheduleModule.forRoot(), SupabaseModule, AuthModule, ScannerModule, ApiModule, IntelligenceModule, BacktestModule, ScorecardModule],
   controllers: [AppController],
   providers: [AppService],
 })

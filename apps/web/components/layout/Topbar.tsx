@@ -16,7 +16,7 @@ function resolveRouteTitle(pathname: string): string {
   if (pathname.startsWith("/dashboard/scanner")) return "Scanner"
   if (pathname.startsWith("/dashboard/intelligence")) return "Intel"
   if (pathname.startsWith("/dashboard/news")) return "News & Filings"
-  if (pathname.startsWith("/dashboard/performance")) return "Performance"
+  if (pathname.startsWith("/dashboard/performance")) return "Scorecard"
   if (pathname.startsWith("/dashboard/analysis")) return "Signal Analysis"
   if (pathname.startsWith("/dashboard/markets")) return "Markets"
   if (pathname.startsWith("/settings")) return "Settings"
@@ -86,7 +86,7 @@ export function Topbar() {
     { href: "/dashboard/analysis/RELIANCE", label: "Signal Analysis", icon: "analytics", desc: "Explainable Evidence & Gates" },
     { href: "/dashboard/intelligence", label: "Market Intelligence", icon: "candlestick_chart", desc: "Macro, Sectors & Provenance" },
     { href: "/dashboard/news", label: "News & Filings", icon: "newspaper", desc: "NSE/BSE Official Disclosures" },
-    { href: "/dashboard/performance", label: "Performance & Validation", icon: "fact_check", desc: "Out-of-Sample Calibration" },
+    { href: "/dashboard/performance", label: "Scorecard", icon: "fact_check", desc: "Strategy results in R" },
   ]
 
   return (

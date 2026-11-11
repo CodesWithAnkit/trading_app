@@ -51,7 +51,7 @@ export function Sidebar() {
     },
     {
       href: "/dashboard/performance",
-      label: "Performance & Validation",
+      label: "Scorecard",
       icon: "fact_check"
     },
     {

@@ -9,6 +9,7 @@ import { Bar, DailyBar, DEFINITIONS_VERSION, istDate } from '../strategy/guru/in
 import { GATE_CACHE_MS, latestRunsByPair, LatestRun, LiveStatusRegistry } from '../../backtest/live/liveToggles.js';
 import { toApiSignal } from '../signalMapper.js';
 import { Fill, GuruLiveEngine } from './guruLiveEngine.js';
+import { guruStrategyId, regimeAt } from '../../scorecard/stamping.js';
 
 const REFRESH_MS = 60_000;
 const EXCHANGE_TYPE: Record<string, string> = { NSE: '1', BSE: '3' };
@@ -124,10 +125,15 @@ export class GuruLiveService implements OnApplicationBootstrap, OnModuleDestroy 
       signalId: null, symbol, setup: ruleId, direction: p.side, entry: p.entry, stop: p.stop, target: p.target, firedAt: at.toISOString(),
     });
     if (!reserved) return;
+    // Spec 0027 AC-11: grouping keys fixed at entry (a failed regime read stamps null).
+    const marketRegime = await regimeAt(db, at);
     const { data: inserted, error } = await db
       .from('signals')
       .insert({
         symbol,
+        strategy_id: guruStrategyId(ruleId),
+        strategy_version: guru.definitionsVersion,
+        market_regime: marketRegime,
         direction: p.side,
         setup_family: 'GURU',
         status: 'ACTIVE',

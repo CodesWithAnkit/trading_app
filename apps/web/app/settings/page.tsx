@@ -4,6 +4,7 @@ import * as React from "react"
 import { useSessionUser } from "@/lib/contexts/AuthContext"
 import { LiveGuruRulesList } from "@/components/domain/backtest/LiveToggle"
 import { useSettings } from "@/lib/contexts/SettingsContext"
+import { ScorecardMinSampleSetting } from "@/components/domain/ScorecardMinSampleSetting"
 import { 
   ShieldCheck, 
   Settings as SettingsIcon, 
@@ -67,6 +68,8 @@ export default function SettingsPage() {
           <span>{isSaved ? "Saved Successfully!" : "Save Configuration"}</span>
         </button>
       </div>
+
+      <ScorecardMinSampleSetting />
 
       {/* Main Grid: Left Risk Gates (7 Cols) vs Right Cost Engine (5 Cols) */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-gutter items-start">

@@ -1,329 +1,382 @@
 "use client"
 import * as React from "react"
+import Link from "next/link"
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts"
-import { 
-  ShieldCheck, 
-  TrendingUp, 
-  Activity, 
-  HelpCircle, 
-  Layers, 
-  ArrowUpRight, 
-  CheckCircle2, 
-  AlertTriangle 
-} from "lucide-react"
+  CutKey,
+  istToday,
+  ScorecardData,
+  ScorecardFilters,
+  ScorecardRow,
+  useScorecard,
+} from "@/lib/hooks/useScorecard"
 
-const mockEquityData = [
-  { date: "2024-09-01", equity: 100000, paper: 100000 },
-  { date: "2024-09-05", equity: 102500, paper: 102100 },
-  { date: "2024-09-10", equity: 101800, paper: 101500 },
-  { date: "2024-09-15", equity: 104200, paper: 103800 },
-  { date: "2024-09-20", equity: 105600, paper: 104900 },
-  { date: "2024-09-25", equity: 108400, paper: 107200 },
-  { date: "2024-10-01", equity: 107900, paper: 106800 },
-  { date: "2024-10-05", equity: 110500, paper: 109200 },
-  { date: "2024-10-10", equity: 112800, paper: 111400 },
-  { date: "2024-10-14", equity: 114500, paper: 112800 },
+// spec 0027: the Signal Scorecard. Reconciled outcomes only, measured in R.
+// Design: https://claude.ai/artifact/XAPsBkouzLiEgLPmuLamuD
+
+const CUTS: { key: CutKey; label: string }[] = [
+  { key: "strategy", label: "Strategy" },
+  { key: "setup", label: "Setup" },
+  { key: "timeBucket", label: "Time of day" },
+  { key: "regime", label: "Market regime" },
+  { key: "newsVerdict", label: "News verdict" },
 ]
 
-export default function PerformancePage() {
+const PRESETS: { key: ScorecardFilters["preset"]; label: string }[] = [
+  { key: "30d", label: "Last 30 days" },
+  { key: "90d", label: "Last 90 days" },
+  { key: "all", label: "All time" },
+  { key: "custom", label: "Custom" },
+]
+
+// Distinct in lightness as well as hue, so lines stay apart without colour vision.
+const LINE_COLORS = ["#1D4ED8", "#C2410C", "#0F766E", "#6B21A8", "#0369A1", "#A16207", "#BE185D", "#374151"]
+const LINE_DASHES = ["0", "0", "6 4", "2 4", "0", "6 4", "2 4", "8 3"]
+
+function fmtR(v: number | null): string {
+  if (v === null) return "—"
+  const sign = v > 0 ? "+" : v < 0 ? "−" : ""
+  return `${sign}${Math.abs(v).toFixed(2)}R`
+}
+function fmtPct(v: number | null): string {
+  return v === null ? "—" : `${Math.round(v * 100)}%`
+}
+function signClass(v: number | null): string {
+  if (v === null || v === 0) return "text-text-primary"
+  return v > 0 ? "text-accent-primary" : "text-accent-bearish"
+}
+
+export default function ScorecardPage() {
+  const [filters, setFilters] = React.useState<ScorecardFilters>({
+    preset: "30d",
+    from: istToday(-30),
+    to: istToday(),
+    direction: "",
+    strategyId: "",
+    strategyVersion: "",
+  })
+  const [cut, setCut] = React.useState<CutKey>("strategy")
+  const { data, error, loading, retry } = useScorecard(filters)
+  const set = (patch: Partial<ScorecardFilters>) => setFilters((f) => ({ ...f, ...patch }))
+
   return (
-    <div className="flex flex-col gap-3 sm:gap-margin px-gutter sm:px-gutter-md lg:px-margin-lg py-2 sm:py-space-md lg:py-margin w-full">
-      {/* Top Banner / Hero */}
-      <div className="bg-surface border border-border-subtle rounded-xl p-space-md shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
-        <div className="flex items-center gap-space-md">
-          <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-            <span className="material-symbols-outlined text-[24px]">fact_check</span>
-          </div>
-          <div>
-            <div className="flex items-center gap-space-sm">
-              <h1 className="font-headline-lg text-headline-lg font-bold text-text-primary tracking-tight">
-                Performance Analytics & Model Validation
-              </h1>
-              <span className="px-2 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-label-code font-bold uppercase">
-                Walk-Forward Verified
-              </span>
-            </div>
-            <p className="font-body-xs text-body-xs text-text-secondary mt-0.5">
-              Out-of-sample paper tracking, probability calibration, and transaction friction decomposition.
-            </p>
-          </div>
+    <div className="flex flex-col gap-4 px-gutter sm:px-gutter-md lg:px-margin-lg py-4 lg:py-margin w-full max-w-[1280px] mx-auto">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-headline-lg text-headline-lg font-bold text-text-primary tracking-tight">Scorecard</h1>
+          <p className="text-body-sm text-text-secondary">
+            Reconciled outcomes only, measured in R. Net figures are estimated after charges.
+          </p>
         </div>
-
-        <div className="flex items-center gap-space-sm">
-          <span className="font-label-code text-label-code text-text-secondary">
-            Brier Score: <strong className="text-accent-bullish">0.142 (Optimal)</strong>
-          </span>
-        </div>
-      </div>
-
-      {/* 4 Quantitative Validation Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-gutter">
-        {/* Card 1: Win Rate & Expectancy */}
-        <div className="bg-surface p-space-md rounded-xl border border-border-subtle flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between pb-space-xs border-b border-border-subtle">
-            <span className="font-label-code text-label-code text-text-secondary uppercase font-semibold">Realized Win Rate</span>
-            <span className="font-label-code text-label-code text-status-live-text font-bold">SAMPLE: 24 TRADES</span>
-          </div>
-          <div className="py-space-sm flex flex-col gap-1.5">
-            <div className="flex items-baseline justify-between">
-              <span className="font-metric-lg text-metric-lg font-bold text-accent-bullish">62.5%</span>
-              <span className="font-label-code text-label-code text-text-secondary">15 Win / 9 Loss</span>
-            </div>
-            <div className="w-full bg-surface-high h-2 rounded-full overflow-hidden flex">
-              <div className="bg-accent-bullish h-full" style={{ width: "62.5%" }}></div>
-              <div className="bg-accent-danger h-full" style={{ width: "37.5%" }}></div>
-            </div>
-            <div className="flex flex-col gap-1 pt-1 font-label-code text-label-code text-text-secondary">
-              <div className="flex justify-between">
-                <span>Paper Tracking (OOS):</span>
-                <span className="font-semibold text-text-primary">58.4% (142 setups)</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Backtest (6-Month):</span>
-                <span className="font-semibold text-text-primary">56.1% (840 setups)</span>
-              </div>
-            </div>
-          </div>
-          <div className="pt-space-xs border-t border-border-subtle flex items-center justify-between font-label-code text-body-xs text-text-secondary">
-            <span>R:R Net Realized:</span>
-            <span className="font-bold text-accent-bullish">1 : 1.82 Avg</span>
-          </div>
-        </div>
-
-        {/* Card 2: Net Expectancy */}
-        <div className="bg-surface p-space-md rounded-xl border border-border-subtle flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between pb-space-xs border-b border-border-subtle">
-            <span className="font-label-code text-label-code text-text-secondary uppercase font-semibold">Net Expectancy / Setup</span>
-            <span className="px-1.5 py-0.5 rounded bg-surface-container text-primary font-label-code text-[10px] font-bold">POST-CHARGES</span>
-          </div>
-          <div className="py-space-sm flex flex-col gap-1.5">
-            <div className="flex items-baseline justify-between">
-              <span className="font-metric-lg text-metric-lg font-bold text-primary">+₹382.50</span>
-              <span className="font-label-code text-label-code text-accent-bullish font-semibold">▲ Alpha Edge</span>
-            </div>
-            <div className="flex flex-col gap-1 font-label-code text-label-code text-text-secondary">
-              <div className="flex justify-between">
-                <span>Paper OOS:</span>
-                <span className="font-semibold text-status-live-text">+₹294.10 / trade</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Backtest:</span>
-                <span className="font-semibold text-text-primary">+₹218.40 / trade</span>
-              </div>
-              <div className="flex justify-between text-body-xs">
-                <span>Slippage Drag:</span>
-                <span className="text-accent-danger font-medium">-23.1% delta</span>
-              </div>
-            </div>
-          </div>
-          <div className="pt-space-xs border-t border-border-subtle flex items-center justify-between font-label-code text-body-xs text-text-secondary">
-            <span>Per Tranche:</span>
-            <span className="font-semibold text-text-primary">₹1,00,000 basis</span>
-          </div>
-        </div>
-
-        {/* Card 3: Profit Factor & Drawdown */}
-        <div className="bg-surface p-space-md rounded-xl border border-border-subtle flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between pb-space-xs border-b border-border-subtle">
-            <span className="font-label-code text-label-code text-text-secondary uppercase font-semibold">Profit Factor & Drawdown</span>
-            <span className="px-1.5 py-0.5 rounded bg-status-live-bg text-status-live-text font-label-code text-[10px] font-bold">ROBUST</span>
-          </div>
-          <div className="py-space-sm flex flex-col gap-1.5">
-            <div className="flex items-baseline justify-between">
-              <span className="font-metric-lg text-metric-lg font-bold text-text-primary">1.84 PF</span>
-              <span className="font-label-code text-label-code text-accent-danger font-bold">-4.2% Max DD</span>
-            </div>
-            <div className="flex flex-col gap-1 font-label-code text-label-code text-text-secondary">
-              <div className="flex justify-between">
-                <span>Manual vs Paper PF:</span>
-                <span className="font-semibold text-text-primary">1.84 vs 1.62</span>
-              </div>
-              <div className="flex justify-between">
-                <span>6M Backtest PF:</span>
-                <span className="font-semibold text-text-primary">1.48 (Validated)</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Peak-to-Trough:</span>
-                <span className="text-accent-danger font-semibold">₹4,200</span>
-              </div>
-            </div>
-          </div>
-          <div className="pt-space-xs border-t border-border-subtle flex items-center justify-between font-label-code text-body-xs text-text-secondary">
-            <span>Recovery Factor:</span>
-            <span className="font-bold text-text-primary">3.24x</span>
-          </div>
-        </div>
-
-        {/* Card 4: Friction Decomposition */}
-        <div className="bg-surface p-space-md rounded-xl border border-border-subtle flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between pb-space-xs border-b border-border-subtle">
-            <span className="font-label-code text-label-code text-text-secondary uppercase font-semibold">Friction / Cost Impact</span>
-            <span className="px-1.5 py-0.5 rounded bg-status-stale-bg text-status-stale-text font-label-code text-[10px] font-bold">FR-20 AUDIT</span>
-          </div>
-          <div className="py-space-sm flex flex-col gap-1.5">
-            <div className="flex items-baseline justify-between">
-              <span className="font-metric-lg text-metric-lg font-bold text-accent-bearish">-18.4%</span>
-              <span className="font-label-code text-label-code text-text-secondary">Gross to Net Drag</span>
-            </div>
-            <div className="w-full bg-surface-high h-2 rounded-full overflow-hidden flex">
-              <div className="bg-primary h-full" style={{ width: "81.6%" }}></div>
-              <div className="bg-status-stale-text h-full" style={{ width: "18.4%" }}></div>
-            </div>
-            <div className="flex flex-col gap-1 font-label-code text-label-code text-text-secondary">
-              <div className="flex justify-between">
-                <span>Brokerage + STT (NSE):</span>
-                <span className="font-semibold text-text-primary">9.2%</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Simulated Slippage:</span>
-                <span className="font-semibold text-text-primary">9.2%</span>
-              </div>
-            </div>
-          </div>
-          <div className="pt-space-xs border-t border-border-subtle flex items-center justify-between font-label-code text-body-xs text-text-secondary">
-            <span>Break-Even Win Rate:</span>
-            <span className="font-bold text-text-primary">48.2%</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Equity Curve & Walk-Forward Charts */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-gutter items-start">
-        {/* Equity Curve (Cols 1-8) */}
-        <div className="xl:col-span-8 bg-surface rounded-xl border border-border-subtle p-space-md shadow-sm flex flex-col gap-space-md">
-          <div className="flex items-center justify-between pb-space-xs border-b border-border-subtle">
-            <div className="flex items-center gap-space-xs">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <h2 className="font-headline-sm text-headline-sm font-bold text-text-primary">
-                Cumulative Realized vs Paper Equity Curve
-              </h2>
-            </div>
-            <div className="flex items-center gap-3 font-label-code text-label-code">
-              <div className="flex items-center gap-1">
-                <span className="w-2.5 h-0.5 bg-primary"></span>
-                <span>Manual Journal (+₹14.5k)</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="w-2.5 h-0.5 bg-status-live-text"></span>
-                <span>Paper OOS (+₹12.8k)</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="w-full h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockEquityData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.6} vertical={false} />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fill: '#5E6C80', fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={val => {
-                    const d = new Date(val)
-                    return `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })}`
-                  }}
-                />
-                <YAxis 
-                  domain={['dataMin - 1000', 'dataMax + 1000']}
-                  tick={{ fill: '#5E6C80', fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={val => `₹${(val / 1000).toFixed(0)}k`}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#FFFFFF', 
-                    borderColor: '#CBD5E1',
-                    borderRadius: '8px',
-                    color: '#132238'
-                  }}
-                  formatter={(val: any, name: any) => [`₹${Number(val).toLocaleString()}`, name === 'equity' ? 'Manual Realized' : 'Paper OOS']}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="equity" 
-                  stroke="#0037b0" 
-                  strokeWidth={2.5}
-                  dot={{ r: 3, fill: '#0037b0' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="paper" 
-                  stroke="#047857" 
-                  strokeWidth={2}
-                  strokeDasharray="4 4"
-                  dot={{ r: 2, fill: '#047857' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Confidence Probability Calibration (Cols 9-12) */}
-        <div className="xl:col-span-4 bg-surface rounded-xl border border-border-subtle p-space-md shadow-sm flex flex-col gap-space-md">
-          <div className="flex items-center justify-between pb-space-xs border-b border-border-subtle">
-            <div className="flex items-center gap-space-xs">
-              <Activity className="w-4 h-4 text-primary" />
-              <h3 className="font-headline-sm text-headline-sm font-bold text-text-primary">
-                Probability Calibration
-              </h3>
-            </div>
-            <span className="font-label-code text-body-xs text-accent-bullish font-bold bg-status-live-bg px-1.5 py-0.5 rounded">
-              0.142 Brier
+        {data && (
+          <div className="flex flex-wrap gap-4 text-body-sm text-text-secondary">
+            <span>
+              Not yet reconciled: <strong className="font-label-code text-text-primary">{data.excluded.unreconciled}</strong>
+            </span>
+            <span>
+              Invalid risk: <strong className="font-label-code text-text-primary">{data.excluded.invalidRisk}</strong>
+            </span>
+            <span>
+              Min sample: <strong className="font-label-code text-text-primary">{data.settings.minSample}</strong>{" "}
+              <Link href="/settings" className="text-accent-primary underline underline-offset-2">
+                Edit in Settings
+              </Link>
             </span>
           </div>
+        )}
+      </header>
 
-          <p className="font-body-xs text-body-xs text-text-secondary">
-            Compares algorithmic predicted confidence bucket vs actual empirical target hit frequency (FR-18).
-          </p>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse font-label-code text-label-code">
-              <thead>
-                <tr className="bg-surface-container-low text-text-secondary uppercase">
-                  <th className="py-2 px-2">Score Bucket</th>
-                  <th className="py-2 px-2 text-right">Hit Rate</th>
-                  <th className="py-2 px-2 text-right">Samples</th>
-                  <th className="py-2 px-2 text-right">Delta</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-subtle">
-                <tr>
-                  <td className="py-2 px-2 font-bold text-accent-bullish">80 - 100 (High)</td>
-                  <td className="py-2 px-2 text-right font-bold text-text-primary">78.4%</td>
-                  <td className="py-2 px-2 text-right text-text-secondary">42</td>
-                  <td className="py-2 px-2 text-right text-status-live-text font-semibold">-1.6%</td>
-                </tr>
-                <tr>
-                  <td className="py-2 px-2 font-bold text-primary">60 - 79 (Good)</td>
-                  <td className="py-2 px-2 text-right font-bold text-text-primary">64.1%</td>
-                  <td className="py-2 px-2 text-right text-text-secondary">78</td>
-                  <td className="py-2 px-2 text-right text-status-live-text font-semibold">+4.1%</td>
-                </tr>
-                <tr>
-                  <td className="py-2 px-2 font-bold text-accent-bearish">40 - 59 (Marginal)</td>
-                  <td className="py-2 px-2 text-right font-bold text-text-primary">48.2%</td>
-                  <td className="py-2 px-2 text-right text-text-secondary">31</td>
-                  <td className="py-2 px-2 text-right text-accent-bearish font-semibold">-1.8%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div className="p-space-sm bg-surface-container-low rounded-lg text-[11px] text-text-secondary font-body-xs border border-border-subtle">
-            Brier score below 0.18 indicates exceptional probabilistic calibration without overconfidence bias.
-          </div>
+      <section aria-label="Filters" className="bg-surface border border-border-subtle rounded-xl p-3 flex flex-wrap items-center gap-3">
+        <div role="group" aria-label="Date range" className="flex flex-wrap gap-1 bg-surface-container rounded-lg p-1">
+          {PRESETS.map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              aria-pressed={filters.preset === p.key}
+              onClick={() => set({ preset: p.key })}
+              className={`min-h-10 px-3 rounded-md text-body-sm ${
+                filters.preset === p.key ? "bg-surface text-text-primary font-semibold shadow-sm" : "text-text-secondary"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
-      </div>
+        {filters.preset === "custom" && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <label className="flex items-center gap-2 text-body-sm text-text-secondary">
+              From
+              <input
+                type="date"
+                value={filters.from}
+                max={filters.to}
+                onChange={(e) => set({ from: e.target.value })}
+                className="h-10 rounded-lg border border-border-strong bg-surface px-2 text-text-primary"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-body-sm text-text-secondary">
+              To
+              <input
+                type="date"
+                value={filters.to}
+                min={filters.from}
+                onChange={(e) => set({ to: e.target.value })}
+                className="h-10 rounded-lg border border-border-strong bg-surface px-2 text-text-primary"
+              />
+            </label>
+          </div>
+        )}
+        <FilterSelect
+          label="Direction"
+          value={filters.direction}
+          onChange={(v) => set({ direction: v as ScorecardFilters["direction"] })}
+          options={[["", "All"], ["LONG", "Long"], ["SHORT", "Short"]]}
+        />
+        <FilterSelect
+          label="Strategy"
+          value={filters.strategyId}
+          onChange={(v) => set({ strategyId: v })}
+          options={[["", "All strategies"], ...(data?.filterOptions.strategies ?? []).map((s) => [s, s] as [string, string])]}
+        />
+        <FilterSelect
+          label="Version"
+          value={filters.strategyVersion}
+          onChange={(v) => set({ strategyVersion: v })}
+          options={[["", "All versions"], ...(data?.filterOptions.versions ?? []).map((s) => [s, s] as [string, string])]}
+        />
+        {data && (
+          <span className="ml-auto text-body-xs text-text-secondary">
+            {data.range.all ? "All time" : `${data.range.from} to ${data.range.to} (IST)`}
+          </span>
+        )}
+      </section>
+
+      {error ? (
+        <div role="alert" className="bg-surface border border-border-subtle rounded-xl p-6 flex flex-col items-start gap-3">
+          <p className="text-body-sm text-text-primary font-semibold">Couldn&apos;t load the scorecard.</p>
+          <p className="text-body-sm text-text-secondary">{error}</p>
+          <button type="button" onClick={retry} className="min-h-11 px-4 rounded-lg bg-accent-primary text-white font-semibold">
+            Retry
+          </button>
+        </div>
+      ) : !data ? (
+        <div className="bg-surface border border-border-subtle rounded-xl p-6 text-body-sm text-text-secondary" aria-busy="true">
+          Loading scorecard…
+        </div>
+      ) : data.overall.trades === 0 ? (
+        <div className="bg-surface border border-border-subtle rounded-xl p-6 flex flex-col gap-2">
+          <p className="text-body-sm text-text-primary font-semibold">No reconciled trades in this range</p>
+          <p className="text-body-sm text-text-secondary">
+            {data.excluded.unreconciled} signals are waiting for the 15:32 IST reconciliation and {data.excluded.invalidRisk} have
+            invalid risk (no stored stop).
+          </p>
+        </div>
+      ) : (
+        <div className={`flex flex-col gap-4 ${loading ? "opacity-60" : ""}`}>
+          <Overall data={data} />
+          <Curve data={data} />
+          <Breakdown rows={data.cuts[cut]} cut={cut} setCut={setCut} riskAssumed={data.settings.riskBudgetAssumed} />
+        </div>
+      )}
     </div>
+  )
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  options: [string, string][]
+}) {
+  return (
+    <label className="flex items-center gap-2 text-body-sm text-text-secondary">
+      {label}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-10 rounded-lg border border-border-strong bg-surface px-2 text-text-primary"
+      >
+        {options.map(([v, l]) => (
+          <option key={v} value={v}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+function Overall({ data }: { data: ScorecardData }) {
+  const o = data.overall
+  const tiles: { label: string; value: string; sub: string; cls: string }[] = [
+    { label: "Trades", value: String(o.trades), sub: `${o.wins} won · ${o.losses} lost · ${o.neutrals} neutral`, cls: "text-text-primary" },
+    { label: "Win rate", value: fmtPct(o.winRate), sub: "Neutral trades in the total", cls: "text-text-primary" },
+    { label: "Avg R gross", value: fmtR(o.avgRGross), sub: "Before charges", cls: signClass(o.avgRGross) },
+    { label: "Expectancy net", value: fmtR(o.expectancyNet), sub: "Estimated, per trade", cls: signClass(o.expectancyNet) },
+    { label: "Est. cost share", value: fmtPct(o.estimatedCostShare), sub: "Trades on the ₹20 default", cls: "text-text-primary" },
+  ]
+  return (
+    <section aria-label="Overall" className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(170px,1fr))]">
+      {tiles.map((t) => (
+        <div key={t.label} className="bg-surface border border-border-subtle rounded-xl p-4 flex flex-col gap-1">
+          <span className="text-label-code font-semibold uppercase tracking-wider text-text-secondary">{t.label}</span>
+          <span className={`font-label-code text-[28px] font-semibold tracking-tight ${t.cls}`}>{t.value}</span>
+          <span className="text-body-xs text-text-secondary">{t.sub}</span>
+        </div>
+      ))}
+      {o.tooFew && (
+        <p className="col-span-full text-body-xs text-text-secondary">
+          Fewer than {data.settings.minSample} trades overall: treat every number here as early evidence.
+        </p>
+      )}
+    </section>
+  )
+}
+
+function Curve({ data }: { data: ScorecardData }) {
+  // One merged series keyed by trade time; each strategy steps only at its own trades.
+  const rows = React.useMemo(() => {
+    const all = data.curve.flatMap((l) => l.points.map((p) => ({ at: p.at, id: l.strategyId, v: p.cumNetR })))
+    all.sort((a, b) => a.at.localeCompare(b.at))
+    const last: Record<string, number> = {}
+    return all.map((p) => {
+      last[p.id] = p.v
+      return { at: p.at, ...last }
+    })
+  }, [data.curve])
+
+  return (
+    <section aria-label="Cumulative net R" className="bg-surface border border-border-subtle rounded-xl p-4 flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h2 className="text-body-md font-semibold text-text-primary">Cumulative net R by strategy</h2>
+        <ul className="flex flex-wrap gap-3 text-body-xs text-text-primary">
+          {data.curve.map((l, i) => (
+            <li key={l.strategyId} className="flex items-center gap-1.5">
+              <span aria-hidden="true" className="inline-block w-4 h-[3px] rounded" style={{ background: LINE_COLORS[i] }} />
+              <span className="font-label-code">{l.strategyId}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="h-60" role="img" aria-label="Cumulative net R per strategy over the selected range">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+            <CartesianGrid stroke="var(--color-border-subtle)" vertical={false} />
+            <XAxis dataKey="at" tick={false} axisLine={false} />
+            <YAxis tickFormatter={(v: number) => `${v}R`} width={44} tick={{ fontSize: 11 }} />
+            <ReferenceLine y={0} stroke="var(--color-outline)" strokeDasharray="4 4" />
+            <Tooltip
+              labelFormatter={(at) => new Date(String(at)).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+              formatter={(v) => fmtR(Number(v))}
+            />
+            {data.curve.map((l, i) => (
+              <Line
+                key={l.strategyId}
+                type="stepAfter"
+                dataKey={l.strategyId}
+                stroke={LINE_COLORS[i]}
+                strokeDasharray={LINE_DASHES[i]}
+                strokeWidth={2.5}
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      {data.curveOmitted.length > 0 && (
+        <p className="text-body-xs text-text-secondary">Not charted (smaller samples): {data.curveOmitted.join(", ")}</p>
+      )}
+    </section>
+  )
+}
+
+function Breakdown({
+  rows,
+  cut,
+  setCut,
+  riskAssumed,
+}: {
+  rows: ScorecardRow[]
+  cut: CutKey
+  setCut: (c: CutKey) => void
+  riskAssumed: boolean
+}) {
+  const cutLabel = CUTS.find((c) => c.key === cut)!.label
+  return (
+    <section aria-label="Breakdown" className="bg-surface border border-border-subtle rounded-xl flex flex-col">
+      <div role="tablist" aria-label="Cut" className="flex gap-1 px-3 pt-3 border-b border-border-subtle overflow-x-auto">
+        {CUTS.map((c) => (
+          <button
+            key={c.key}
+            type="button"
+            role="tab"
+            aria-selected={cut === c.key}
+            onClick={() => setCut(c.key)}
+            className={`min-h-11 px-4 whitespace-nowrap text-body-sm border-b-2 ${
+              cut === c.key ? "border-accent-primary text-accent-primary font-semibold" : "border-transparent text-text-secondary"
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[920px] border-collapse text-body-sm">
+          <thead>
+            <tr className="text-right text-label-code uppercase tracking-wider text-text-secondary">
+              <th scope="col" className="text-left px-4 py-3 font-semibold">{cutLabel}</th>
+              <th scope="col" className="px-2.5 py-3 font-semibold">Trades</th>
+              <th scope="col" className="px-2.5 py-3 font-semibold">W / L / N</th>
+              <th scope="col" className="px-2.5 py-3 font-semibold">Win rate</th>
+              <th scope="col" className="px-2.5 py-3 font-semibold">Avg win</th>
+              <th scope="col" className="px-2.5 py-3 font-semibold">Avg loss</th>
+              <th scope="col" className="px-2.5 py-3 font-semibold">Avg R gross</th>
+              <th scope="col" className="px-2.5 py-3 font-semibold">Expectancy net</th>
+              <th scope="col" className="px-4 py-3 font-semibold">Est. cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.key} className={`border-t border-border-subtle ${r.tooFew ? "opacity-60 bg-surface-container-low" : ""}`}>
+                <th scope="row" className="text-left px-4 py-3.5 font-medium">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-label-code text-text-primary">{r.label}</span>
+                    {r.tooFew && (
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-status-stale-bg text-status-stale-text">
+                        Too few trades
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <td className="px-2.5 py-3.5 text-right font-label-code font-semibold text-text-primary">{r.trades}</td>
+                <td className="px-2.5 py-3.5 text-right font-label-code text-text-primary">
+                  {r.wins} / {r.losses} / {r.neutrals}
+                </td>
+                <td className="px-2.5 py-3.5 text-right font-label-code text-text-primary">{fmtPct(r.winRate)}</td>
+                <td className="px-2.5 py-3.5 text-right font-label-code text-accent-primary">{fmtR(r.avgWinR)}</td>
+                <td className="px-2.5 py-3.5 text-right font-label-code text-accent-bearish">{fmtR(r.avgLossR)}</td>
+                <td className={`px-2.5 py-3.5 text-right font-label-code ${signClass(r.avgRGross)}`}>{fmtR(r.avgRGross)}</td>
+                <td className={`px-2.5 py-3.5 text-right font-label-code font-semibold ${signClass(r.expectancyNet)}`}>
+                  {fmtR(r.expectancyNet)}
+                </td>
+                <td className="px-4 py-3.5 text-right font-label-code text-text-secondary">{fmtPct(r.estimatedCostShare)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="px-4 py-3 text-body-xs text-text-secondary border-t border-border-subtle">
+        Win rate counts NEUTRAL trades in the total. Avg win and avg loss use WON and LOST trades only. Est. cost is the share of
+        trades charged the ₹20 default because they have no evidence row. Rows below the minimum sample are muted.
+        {riskAssumed && " Your risk per trade isn't set, so costs assume a ₹1,000 risk budget."}
+      </p>
+    </section>
   )
 }

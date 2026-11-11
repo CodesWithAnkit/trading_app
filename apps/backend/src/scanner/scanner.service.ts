@@ -25,6 +25,7 @@ import { downloadFnoStocks } from './universe/instrumentFile.js';
 import { isAtOrAfterTimeExit, isInExitWindow, isIstWeekday } from './universe/schedule.js';
 import { checkExit, EXIT_STATUS, ExitReason, pnlPct, Plan, PlanBook } from './plans/planBook.js';
 import { NewsGateEvent, NewsGateService, plainSymbol } from '../intelligence/news/news-gate.service.js';
+import { regimeAt, scannerStrategyId } from '../scorecard/stamping.js';
 
 export type ApproachingSetup = {
   symbol: string;
@@ -679,8 +680,13 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
         };
         if (!this.planBook.reserve(tracked)) continue;
 
+        // Spec 0027 AC-11: grouping keys fixed at entry (a failed regime read stamps null).
+        const marketRegime = await regimeAt(this.supabase.client, new Date(signal.createdAt));
         const { data: inserted, error: insertError } = await this.supabase.client.from('signals').insert({
           symbol: plainSymbol(signal.symbol),
+          strategy_id: scannerStrategyId(signal.setupFamily),
+          strategy_version: dummyConfig.strategy.strategy_version,
+          market_regime: marketRegime,
           direction: signal.direction,
           setup_family: signal.setupFamily,
           status: signal.state,
